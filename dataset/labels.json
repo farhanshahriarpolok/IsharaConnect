@@ -1,0 +1,223 @@
+{
+  "version": "1.0.0",
+  "language": "Bangla Sign Language (BdSL)",
+  "total_signs": 24,
+  "signs": [
+    {
+      "id": 0,
+      "slug": "assalamu_alaikum",
+      "bangla": "আসসালামু আলাইকুম",
+      "english": "Peace be upon you / Hello",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Right hand touches forehead and moves outward"
+    },
+    {
+      "id": 1,
+      "slug": "dhonnobad",
+      "bangla": "ধন্যবাদ",
+      "english": "Thank you",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Flat open hand touches chin and moves forward toward interlocutor"
+    },
+    {
+      "id": 2,
+      "slug": "shagotom",
+      "bangla": "স্বাগতম",
+      "english": "Welcome",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Both open palms facing upward moving gently inward"
+    },
+    {
+      "id": 3,
+      "slug": "kemon_achen",
+      "bangla": "কেমন আছেন",
+      "english": "How are you?",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Bent hands rotating outwards questioning expression"
+    },
+    {
+      "id": 4,
+      "slug": "bhalo",
+      "bangla": "ভালো",
+      "english": "Good / Fine",
+      "category": "static",
+      "hands": 1,
+      "description": "Thumbs up gesture positioned near chest height"
+    },
+    {
+      "id": 5,
+      "slug": "kharap",
+      "bangla": "খারাপ",
+      "english": "Bad",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Thumbs down rotating downwards"
+    },
+    {
+      "id": 6,
+      "slug": "ami",
+      "bangla": "আমি",
+      "english": "I / Me",
+      "category": "static",
+      "hands": 1,
+      "description": "Index finger pointing directly to chest"
+    },
+    {
+      "id": 7,
+      "slug": "apni",
+      "bangla": "আপনি",
+      "english": "You (Formal)",
+      "category": "static",
+      "hands": 1,
+      "description": "Open flat palm extended toward interlocutor"
+    },
+    {
+      "id": 8,
+      "slug": "tumi",
+      "bangla": "তুমি",
+      "english": "You (Informal)",
+      "category": "static",
+      "hands": 1,
+      "description": "Index finger pointing toward interlocutor"
+    },
+    {
+      "id": 9,
+      "slug": "naam",
+      "bangla": "নাম",
+      "english": "Name",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Index and middle fingers of both hands crossing/tapping"
+    },
+    {
+      "id": 10,
+      "slug": "shahajjo",
+      "bangla": "সাহায্য",
+      "english": "Help",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Closed fist supported by flat palm moving upward"
+    },
+    {
+      "id": 11,
+      "slug": "pani",
+      "bangla": "পানি",
+      "english": "Water",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "W-shape or finger tapping near side of mouth"
+    },
+    {
+      "id": 12,
+      "slug": "khabar",
+      "bangla": "খাবার",
+      "english": "Food / Eat",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Closed fingertips brought toward mouth repeatedly"
+    },
+    {
+      "id": 13,
+      "slug": "daktar",
+      "bangla": "ডাক্তার",
+      "english": "Doctor",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Fingers tapping wrist (checking pulse motion)"
+    },
+    {
+      "id": 14,
+      "slug": "osud",
+      "bangla": "ওষুধ",
+      "english": "Medicine",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Middle finger rubbing circular on palm (grinding pill)"
+    },
+    {
+      "id": 15,
+      "slug": "hospital",
+      "bangla": "হাসপাতাল",
+      "english": "Hospital",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Drawing cross on upper shoulder/arm"
+    },
+    {
+      "id": 16,
+      "slug": "thik_ache",
+      "bangla": "ঠিক আছে",
+      "english": "Okay / Alright",
+      "category": "static",
+      "hands": 1,
+      "description": "O and K finger formation or standard OK sign"
+    },
+    {
+      "id": 17,
+      "slug": "ha",
+      "bangla": "হ্যাঁ",
+      "english": "Yes",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Fist nodding up and down like a head nod"
+    },
+    {
+      "id": 18,
+      "slug": "na",
+      "bangla": "না",
+      "english": "No",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger wagging side to side"
+    },
+    {
+      "id": 19,
+      "slug": "bujhechi",
+      "bangla": "বুঝেছি",
+      "english": "Understood",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger flicking upwards near temple"
+    },
+    {
+      "id": 20,
+      "slug": "bujhini",
+      "bangla": "বুঝিনি",
+      "english": "Did not understand",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger tapping temple with slight head shake"
+    },
+    {
+      "id": 21,
+      "slug": "ek",
+      "bangla": "১ (এক)",
+      "english": "One",
+      "category": "static",
+      "hands": 1,
+      "description": "Single index finger pointing vertically"
+    },
+    {
+      "id": 22,
+      "slug": "dui",
+      "bangla": "২ (দুই)",
+      "english": "Two",
+      "category": "static",
+      "hands": 1,
+      "description": "Index and middle fingers extended in V-shape"
+    },
+    {
+      "id": 23,
+      "slug": "tin",
+      "bangla": "৩ (তিন)",
+      "english": "Three",
+      "category": "static",
+      "hands": 1,
+      "description": "Index, middle, and ring fingers extended"
+    }
+  ]
+}

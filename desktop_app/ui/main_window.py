@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
 
 from desktop_app.controllers.camera_worker import CameraWorker
 from desktop_app.controllers.network_worker import NetworkWorker
+from desktop_app.ui.propose_sign_dialog import ProposeSignDialog
 
 logger = logging.getLogger(__name__)
 
@@ -101,12 +102,16 @@ class IsharaMainWindow(QMainWindow):
         self.mode_selector.setCurrentText(self.mode.title())
         self.mode_selector.currentTextChanged.connect(self._change_mode)
         
+        self.propose_btn = QPushButton("➕ Propose New Sign")
+        self.propose_btn.clicked.connect(self._open_propose_dialog)
+        
         header_layout.addWidget(title_label)
         header_layout.addStretch()
         header_layout.addWidget(self.status_badge)
         header_layout.addWidget(self.room_input)
         header_layout.addWidget(self.join_btn)
         header_layout.addWidget(self.mode_selector)
+        header_layout.addWidget(self.propose_btn)
         
         main_layout.addLayout(header_layout)
 
@@ -324,6 +329,27 @@ class IsharaMainWindow(QMainWindow):
             self.network_worker.send_speech_event(text)
             self.transcript_area.append(f"<span style='color:{ACCENT_BLUE}'><b>You:</b> {text}</span>")
             self.reply_input.clear()
+
+    @pyqtSlot()
+    def _open_propose_dialog(self):
+        """Open the sign proposal dialog."""
+        dialog = ProposeSignDialog(server_url=self.server_url)
+        # Pause camera worker if signer, as the dialog uses the camera
+        was_running = False
+        if self.camera_worker:
+            was_running = True
+            self.camera_worker.stop()
+            self.camera_worker = None
+            
+        dialog.exec()
+        
+        # Resume camera worker
+        if was_running and self.mode == "signer":
+            self.camera_worker = CameraWorker()
+            self.camera_worker.frame_ready.connect(self._update_camera_feed)
+            self.camera_worker.sign_detected.connect(self._on_sign_detected)
+            self.camera_worker.fps_updated.connect(self._update_fps)
+            self.camera_worker.start()
 
     def closeEvent(self, event):
         """Handle window close gracefully."""

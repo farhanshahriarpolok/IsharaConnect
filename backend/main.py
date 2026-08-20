@@ -5,6 +5,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routes import router as api_router
+from backend.api.admin_routes import router as admin_router
 from backend.websockets.room_manager import manager, ClientType
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(admin_router)
 
 
 @app.websocket("/ws/room/{room_id}/{client_type}")

@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, Body
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from backend.services.staging_service import staging_service
 
 router = APIRouter(prefix="/api/v1")
 
@@ -15,6 +17,7 @@ class SignProposal(BaseModel):
     bangla: str
     english: str
     category: str
+    samples: list[list[list[float]]] = Field(default_factory=list, description="List of 30x126 landmark matrices")
 
 
 @router.get("/health")
@@ -45,19 +48,15 @@ async def get_dictionary() -> Dict[str, Any]:
 @router.post("/signs/propose")
 async def propose_sign(proposal: SignProposal) -> Dict[str, Any]:
     """Staging endpoint for users submitting new signs."""
-    pending_dir = Path("dataset/pending")
-    pending_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Simple JSON save for staging (in a real app, this would be a DB insert)
-    import time
-    proposal_id = f"prop_{int(time.time())}_{proposal.user_id}"
-    
-    file_path = pending_dir / f"{proposal_id}.json"
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(proposal.model_dump(), f, indent=2)
+    submission_id = staging_service.submit_proposal(
+        label_bn=proposal.bangla,
+        label_en=proposal.english,
+        contributor=proposal.user_id,
+        samples=proposal.samples
+    )
         
     return {
         "status": "success",
-        "proposal_id": proposal_id,
+        "proposal_id": submission_id,
         "message": "Sign proposal submitted for review."
     }

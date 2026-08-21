@@ -1,0 +1,52 @@
+{
+  "tier_name": "Tier 4: Sign Language Translation (SLT)",
+  "version": "1.0.0",
+  "sources": ["Bangla-SGP", "BornilDB Corpus"],
+  "total_parallel_pairs": 4500,
+  "vocab_gloss_size": 1250,
+  "vocab_text_size": 3400,
+  "max_sequence_length": 32,
+  "domains": ["Conversational", "Emergency", "Healthcare", "Education", "Public Services"],
+  "sample_parallel_corpus": [
+    {
+      "id": "SLT_0001",
+      "gloss_sequence": "AMI DAKTAR SAHAJJO CHAI",
+      "bengali_text": "আমি ডাক্তারের সাহায্য চাই।",
+      "english_text": "I need a doctor's help.",
+      "tokens_gloss": ["AMI", "DAKTAR", "SAHAJJO", "CHAI"],
+      "tokens_text": ["আমি", "ডাক্তারের", "সাহায্য", "চাই", "।"]
+    },
+    {
+      "id": "SLT_0002",
+      "gloss_sequence": "APNI KEMON ACHEN",
+      "bengali_text": "আপনি কেমন আছেন?",
+      "english_text": "How are you?",
+      "tokens_gloss": ["APNI", "KEMON", "ACHEN"],
+      "tokens_text": ["আপনি", "কেমন", "আছেন", "?"]
+    },
+    {
+      "id": "SLT_0003",
+      "gloss_sequence": "AMAR NAAM POLOK",
+      "bengali_text": "আমার নাম পলক।",
+      "english_text": "My name is Polok.",
+      "tokens_gloss": ["AMAR", "NAAM", "POLOK"],
+      "tokens_text": ["আমার", "নাম", "পলক", "।"]
+    },
+    {
+      "id": "SLT_0004",
+      "gloss_sequence": "HOSPITAL JABO AMAR OSUD LAGBE",
+      "bengali_text": "আমি হাসপাতালে যাব, আমার ওষুধ লাগবে।",
+      "english_text": "I will go to the hospital, I need medicine.",
+      "tokens_gloss": ["HOSPITAL", "JABO", "AMAR", "OSUD", "LAGBE"],
+      "tokens_text": ["আমি", "হাসপাতালে", "যাব", ",", "আমার", "ওষুধ", "লাগবে", "।"]
+    },
+    {
+      "id": "SLT_0005",
+      "gloss_sequence": "DHONNOBAD APNAR SAHAJJO JONNO",
+      "bengali_text": "আপনার সাহায্যের জন্য অনেক ধন্যবাদ।",
+      "english_text": "Thank you very much for your help.",
+      "tokens_gloss": ["DHONNOBAD", "APNAR", "SAHAJJO", "JONNO"],
+      "tokens_text": ["আপনার", "সাহায্যের", "জন্য", "অনেক", "ধন্যবাদ", "।"]
+    }
+  ]
+}

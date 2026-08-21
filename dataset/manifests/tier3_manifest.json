@@ -1,0 +1,67 @@
+{
+  "tier_name": "Tier 3: Continuous Sign Language Recognition (CSLR)",
+  "version": "1.0.0",
+  "sources": ["BornilDB v1.0", "Ban-Sign-Sent-9K-V1"],
+  "total_clips": 30700,
+  "ctc_blank_index": 0,
+  "feature_dimension": 151,
+  "window_size": 60,
+  "stride": 30,
+  "domains": ["News", "Medical Consultations", "Classroom", "Legal", "General Dialogues"],
+  "sample_sentences": [
+    {
+      "clip_id": "CSLR_SENT_001",
+      "gloss_sequence": ["AMI", "DAKTAR", "SAHAJJO", "CHAI"],
+      "bengali_text": "আমি ডাক্তারের সাহায্য চাই।",
+      "english_translation": "I need help from a doctor.",
+      "duration_sec": 4.2,
+      "fps": 30,
+      "timestamps": [
+        {"gloss": "AMI", "start_frame": 0, "end_frame": 28},
+        {"gloss": "DAKTAR", "start_frame": 30, "end_frame": 62},
+        {"gloss": "SAHAJJO", "start_frame": 65, "end_frame": 95},
+        {"gloss": "CHAI", "start_frame": 98, "end_frame": 126}
+      ]
+    },
+    {
+      "clip_id": "CSLR_SENT_002",
+      "gloss_sequence": ["APNI", "KEMON", "ACHEN"],
+      "bengali_text": "আপনি কেমন আছেন?",
+      "english_translation": "How are you?",
+      "duration_sec": 3.0,
+      "fps": 30,
+      "timestamps": [
+        {"gloss": "APNI", "start_frame": 0, "end_frame": 26},
+        {"gloss": "KEMON", "start_frame": 28, "end_frame": 58},
+        {"gloss": "ACHEN", "start_frame": 60, "end_frame": 90}
+      ]
+    },
+    {
+      "clip_id": "CSLR_SENT_003",
+      "gloss_sequence": ["AMAR", "PANI", "KHIDHA", "LAGCHE"],
+      "bengali_text": "আমার পানি ও খাবার প্রয়োজন।",
+      "english_translation": "I need water and food.",
+      "duration_sec": 4.5,
+      "fps": 30,
+      "timestamps": [
+        {"gloss": "AMAR", "start_frame": 0, "end_frame": 30},
+        {"gloss": "PANI", "start_frame": 32, "end_frame": 64},
+        {"gloss": "KHIDHA", "start_frame": 66, "end_frame": 98},
+        {"gloss": "LAGCHE", "start_frame": 100, "end_frame": 135}
+      ]
+    },
+    {
+      "clip_id": "CSLR_SENT_004",
+      "gloss_sequence": ["HOSPITAL", "KOTHAY", "BOLUN"],
+      "bengali_text": "হাসপাতাল কোথায় আমাকে বলুন।",
+      "english_translation": "Please tell me where the hospital is.",
+      "duration_sec": 3.8,
+      "fps": 30,
+      "timestamps": [
+        {"gloss": "HOSPITAL", "start_frame": 0, "end_frame": 35},
+        {"gloss": "KOTHAY", "start_frame": 38, "end_frame": 75},
+        {"gloss": "BOLUN", "start_frame": 78, "end_frame": 114}
+      ]
+    }
+  ]
+}

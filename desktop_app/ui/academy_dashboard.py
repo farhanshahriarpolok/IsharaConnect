@@ -272,6 +272,20 @@ class AcademyDashboard(QWidget):
         self.posture_hud.setHtml(f"<b style='color:{CYAN_ACCENT};'>AI Posture Tutor:</b> Ready.")
         center_layout.addWidget(self.posture_hud)
 
+        # Live Posture Coach & Real-time Error Notification Banner
+        self.posture_coach_banner = QLabel("💡 পরামর্শ: ক্যামেরার সামনে আপনার হাত প্রদর্শন করুন...")
+        self.posture_coach_banner.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self.posture_coach_banner.setStyleSheet("""
+            background: rgba(30, 41, 59, 0.8);
+            color: #94A3B8;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+        """)
+        self.posture_coach_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.posture_coach_banner.setWordWrap(True)
+        center_layout.addWidget(self.posture_coach_banner)
+
         # Telemetry Row (XP, Streak, Circular Gauge)
         telemetry_row = QHBoxLayout()
         self.xp_label = QLabel("XP: 0")
@@ -465,9 +479,14 @@ class AcademyDashboard(QWidget):
         en = meta.get("label_en") or raw_en
         phonetic = meta.get("phonetic") or slug.replace("_", " ").title()
         cat = meta.get("category", "General")
-        handedness = meta.get("handedness", "single")
+        
+        handedness_raw = str(meta.get("handedness", "single")).lower()
+        is_dual = handedness_raw in ["dual", "both", "2"]
+        handedness_badge = "👐 উভয় হাত (Both Hands)" if is_dual else "✋ ডান হাত (Right Hand)"
+        handedness_color = "#10B981" if is_dual else "#38BDF8"
+        
         mnemonic = meta.get("mnemonic") or meta.get("description") or "ক্যামেরার সামনে হাতের অঙ্গুলি ও তালু নির্দেশিত চিত্রমোতাবেক প্রস্তুত রাখুন।"
-        touch_rule = meta.get("touch_rule") or ("কোনো স্পর্শ নেই (উন্মুক্ত হাতের একক ভঙ্গি)" if handedness == "single" else "উভয় হাতের নির্দেশিত সংযোগ বিন্দু স্পর্শ করুন")
+        touch_rule = meta.get("touch_rule") or ("কোনো স্পর্শ নেই (উন্মুক্ত হাতের একক ভঙ্গি)" if not is_dual else "উভয় হাতের নির্দেশিত সংযোগ বিন্দু স্পর্শ করুন")
 
         self.current_sign_slug = slug
         self.current_sign_bn = bn
@@ -480,21 +499,51 @@ class AcademyDashboard(QWidget):
         self.ref_sign_bn.setText(bn)
         self.ref_sign_en.setText(en)
         self.ref_phonetic.setText(f"🔊 উচ্চারণ: [{phonetic}]")
-        self.ref_badge.setText(f"Category: {cat} | Handedness: {handedness.title()}")
+        self.ref_badge.setText(f"ক্যাটাগরি: {cat} | {handedness_badge}")
+        self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {handedness_color}; border-radius: 6px; padding: 4px 8px; font-size: 11.5px; font-weight: bold;")
+
+        pos_desc = "ক্যামেরা ফ্রেমের ঠিক মাঝে হাত ও বাহু স্থির রাখুন।" if not is_dual else "উভয় হাত সমান উচ্চতায় বুকের সামনে আনুন।"
+        fingers_desc = mnemonic
+        action_desc = "স্থিতিশীল ভঙ্গিতে ২ সেকেন্ড ধরে রাখুন।" if not self.is_dynamic_sign else "ধীর ও মসৃণ গতিতে নির্দেশিত পথ অনুসরণ করুন।"
 
         instructions_html = f"""
         <div style="font-family: 'Segoe UI', Arial; font-size: 13px; line-height: 1.5; color: #E2E8F0;">
-          <b style="color: #38BDF8; font-size: 14px;">🎯 ধাপ ও কৌশল (Steps & Technique):</b><br>
-          • <b>ভঙ্গি:</b> {mnemonic}<br>
-          <div style="margin-top: 8px; padding: 8px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 13px;">
+          <b style="color: #38BDF8; font-size: 14px;">🎯 ধাপ ও কৌশল (Steps & Technique):</b>
+          <div style="margin-top: 6px; padding: 8px; background: rgba(15, 23, 42, 0.6); border-radius: 6px; font-size: 12.5px; line-height: 1.6;">
+            <b style="color: #38BDF8;">১. অবস্থান (Position):</b> {pos_desc}<br>
+            <b style="color: #38BDF8;">২. আঙুল (Fingers):</b> {fingers_desc}<br>
+            <b style="color: #38BDF8;">৩. কৌশল (Action):</b> {action_desc}
+          </div>
+          <div style="margin-top: 8px; padding: 8px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 12.5px;">
             ✨ <b>স্পর্শের নিয়ম:</b> {touch_rule}
           </div>
         </div>
         """
         self.ref_instructions.setHtml(instructions_html)
 
+        # Reset coach banner
+        self.update_posture_coach(f"ক্যামেরার সামনে '{bn}' এর ভঙ্গি প্রদর্শন করুন...", state="idle")
+
         # Load Visual Card via bulletproof SignCardViewer
         self.sign_card_viewer.load_sign(slug, bn, en)
+
+    def update_posture_coach(self, advice_text: str, state: str = "idle"):
+        """Updates the Live Posture Coach notification banner."""
+        if state == "perfect":
+            style = "background: rgba(16, 185, 129, 0.22); color: #34D399; border: 1.5px solid #10B981; border-radius: 8px; padding: 8px 12px; font-weight: bold;"
+            icon = "🟢"
+        elif state == "warning":
+            style = "background: rgba(244, 63, 94, 0.18); color: #FDA4AF; border: 1.5px solid #F43F5E; border-radius: 8px; padding: 8px 12px; font-weight: bold;"
+            icon = "🔴"
+        elif state == "info":
+            style = "background: rgba(6, 182, 212, 0.18); color: #38BDF8; border: 1.5px solid #06B6D4; border-radius: 8px; padding: 8px 12px; font-weight: bold;"
+            icon = "💡"
+        else:  # idle
+            style = "background: rgba(30, 41, 59, 0.8); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 8px 12px;"
+            icon = "⚪"
+
+        self.posture_coach_banner.setStyleSheet(style)
+        self.posture_coach_banner.setText(f"{icon} {advice_text}")
 
     def _on_curriculum_selected(self, item: QTreeWidgetItem, column: int):
         """Triggered when user clicks a lesson in the curriculum tree."""
@@ -625,12 +674,54 @@ class AcademyDashboard(QWidget):
 
         label_bn = data.get("label_bn", "")
         conf = float(data.get("confidence", 0.0)) * 100.0
+        left_lm = data.get("left_landmarks")
+        right_lm = data.get("right_landmarks")
 
+        # Evaluate target posture directly if landmarks are available
+        if left_lm is not None or right_lm is not None:
+            score, is_match, checklist, advice = self.rule_engine.evaluate_target_posture(
+                left_lm, right_lm, self.current_sign_slug
+            )
+            pct = int(score * 100.0)
+            self.progress_bar.setValue(pct)
+            self.match_gauge.set_value(float(pct))
+            
+            if checklist:
+                items_html = " ".join([
+                    f"<span style='color: {'#10B981' if c.get('matched') else '#F43F5E'};'>{'✓' if c.get('matched') else '✗'} {c.get('item_bn')}</span>"
+                    for c in checklist
+                ])
+                self.posture_hud.setHtml(f"<b>চেকলিস্ট:</b> {items_html}")
+
+            if is_match:
+                self.update_posture_coach(advice, state="perfect")
+                if self.practice_running:
+                    self.xp_score += 5
+                    self.streak += 1
+                    self.xp_label.setText(f"XP: {self.xp_score}")
+                    self.streak_label.setText(f"Streak: {self.streak} 🔥")
+                    self.xp_header_lbl.setText(f"XP: {self.xp_score} ⭐")
+            else:
+                self.update_posture_coach(advice, state="warning")
+            return
+
+        # Fallback if only prediction classification dict is forwarded
         if label_bn and (label_bn == self.current_sign_bn or self.current_sign_slug in str(data.get("label_en", "")).lower()):
             self.progress_bar.setValue(int(min(100.0, max(0.0, conf))))
             self.match_gauge.set_value(conf)
-            if conf > 75.0 and not self.practice_running:
+            if conf >= 70.0:
+                self.update_posture_coach("ভঙ্গি নিখুঁত! হাত এই অবস্থায় ধরে রাখুন...", state="perfect")
                 self.posture_hud.setHtml(f"<b style='color:#10B981;'>Detected: {label_bn} ({conf:.1f}%)</b>")
+                if self.practice_running:
+                    self.xp_score += 5
+                    self.streak += 1
+                    self.xp_label.setText(f"XP: {self.xp_score}")
+                    self.streak_label.setText(f"Streak: {self.streak} 🔥")
+                    self.xp_header_lbl.setText(f"XP: {self.xp_score} ⭐")
+            else:
+                self.update_posture_coach(f"পরামর্শ: লক্ষ্য ইশারা '{self.current_sign_bn}' এর সাথে মেলাতে হাত প্রস্তুত করুন...", state="info")
+        else:
+            self.update_posture_coach("পরামর্শ: নির্দেশিত চিত্রের সাথে হাত ও আঙুল মেলান...", state="warning")
 
     def _stop_practice(self):
         self.practice_running = False

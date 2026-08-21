@@ -14,9 +14,9 @@
   <!-- Clean Container Frame -->
   <rect width="276" height="216" x="2" y="2" rx="14" fill="url(#cardBg)" stroke="url(#borderGlow)" stroke-width="2" />
   
-  <!-- Subtle Handedness Chip -->
-  <rect x="12" y="12" width="70" height="18" rx="5" fill="#1E293B" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1" />
-  <text x="47" y="24" fill="#38BDF8" font-family="'Segoe UI', Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle">Single Hand</text>
+  <!-- Explicit Handedness Badge -->
+  <rect x="12" y="10" width="135" height="22" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-opacity="0.5" stroke-width="1.2" />
+  <text x="79.5" y="25" fill="#38BDF8" font-family="'SolaimanLipi', 'Segoe UI', Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle">✋ ডান হাত (Right Hand)</text>
 
   <!-- High-Fidelity Anatomical Hand Model -->
   <g id="hand_anatomy">

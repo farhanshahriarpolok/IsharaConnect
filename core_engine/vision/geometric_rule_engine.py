@@ -78,10 +78,24 @@ class BdSLGeometricRuleEngine:
             }
 
         lm = self.smooth_landmarks(np.asarray(landmarks, dtype=np.float32), is_left=is_left)
-        wrist = lm[0]
+        wrist = lm[0].copy()
+
+        # Wrist-centered Rotational Alignment (Compensate for arm tilt ±45°)
+        vec_wrist_to_mcp = lm[9] - wrist
+        # In image coords, y goes down. Angle relative to straight up (0, -1)
+        tilt_angle = math.atan2(float(vec_wrist_to_mcp[0]), -float(vec_wrist_to_mcp[1]))
+        if abs(tilt_angle) < (math.pi / 2.5):  # within ~72° tilt
+            cos_a = math.cos(-tilt_angle)
+            sin_a = math.sin(-tilt_angle)
+            lm_aligned = lm.copy()
+            dx = lm[:, 0] - wrist[0]
+            dy = lm[:, 1] - wrist[1]
+            lm_aligned[:, 0] = wrist[0] + dx * cos_a - dy * sin_a
+            lm_aligned[:, 1] = wrist[1] + dx * sin_a + dy * cos_a
+            lm = lm_aligned
 
         # Bounding box & Palm scale normalization (Wrist to Middle MCP)
-        palm_scale = max(0.04, float(np.linalg.norm(lm[9] - lm[0])))
+        palm_scale = max(0.04, float(np.linalg.norm(lm[9] - wrist)))
 
         # 1. Evaluate finger extension state (Relaxed by +15% for multi-angle tolerance)
         states = {}
@@ -320,3 +334,164 @@ class BdSLGeometricRuleEngine:
             "dominant_hand": hand_tag,
             "dual_touch": dual_touch
         }
+
+    def evaluate_target_posture(
+        self,
+        landmarks_left: Optional[np.ndarray],
+        landmarks_right: Optional[np.ndarray],
+        target_slug: str
+    ) -> Tuple[float, bool, List[Dict[str, Any]], str]:
+        """Evaluates hand posture specifically against a target BdSL sign.
+
+        Returns:
+            Tuple of:
+                - match_score (float): Normalized match accuracy (0.0 to 1.0)
+                - is_match (bool): True if score >= 0.70
+                - checklist (List[Dict]): Evaluated posture checkpoints
+                - advice_bn (str): Actionable Bengali posture feedback / correction
+        """
+        left_res = self.analyze_hand(landmarks_left, is_left=True)
+        right_res = self.analyze_hand(landmarks_right, is_left=False)
+
+        slug = (target_slug or "").lower().strip()
+        dual_signs = ["sahajjo", "shahajjo", "dhonnobad", "shagotom", "kemon_achen", "hospital"]
+        is_dual_target = slug in dual_signs or "dual" in slug
+
+        # Case 1: No hand detected
+        if not left_res["present"] and not right_res["present"]:
+            return 0.0, False, [], "পরামর্শ: ক্যামেরার সামনে আপনার হাত প্রদর্শন করুন..."
+
+        # Case 2: Dual sign requires both hands
+        if is_dual_target and (not left_res["present"] or not right_res["present"]):
+            missing = "বাম হাত" if not left_res["present"] else "ডান হাত"
+            return 0.35, False, [
+                {"item_bn": "উভয় হাত ক্যামেরার সামনে প্রদর্শন", "matched": False}
+            ], f"পরামর্শ: {missing} ক্যামেরার সামনে আনুন..."
+
+        # Active hand
+        active = right_res if right_res["present"] else left_res
+        t = active["thumb"]
+        i = active["index"]
+        m = active["middle"]
+        r = active["ring"]
+        p = active["pinky"]
+        ext = active["extended_count"]
+
+        checklist = []
+        advice_list = []
+        score = 0.0
+
+        # Heuristic rules per target
+        if slug in ["ek", "1", "১", "vowel_i", "i_kar"]:
+            # Only Index extended
+            i_ok = i == "EXTENDED"
+            others_ok = m == "CURL" and r == "CURL" and p == "CURL"
+            t_ok = t != "EXTENDED"
+            checklist = [
+                {"item_bn": "তর্জনী সোজা ঊর্ধ্বমুখী (Index Up)", "matched": i_ok},
+                {"item_bn": "মধ্যমা ও অনামিকা বন্ধ (Curled)", "matched": others_ok},
+                {"item_bn": "বৃদ্ধাঙ্গুলি ভেতরের দিকে (Thumb In)", "matched": t_ok},
+            ]
+            if not i_ok:
+                advice_list.append("তর্জনী আরও সোজা ও ঊর্ধ্বমুখী করুন")
+            if not others_ok:
+                advice_list.append("মধ্যমা, অনামিকা ও কনিষ্ঠা আঙুল মুষ্টিবদ্ধ করুন")
+            if not t_ok:
+                advice_list.append("বৃদ্ধাঙ্গুলি ভেতরের দিকে ভাঁজ করুন")
+            score = (float(i_ok) * 0.5) + (float(others_ok) * 0.3) + (float(t_ok) * 0.2)
+
+        elif slug in ["dui", "2", "২", "vowel_u", "u_kar", "ja"]:
+            # Index & Middle extended
+            i_ok = i == "EXTENDED"
+            m_ok = m == "EXTENDED"
+            r_p_ok = r == "CURL" and p == "CURL"
+            checklist = [
+                {"item_bn": "তর্জনী প্রসারিত (Index Open)", "matched": i_ok},
+                {"item_bn": "মধ্যমা প্রসারিত (Middle Open)", "matched": m_ok},
+                {"item_bn": "অনামিকা ও কনিষ্ঠা বন্ধ (Curled)", "matched": r_p_ok},
+            ]
+            if not i_ok:
+                advice_list.append("তর্জনী সোজা করুন")
+            if not m_ok:
+                advice_list.append("মধ্যমা আঙুল সোজা করুন")
+            if not r_p_ok:
+                advice_list.append("অনামিকা ও কনিষ্ঠা আঙুল মুষ্টিবদ্ধ রাখুন")
+            score = (float(i_ok) * 0.35) + (float(m_ok) * 0.35) + (float(r_p_ok) * 0.3)
+
+        elif slug in ["tin", "3", "৩", "ga"]:
+            # Index, Middle, Ring extended
+            top3_ok = i == "EXTENDED" and m == "EXTENDED" and r == "EXTENDED"
+            p_ok = p == "CURL"
+            checklist = [
+                {"item_bn": "তর্জনী, মধ্যমা ও অনামিকা সোজা", "matched": top3_ok},
+                {"item_bn": "কনিষ্ঠা আঙুল বন্ধ", "matched": p_ok},
+            ]
+            if not top3_ok:
+                advice_list.append("তিনটি আঙুল (তর্জনী, মধ্যমা, অনামিকা) প্রসারিত করুন")
+            if not p_ok:
+                advice_list.append("কনিষ্ঠা আঙুল বন্ধ রাখুন")
+            score = (float(top3_ok) * 0.7) + (float(p_ok) * 0.3)
+
+        elif slug in ["char", "4", "৪", "gha", "ba"]:
+            # 4 fingers extended
+            four_ok = i == "EXTENDED" and m == "EXTENDED" and r == "EXTENDED" and p == "EXTENDED"
+            t_ok = t != "EXTENDED"
+            checklist = [
+                {"item_bn": "চারটি আঙুল সোজা ও প্রসারিত", "matched": four_ok},
+                {"item_bn": "বৃদ্ধাঙ্গুলি তালুর উপর ভাঁজ করা", "matched": t_ok},
+            ]
+            if not four_ok:
+                advice_list.append("চারটি আঙুলই সম্পূর্ণ সোজা করুন")
+            if not t_ok:
+                advice_list.append("বৃদ্ধাঙ্গুলি তালুর দিকে ভাঁজ করুন")
+            score = (float(four_ok) * 0.75) + (float(t_ok) * 0.25)
+
+        elif slug in ["a", "0", "০", "ma"]:
+            # Full Fist
+            fist_ok = active["is_fist"]
+            checklist = [
+                {"item_bn": "সকল আঙুল সম্পূর্ণ মুষ্টিবদ্ধ (Fist)", "matched": fist_ok},
+                {"item_bn": "বৃদ্ধাঙ্গুলি মুষ্টির উপর আড়াআড়ি", "matched": fist_ok},
+            ]
+            if not fist_ok:
+                advice_list.append("সকল আঙুল মুষ্টিবদ্ধ (Fist) করুন")
+            score = 0.95 if fist_ok else 0.40
+
+        elif slug in ["pa", "5", "৫", "dhonnobad"]:
+            # Open Palm
+            palm_ok = active["is_open_palm"] or ext >= 4
+            checklist = [
+                {"item_bn": "উন্মুক্ত তালু ও সকল আঙুল সোজা", "matched": palm_ok},
+            ]
+            if not palm_ok:
+                advice_list.append("সকল আঙুল সম্পূর্ণ উন্মুক্ত ও সোজা করুন")
+            score = 0.95 if palm_ok else 0.45
+
+        elif slug in ["shahajjo", "sahajjo"]:
+            # Dual Hand: Left Palm Flat + Right Fist
+            left_ok = left_res["is_open_palm"]
+            right_ok = right_res["is_fist"]
+            checklist = [
+                {"item_bn": "বাম হাতের তালু খোলা ও অনুভূমিক", "matched": left_ok},
+                {"item_bn": "ডান হাত মুষ্টিবদ্ধ (Fist)", "matched": right_ok},
+            ]
+            if not left_ok:
+                advice_list.append("বাম হাতের তালু সোজা ও খোলা রাখুন")
+            if not right_ok:
+                advice_list.append("ডান হাত মুষ্টিবদ্ধ করুন")
+            score = (float(left_ok) * 0.5) + (float(right_ok) * 0.5)
+
+        else:
+            # Generic fallback check
+            score = 0.85 if ext > 0 else 0.30
+            checklist = [{"item_bn": "নির্দেশিত হাতের ভঙ্গি প্রস্তুত করুন", "matched": score > 0.5}]
+
+        is_match = score >= 0.70
+        if is_match:
+            advice_bn = "ভঙ্গি নিখুঁত! হাত এই অবস্থায় ধরে রাখুন..."
+        elif advice_list:
+            advice_bn = "পরামর্শ: " + ", ".join(advice_list)
+        else:
+            advice_bn = "পরামর্শ: নির্দেশিত চিত্রের সাথে আঙুলের অবস্থান মেলান..."
+
+        return round(score, 2), is_match, checklist, advice_bn

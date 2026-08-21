@@ -133,3 +133,49 @@ def test_empty_landmarks_safety():
     assert sign is None
     assert conf == 0.0
     assert status["posture_summary"] == "কোনো হাত শনাক্ত হয়নি"
+
+
+def test_evaluate_target_posture():
+    """Target posture evaluator returns correct score, match status, and Bengali guidance."""
+    engine = BdSLGeometricRuleEngine()
+    # Correct posture for 'ek' / '1'
+    lm_1 = _create_hand_landmarks({
+        "thumb": False, "index": True, "middle": False, "ring": False, "pinky": False
+    })
+    score, is_match, checklist, advice = engine.evaluate_target_posture(None, lm_1, "ek")
+    assert is_match is True
+    assert score >= 0.80
+    assert "নিখুঁত" in advice
+
+    # Deficient posture (Index curled)
+    lm_bad = _create_hand_landmarks({
+        "thumb": False, "index": False, "middle": False, "ring": False, "pinky": False
+    })
+    score_bad, is_match_bad, checklist_bad, advice_bad = engine.evaluate_target_posture(None, lm_bad, "ek")
+    assert is_match_bad is False
+    assert "তর্জনী" in advice_bad
+
+
+def test_wrist_rotational_invariance():
+    """Landmarks rotated by tilt angle (e.g. 20 degrees) still detect extended fingers."""
+    engine = BdSLGeometricRuleEngine()
+    lm = _create_hand_landmarks({
+        "thumb": False, "index": True, "middle": True, "ring": False, "pinky": False
+    })
+    # Apply synthetic rotation around wrist (lm[0])
+    wrist = lm[0]
+    angle = np.radians(20)
+    cos_a, sin_a = np.cos(angle), np.sin(angle)
+    lm_tilted = lm.copy()
+    dx = lm[:, 0] - wrist[0]
+    dy = lm[:, 1] - wrist[1]
+    lm_tilted[:, 0] = wrist[0] + dx * cos_a - dy * sin_a
+    lm_tilted[:, 1] = wrist[1] + dx * sin_a + dy * cos_a
+
+    res = engine.analyze_hand(lm_tilted)
+    assert res["present"] is True
+    assert res["index"] == "EXTENDED"
+    assert res["middle"] == "EXTENDED"
+    assert res["ring"] == "CURL"
+    assert res["pinky"] == "CURL"
+

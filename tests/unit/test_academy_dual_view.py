@@ -45,7 +45,7 @@ def test_academy_dashboard_3panel_init(qapp):
 
 
 def test_academy_dashboard_update_reference_card(qapp):
-    """Verify selecting a sign updates both Center Arena Title and Right Reference Card."""
+    """Verify selecting a sign updates Center Arena Title, Right Reference Card, and Handedness pill."""
     dash = AcademyDashboard()
     dash._update_reference_card("dhonnobad")
     assert dash.current_sign_slug == "dhonnobad"
@@ -53,6 +53,20 @@ def test_academy_dashboard_update_reference_card(qapp):
     assert "Thank you" in dash.ref_sign_en.text()
     assert "উচ্চারণ" in dash.ref_phonetic.text()
     assert "ধন্যবাদ" in dash.arena_title.text()
+    assert "উভয় হাত" in dash.ref_badge.text() or "ডান হাত" in dash.ref_badge.text()
+    assert dash.posture_coach_banner is not None
+
+
+def test_academy_dashboard_posture_coach_updates(qapp):
+    """Verify update_posture_coach alters banner styles and text dynamically."""
+    dash = AcademyDashboard()
+    dash.update_posture_coach("ভঙ্গি নিখুঁত!", state="perfect")
+    assert "🟢" in dash.posture_coach_banner.text()
+    assert "ভঙ্গি নিখুঁত!" in dash.posture_coach_banner.text()
+
+    dash.update_posture_coach("তর্জনী সোজা করুন", state="warning")
+    assert "🔴" in dash.posture_coach_banner.text()
+    assert "তর্জনী সোজা করুন" in dash.posture_coach_banner.text()
 
 
 def test_academy_dashboard_lesson_selection(qapp):

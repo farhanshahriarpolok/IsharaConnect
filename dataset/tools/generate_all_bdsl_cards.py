@@ -185,6 +185,10 @@ def generate_svg_card(sign: Dict) -> str:
     <polygon points="220,155 232,150 224,140" fill="#F59E0B" />
         '''
 
+    handedness_text = "👐 উভয় হাত (Both Hands)" if is_dual else "✋ ডান হাত (Right Hand)"
+    handedness_color = "#10B981" if is_dual else "#38BDF8"
+    chip_w = 145 if is_dual else 135
+
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
   <defs>
     <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -201,9 +205,9 @@ def generate_svg_card(sign: Dict) -> str:
   <!-- Clean Container Frame -->
   <rect width="{width - 4}" height="{height - 4}" x="2" y="2" rx="14" fill="url(#cardBg)" stroke="url(#borderGlow)" stroke-width="2" />
   
-  <!-- Subtle Handedness Chip -->
-  <rect x="12" y="12" width="70" height="18" rx="5" fill="#1E293B" stroke="rgba(56, 189, 248, 0.3)" stroke-width="1" />
-  <text x="47" y="24" fill="#38BDF8" font-family="'Segoe UI', Arial, sans-serif" font-size="9" font-weight="bold" text-anchor="middle">{'Dual Hand' if is_dual else 'Single Hand'}</text>
+  <!-- Explicit Handedness Badge -->
+  <rect x="12" y="10" width="{chip_w}" height="22" rx="6" fill="#1E293B" stroke="{handedness_color}" stroke-opacity="0.5" stroke-width="1.2" />
+  <text x="{12 + chip_w / 2:.1f}" y="25" fill="{handedness_color}" font-family="'SolaimanLipi', 'Segoe UI', Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle">{handedness_text}</text>
 
   <!-- High-Fidelity Anatomical Hand Model -->
   <g id="hand_anatomy">

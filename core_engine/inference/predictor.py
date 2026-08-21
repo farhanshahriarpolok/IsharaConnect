@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional, Dict
 
 import numpy as np
+from core_engine.inference.config import InferenceConfig
 
 try:
     import onnxruntime as ort
@@ -28,16 +29,16 @@ class RealTimePredictor:
         self,
         model_path: str = "models/onnx/bdsl_model.onnx",
         labels_path: str = "dataset/labels.json",
-        sequence_length: int = 30,
-        confidence_threshold: float = 0.85,
-        debounce_cooldown_sec: float = 1.0,
-        agreement_window: int = 10,
+        config: InferenceConfig = None,
         agreement_threshold: float = 0.7
     ):
-        self.sequence_length = sequence_length
-        self.confidence_threshold = confidence_threshold
-        self.debounce_cooldown_sec = debounce_cooldown_sec
-        self.agreement_window = agreement_window
+        if config is None:
+            config = InferenceConfig()
+            
+        self.sequence_length = config.sequence_length
+        self.confidence_threshold = config.confidence_threshold
+        self.debounce_cooldown_sec = config.cooldown_seconds
+        self.agreement_window = config.agreement_window
         self.agreement_threshold = agreement_threshold
 
         # Load labels

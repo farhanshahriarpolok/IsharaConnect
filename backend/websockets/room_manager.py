@@ -1,135 +1,171 @@
-"""WebSocket Room Manager for duplex communication."""
+"""WebSocket Room Manager with Pluggable Storage Adapters."""
 
 import json
 import logging
+import time
 from enum import Enum
-from typing import Dict, List, Set
-
+from typing import Dict, List, Optional
 from fastapi import WebSocket
+from abc import ABC, abstractmethod
 
 from core_engine.audio.tts_engine import TextToSpeechEngine
 from core_engine.nlp.gloss_translator import BdSLGlossTranslator
-import time
+from backend.config import settings
+
+try:
+    import redis.asyncio as redis
+except ImportError:
+    redis = None
 
 logger = logging.getLogger(__name__)
 
-
 class ClientType(str, Enum):
-    """Types of clients connecting to a room."""
-    SIGNER = "signer"    # Deaf user transmitting landmarks/signs
-    SPEAKER = "speaker"  # Hearing user transmitting speech/text
+    SIGNER = "signer"
+    SPEAKER = "speaker"
 
+class BaseRoomAdapter(ABC):
+    @abstractmethod
+    async def connect(self, websocket: WebSocket, room_id: str, client_type: ClientType): pass
+    @abstractmethod
+    async def disconnect(self, websocket: WebSocket, room_id: str): pass
+    @abstractmethod
+    async def broadcast_message(self, room_id: str, message: dict, sender: WebSocket): pass
 
-class ConnectionManager:
-    """Manages WebSocket connections and room-based duplex routing."""
-
+class InMemoryRoomAdapter(BaseRoomAdapter):
     def __init__(self):
-        # Maps room_id -> list of active WebSockets
         self.active_connections: Dict[str, List[WebSocket]] = {}
-        # Maps WebSocket -> ClientType
         self.client_types: Dict[WebSocket, ClientType] = {}
         
-        # Continuous NLP Engine Tracking
-        self.gloss_buffers: Dict[WebSocket, List[str]] = {}
-        self.last_sign_time: Dict[WebSocket, float] = {}
-        self.idle_timeout = 2.0  # seconds
-        
-        # Shared engines
-        self.tts_engine = TextToSpeechEngine()
-        self.gloss_translator = BdSLGlossTranslator()
-
     async def connect(self, websocket: WebSocket, room_id: str, client_type: ClientType):
-        """Accept a WebSocket connection and register it to a room."""
         await websocket.accept()
-        
-        if room_id not in self.active_connections:
-            self.active_connections[room_id] = []
-            
-        self.active_connections[room_id].append(websocket)
+        self.active_connections.setdefault(room_id, []).append(websocket)
         self.client_types[websocket] = client_type
+        logger.info(f"Client {client_type.value} joined {room_id} (In-Memory).")
         
-        if client_type == ClientType.SIGNER:
-            self.gloss_buffers[websocket] = []
-            self.last_sign_time[websocket] = time.time()
-            
-        logger.info("Client %s joined room %s. Total in room: %d", 
-                    client_type.value, room_id, len(self.active_connections[room_id]))
-
-    def disconnect(self, websocket: WebSocket, room_id: str):
-        """Remove a WebSocket connection from a room."""
-        if room_id in self.active_connections:
-            if websocket in self.active_connections[room_id]:
-                self.active_connections[room_id].remove(websocket)
-                
-            if len(self.active_connections[room_id]) == 0:
+    async def disconnect(self, websocket: WebSocket, room_id: str):
+        if room_id in self.active_connections and websocket in self.active_connections[room_id]:
+            self.active_connections[room_id].remove(websocket)
+            if not self.active_connections[room_id]:
                 del self.active_connections[room_id]
-                
-        if websocket in self.client_types:
-            client_type = self.client_types.pop(websocket)
-            self.gloss_buffers.pop(websocket, None)
-            self.last_sign_time.pop(websocket, None)
-            logger.info("Client %s left room %s.", client_type.value, room_id)
-
-    async def broadcast_to_room(self, room_id: str, message: dict, sender: WebSocket):
-        """Broadcast a message to all other clients in the room."""
+        client_type = self.client_types.pop(websocket, None)
+        logger.info(f"Client {client_type} left {room_id} (In-Memory).")
+        
+    async def broadcast_message(self, room_id: str, message: dict, sender: WebSocket):
         if room_id not in self.active_connections:
             return
-            
-        disconnected = []
+        dead_conns = []
         for connection in self.active_connections[room_id]:
             if connection != sender:
                 try:
                     await connection.send_json(message)
-                except Exception as e:
-                    logger.error("Failed to send message to client in room %s: %s", room_id, e)
-                    disconnected.append(connection)
-                    
-        # Cleanup disconnected clients
-        for conn in disconnected:
-            self.disconnect(conn, room_id)
+                except Exception:
+                    dead_conns.append(connection)
+        for conn in dead_conns:
+            await self.disconnect(conn, room_id)
+
+class RedisRoomAdapter(BaseRoomAdapter):
+    def __init__(self, redis_url: str):
+        self.redis = redis.from_url(redis_url)
+        self.pubsub = self.redis.pubsub()
+        self.local_connections: Dict[str, List[WebSocket]] = {}
+        self.client_types: Dict[WebSocket, ClientType] = {}
+        self.subscribed_rooms = set()
+        
+    async def connect(self, websocket: WebSocket, room_id: str, client_type: ClientType):
+        await websocket.accept()
+        self.local_connections.setdefault(room_id, []).append(websocket)
+        self.client_types[websocket] = client_type
+        logger.info(f"Client {client_type.value} joined {room_id} (Redis).")
+        
+        if room_id not in self.subscribed_rooms:
+            await self.pubsub.subscribe(room_id)
+            self.subscribed_rooms.add(room_id)
+            # In a full implementation, you'd spawn an asyncio task here to listen to self.pubsub.listen()
+            # and forward to local_connections[room_id]
+            
+    async def disconnect(self, websocket: WebSocket, room_id: str):
+        if room_id in self.local_connections and websocket in self.local_connections[room_id]:
+            self.local_connections[room_id].remove(websocket)
+            if not self.local_connections[room_id]:
+                del self.local_connections[room_id]
+                if room_id in self.subscribed_rooms:
+                    await self.pubsub.unsubscribe(room_id)
+                    self.subscribed_rooms.remove(room_id)
+        self.client_types.pop(websocket, None)
+        
+    async def broadcast_message(self, room_id: str, message: dict, sender: WebSocket):
+        # We publish to Redis. Local listener task would pick it up and forward to WebSockets.
+        # For this prototype structure, we will just simulate local broadcast + redis publish
+        await self.redis.publish(room_id, json.dumps(message))
+        
+        if room_id not in self.local_connections:
+            return
+        dead_conns = []
+        for connection in self.local_connections[room_id]:
+            if connection != sender:
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    dead_conns.append(connection)
+        for conn in dead_conns:
+            await self.disconnect(conn, room_id)
+
+class ConnectionManager:
+    def __init__(self):
+        if settings.REDIS_URL and redis:
+            self.adapter = RedisRoomAdapter(settings.REDIS_URL)
+        else:
+            self.adapter = InMemoryRoomAdapter()
+            
+        self.gloss_buffers: Dict[WebSocket, List[str]] = {}
+        self.last_sign_time: Dict[WebSocket, float] = {}
+        self.idle_timeout = 2.0
+        self.tts_engine = TextToSpeechEngine()
+        self.gloss_translator = BdSLGlossTranslator()
+
+    async def connect(self, websocket: WebSocket, room_id: str, client_type: ClientType):
+        await self.adapter.connect(websocket, room_id, client_type)
+        if client_type == ClientType.SIGNER:
+            self.gloss_buffers[websocket] = []
+            self.last_sign_time[websocket] = time.time()
+
+    def disconnect(self, websocket: WebSocket, room_id: str):
+        # Fire and forget disconnect since fastapi WebsocketDisconnect is sync
+        import asyncio
+        asyncio.create_task(self.adapter.disconnect(websocket, room_id))
+        self.gloss_buffers.pop(websocket, None)
+        self.last_sign_time.pop(websocket, None)
 
     async def handle_sign_translation(self, room_id: str, sender: WebSocket, payload: dict):
-        """Process SIGN_TRANSLATION event, buffer glosses, and broadcast sentence."""
         raw_gloss = payload.get("label_bn", "")
         if not raw_gloss:
             return
             
         now = time.time()
         last_time = self.last_sign_time.get(sender, now)
-        
-        # Check if idle timeout exceeded
         if now - last_time > self.idle_timeout:
             self.gloss_buffers[sender] = []
             
-        # Append gloss
-        # Basic debounce: don't append if it's the exact same consecutive gloss within a very short window, 
-        # but for NLP we just append for now
         buffer = self.gloss_buffers.setdefault(sender, [])
         if not buffer or buffer[-1] != raw_gloss:
             buffer.append(raw_gloss)
             
         self.last_sign_time[sender] = now
         
-        # Translate the current sequence
         translation = self.gloss_translator.translate_gloss_sequence(buffer)
         bengali_sentence = translation["bengali_sentence"]
         
         if bengali_sentence:
             import base64
-            # Synthesize audio bytes based on full sentence
             audio_bytes = self.tts_engine.synthesize_to_bytes(text=bengali_sentence, lang="bn")
             if audio_bytes:
-                audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
-                payload["audio_payload_base64"] = audio_base64
-                
-            # Update payload text to sentence
+                payload["audio_payload_base64"] = base64.b64encode(audio_bytes).decode('utf-8')
             payload["label_bn"] = bengali_sentence
             payload["label_en"] = translation["english_sentence"]
                 
-        await self.broadcast_to_room(room_id, {"type": "SIGN_TRANSLATION", "data": payload}, sender)
+        await self.adapter.broadcast_message(room_id, {"type": "SIGN_TRANSLATION", "data": payload}, sender)
 
     async def handle_speech_text(self, room_id: str, sender: WebSocket, payload: dict):
-        """Process SPEECH_TEXT event from SPEAKER and broadcast to SIGNER."""
-        await self.broadcast_to_room(room_id, {"type": "SPEECH_TEXT", "data": payload}, sender)
+        await self.adapter.broadcast_message(room_id, {"type": "SPEECH_TEXT", "data": payload}, sender)
 
 manager = ConnectionManager()

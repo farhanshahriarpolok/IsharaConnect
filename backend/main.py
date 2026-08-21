@@ -10,6 +10,7 @@ import os
 from backend.api.routes import router as api_router
 from backend.api.admin_routes import router as admin_router
 from backend.websockets.room_manager import manager, ClientType
+from backend.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ app = FastAPI(
 # CORS middleware for local/web clients
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

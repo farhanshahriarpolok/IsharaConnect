@@ -3,12 +3,17 @@
 import logging
 from typing import Dict, Any, List
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from backend.auth.dependencies import require_role
 from pydantic import BaseModel
 
 from backend.services.staging_service import staging_service
 
-router = APIRouter(prefix="/api/v1/admin")
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(require_role(["SUPER_ADMIN", "ADMIN", "LINGUISTIC_REVIEWER"]))]
+)
 logger = logging.getLogger(__name__)
 
 

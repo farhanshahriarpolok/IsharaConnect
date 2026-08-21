@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 import pytest
-from launch import is_port_in_use, check_server_health, free_port, stream_logs
+from launch import is_port_in_use, check_server_health, _wait_for_backend, free_port, stream_logs
 
 
 def test_is_port_in_use_closed():
@@ -21,6 +21,18 @@ def test_check_server_health_success():
         assert result is True
 
 
+def test_wait_for_backend_success():
+    """Verify _wait_for_backend succeeds with throttled polling on 200."""
+    with patch("urllib.request.urlopen") as mock_urlopen, \
+         patch("time.sleep") as mock_sleep:
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_urlopen.return_value.__enter__.return_value = mock_resp
+
+        result = _wait_for_backend(port=8000, timeout=2)
+        assert result is True
+
+
 def test_check_server_health_process_crash():
     """Verify check_server_health immediately fails if subprocess exits."""
     mock_proc = MagicMock()
@@ -36,3 +48,4 @@ def test_free_port_no_op_when_not_in_use():
          patch("subprocess.run") as mock_run:
         free_port(8000)
         mock_run.assert_not_called()
+

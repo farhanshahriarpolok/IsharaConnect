@@ -51,10 +51,11 @@ class InMemoryRoomAdapter(BaseRoomAdapter):
         logger.info(f"Client {client_type} left {room_id} (In-Memory).")
         
     async def broadcast_message(self, room_id: str, message: dict, sender: WebSocket):
-        if room_id not in self.active_connections:
+        connections = list(self.active_connections.get(room_id, []))
+        if not connections:
             return
         dead_conns = []
-        for connection in self.active_connections[room_id]:
+        for connection in connections:
             if connection != sender:
                 try:
                     await connection.send_json(message)
@@ -96,12 +97,16 @@ class RedisRoomAdapter(BaseRoomAdapter):
     async def broadcast_message(self, room_id: str, message: dict, sender: WebSocket):
         # We publish to Redis. Local listener task would pick it up and forward to WebSockets.
         # For this prototype structure, we will just simulate local broadcast + redis publish
-        await self.redis.publish(room_id, json.dumps(message))
+        try:
+            await self.redis.publish(room_id, json.dumps(message))
+        except Exception as e:
+            logger.warning("Redis publish error: %s", e)
         
-        if room_id not in self.local_connections:
+        connections = list(self.local_connections.get(room_id, []))
+        if not connections:
             return
         dead_conns = []
-        for connection in self.local_connections[room_id]:
+        for connection in connections:
             if connection != sender:
                 try:
                     await connection.send_json(message)
@@ -132,9 +137,14 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket, room_id: str):
         # Fire and forget disconnect since fastapi WebsocketDisconnect is sync
         import asyncio
-        asyncio.create_task(self.adapter.disconnect(websocket, room_id))
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.adapter.disconnect(websocket, room_id))
+        except RuntimeError:
+            pass
         self.gloss_buffers.pop(websocket, None)
         self.last_sign_time.pop(websocket, None)
+
 
     async def handle_sign_translation(self, room_id: str, sender: WebSocket, payload: dict):
         raw_gloss = payload.get("label_bn", "")

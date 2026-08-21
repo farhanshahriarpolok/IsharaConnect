@@ -76,8 +76,8 @@ def stream_logs(proc: subprocess.Popen, prefix: str = "[Backend]"):
 def check_server_health(
     urls: List[str],
     process: Optional[subprocess.Popen] = None,
-    retries: int = 15,
-    delay: float = 0.8
+    retries: int = 10,
+    delay: float = 0.5
 ) -> bool:
     """Polls backend health endpoints until ready or process crashes."""
     for i in range(retries):
@@ -88,7 +88,7 @@ def check_server_health(
         for url in urls:
             try:
                 req = urllib.request.Request(url)
-                with urllib.request.urlopen(req, timeout=1.5) as response:
+                with urllib.request.urlopen(req, timeout=0.5) as response:
                     if response.status == 200:
                         return True
             except Exception:
@@ -98,6 +98,20 @@ def check_server_health(
         time.sleep(delay)
 
     return False
+
+
+def _wait_for_backend(
+    port: int = 8000,
+    timeout: int = 10,
+    process: Optional[subprocess.Popen] = None
+) -> bool:
+    """Throttled health check waiting for backend with strict 0.5s intervals."""
+    retries = max(1, int(timeout / 0.5))
+    urls = [
+        f"http://127.0.0.1:{port}/health",
+        f"http://127.0.0.1:{port}/api/v1/health"
+    ]
+    return check_server_health(urls, process=process, retries=retries, delay=0.5)
 
 
 def main():
@@ -139,11 +153,7 @@ def main():
     signal.signal(signal.SIGTERM, cleanup)
 
     # 3. Wait for backend to be healthy
-    health_urls = [
-        "http://127.0.0.1:8000/health",
-        "http://127.0.0.1:8000/api/v1/health"
-    ]
-    if not check_server_health(health_urls, process=backend_process):
+    if not _wait_for_backend(port=8000, timeout=10, process=backend_process):
         logger.error("Backend server failed to start within the expected time. Aborting.")
         cleanup()
 
@@ -164,3 +174,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

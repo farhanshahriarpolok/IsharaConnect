@@ -56,6 +56,9 @@ class KinematicJointFrame:
     particle_trail: List[Tuple[float, float]] = field(default_factory=list)
     # Touch contact pairs: (landmark_idx_a, landmark_idx_b, intensity [0.0-1.0])
     touch_contacts: List[Tuple[int, int, float]] = field(default_factory=list)
+    # Z-depth for depth-sorted rendering: higher = closer to viewer (0.0–1.0)
+    right_hand_z: float = 0.0
+    left_hand_z: float = 0.0
 
 
 class KinematicMotionInterpolator:
@@ -161,6 +164,10 @@ class KinematicMotionInterpolator:
             l_touches = self._compute_touch_contacts(l_hand) if has_left else []
             touch_contacts = r_touches + l_touches
 
+            # Z-depth: higher wrist position (lower y) = closer to viewer
+            r_z = max(0.0, min(1.0, 0.72 - r_wrist[1]))
+            l_z = max(0.0, min(1.0, 0.72 - l_wrist[1]))
+
             frames.append(KinematicJointFrame(
                 frame_idx=t,
                 head=head, neck=neck, chest=chest,
@@ -170,7 +177,8 @@ class KinematicMotionInterpolator:
                 left_hand=l_hand, right_hand=r_hand,
                 is_left_active=has_left, is_right_active=has_right,
                 particle_trail=[r_wrist] if has_right else [l_wrist],
-                touch_contacts=touch_contacts
+                touch_contacts=touch_contacts,
+                right_hand_z=r_z, left_hand_z=l_z
             ))
 
         return frames
@@ -213,6 +221,9 @@ class KinematicMotionInterpolator:
             r_touches = self._compute_touch_contacts(r_hand)
             l_touches = self._compute_touch_contacts(l_hand) if has_left else []
 
+            r_z = max(0.0, min(1.0, 0.72 - r_wrist[1]))
+            l_z = max(0.0, min(1.0, 0.72 - l_wrist[1]))
+
             frames.append(KinematicJointFrame(
                 frame_idx=t,
                 head=head, neck=neck, chest=chest,
@@ -222,7 +233,8 @@ class KinematicMotionInterpolator:
                 left_hand=l_hand, right_hand=r_hand,
                 is_left_active=has_left, is_right_active=True,
                 particle_trail=[r_wrist],
-                touch_contacts=r_touches + l_touches
+                touch_contacts=r_touches + l_touches,
+                right_hand_z=r_z, left_hand_z=l_z
             ))
 
         return frames

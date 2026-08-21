@@ -1,7 +1,13 @@
-"""Unit tests for Macro Anatomical Hand Animator (HumanRigViewer) and KinematicMotionInterpolator."""
+"""Unit tests for Volumetric Human Avatar (HumanRigViewer) and KinematicMotionInterpolator.
+
+Covers Sprint 16 (macro framing, playback controls, touch contacts) and
+Sprint 17 (z-depth field, skin palette constants, capsule rendering pipeline,
+volumetric avatar method existence).
+"""
 
 import math
 import pytest
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QApplication
 
 from core_engine.vision.kinematic_interpolator import (
@@ -11,7 +17,12 @@ from core_engine.vision.kinematic_interpolator import (
     FINGERTIP_INDICES,
     TOUCH_THRESHOLD,
 )
-from desktop_app.ui.components.human_rig_viewer import HumanRigViewer
+from desktop_app.ui.components.human_rig_viewer import (
+    HumanRigViewer,
+    SKIN_BASE, SKIN_LIGHT, SKIN_SHADOW, NAIL_BASE,
+    CLOTH_BASE, CLOTH_DARK,
+    CAPSULE_W, FINGER_SEGS,
+)
 from desktop_app.ui.academy_dashboard import AcademyDashboard
 
 
@@ -266,3 +277,136 @@ def test_academy_dashboard_motion_toggle(qapp):
     dashboard._update_reference_card("hospital")
     assert dashboard.human_rig_viewer.sign_slug == "hospital"
     assert dashboard.sign_card_viewer.slug == "hospital"
+
+
+# ── Sprint 17: Volumetric Avatar Tests ───────────────────────────────────────
+
+def test_z_depth_field_exists():
+    """Test that KinematicJointFrame has right_hand_z and left_hand_z fields."""
+    interpolator = KinematicMotionInterpolator()
+    frames = interpolator.resolve_motion_sequence("dhonnobad", "ধন্যবাদ", "Thank you")
+    assert len(frames) == 60
+    for frame in frames:
+        assert hasattr(frame, "right_hand_z"), "Missing right_hand_z field"
+        assert hasattr(frame, "left_hand_z"), "Missing left_hand_z field"
+        assert isinstance(frame.right_hand_z, float)
+        assert isinstance(frame.left_hand_z, float)
+        assert 0.0 <= frame.right_hand_z <= 1.0
+        assert 0.0 <= frame.left_hand_z <= 1.0
+
+
+def test_z_depth_face_level_sign():
+    """Z-depth should be higher when hand is at face level (chin touch for dhonnobad)."""
+    interpolator = KinematicMotionInterpolator()
+    frames = interpolator.resolve_motion_sequence("dhonnobad", "ধন্যবাদ", "Thank you")
+    # At least some frames should have z > 0.2 (hand raised to chin/face)
+    max_z = max(f.right_hand_z for f in frames)
+    assert max_z > 0.2, f"Max z-depth too small for face-level sign: {max_z}"
+
+
+def test_z_depth_low_hand_sign():
+    """Z-depth should be lower when hand is at chest/waist level."""
+    interpolator = KinematicMotionInterpolator()
+    frames = interpolator.resolve_motion_sequence("thik_ache", "ঠিক আছে", "Ok")
+    # Waist-level signing → z should be lower than face signs
+    avg_z = sum(f.right_hand_z for f in frames) / len(frames)
+    assert avg_z < 0.5, f"Avg z-depth unexpectedly high for low-hand sign: {avg_z}"
+
+
+def test_skin_palette_constants():
+    """Test that all skin and clothing color constants are valid QColor instances."""
+    for name, color in [
+        ("SKIN_BASE", SKIN_BASE), ("SKIN_LIGHT", SKIN_LIGHT),
+        ("SKIN_SHADOW", SKIN_SHADOW), ("NAIL_BASE", NAIL_BASE),
+        ("CLOTH_BASE", CLOTH_BASE), ("CLOTH_DARK", CLOTH_DARK),
+    ]:
+        assert isinstance(color, QColor), f"{name} is not a QColor"
+        assert color.isValid(), f"{name} is not a valid QColor"
+
+
+def test_capsule_width_table():
+    """Test CAPSULE_W has correct dimensions: 5 fingers × 3 segments each."""
+    assert len(CAPSULE_W) == 5, "CAPSULE_W must have 5 finger entries"
+    for i, widths in enumerate(CAPSULE_W):
+        assert len(widths) == 3, f"Finger {i} must have 3 segment widths"
+        for j, w in enumerate(widths):
+            assert w > 0, f"CAPSULE_W[{i}][{j}] must be positive"
+            assert w < 25, f"CAPSULE_W[{i}][{j}]={w} unreasonably large"
+        # Verify taper: proximal >= intermediate >= distal
+        assert widths[0] >= widths[1] >= widths[2], (
+            f"Finger {i} widths should taper distally: {widths}"
+        )
+
+
+def test_finger_seg_table():
+    """Test FINGER_SEGS covers all 21 landmarks with correct structure."""
+    assert len(FINGER_SEGS) == 5
+    all_indices = set()
+    for segs in FINGER_SEGS:
+        assert len(segs) == 5, "Each finger needs 5 indices (base + 4 joints)"
+        for idx in segs:
+            assert 0 <= idx < 21
+        all_indices.update(segs[1:])  # All joints (skip wrist root duplicate)
+    # All non-wrist landmarks covered
+    assert len(all_indices) == 20, f"Expected 20 unique non-wrist indices, got {len(all_indices)}"
+
+
+def test_volumetric_render_methods_exist(qapp):
+    """Test that all new volumetric rendering methods exist on HumanRigViewer."""
+    viewer = HumanRigViewer()
+    required_methods = [
+        "_paint_upper_body",
+        "_paint_head_face",
+        "_draw_arm_capsule",
+        "_paint_motion_trail",
+        "_paint_hands_volumetric",
+        "_draw_hand_volumetric",
+        "_paint_palm_volume",
+        "_draw_finger_capsule",
+        "_paint_hud_overlays",
+        "_paint_playback_toolbar",
+        "_compute_hand_frame_rect",
+    ]
+    for method in required_methods:
+        assert hasattr(viewer, method), f"Missing method: {method}"
+        assert callable(getattr(viewer, method)), f"Not callable: {method}"
+
+
+def test_draw_finger_capsule_smoke(qapp):
+    """Test _draw_finger_capsule can be called without error (smoke test)."""
+    from PyQt6.QtGui import QPainter, QPixmap
+    from PyQt6.QtCore import QPointF
+
+    viewer = HumanRigViewer()
+    # Draw into an off-screen pixmap
+    pixmap = QPixmap(280, 240)
+    pixmap.fill(QColor(0, 0, 0, 0))
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+    p1 = QPointF(100, 100)
+    p2 = QPointF(100, 70)
+    # Extended
+    viewer._draw_finger_capsule(painter, p1, p2, 10.0, is_extended=True)
+    # Curled
+    viewer._draw_finger_capsule(painter, p1, p2, 8.0, is_extended=False)
+
+    painter.end()  # No exception = pass
+
+
+def test_volumetric_viewer_smoke_sign_load(qapp):
+    """Test loading multiple signs into volumetric viewer without errors."""
+    viewer = HumanRigViewer()
+    for slug, bn, en in [
+        ("dhonnobad", "ধন্যবাদ", "Thank you"),
+        ("sahajjo", "সাহায্য", "Help"),
+        ("ami", "আমি", "Me"),
+        ("hospital", "হাসপাতাল", "Hospital"),
+        ("thik_ache", "ঠিক আছে", "Ok"),
+    ]:
+        viewer.load_sign_motion(slug, bn, en)
+        assert viewer.sign_slug == slug
+        assert len(viewer.frames) == 60
+        for frame in viewer.frames:
+            assert hasattr(frame, "right_hand_z")
+            assert math.isfinite(frame.right_hand_z)

@@ -35,10 +35,32 @@ class NetworkWorker(QThread):
     def run(self):
         """Start the asyncio event loop in this thread."""
         asyncio.set_event_loop(self._loop)
-        self._loop.run_until_complete(self._websocket_loop())
+        try:
+            self._loop.run_until_complete(self._websocket_loop())
+        except asyncio.CancelledError:
+            pass
+        except RuntimeError as e:
+            logger.error("RuntimeError in NetworkWorker loop: %s", e)
+        except Exception as e:
+            logger.error("Exception in NetworkWorker loop: %s", e)
+        finally:
+            try:
+                # Clean up pending tasks properly before closing the loop
+                pending = asyncio.all_tasks(loop=self._loop)
+                for task in pending:
+                    task.cancel()
+                    
+                if pending:
+                    self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                
+                self._loop.run_until_complete(self._loop.shutdown_asyncgens())
+            except Exception as e:
+                logger.error("Error during NetworkWorker loop cleanup: %s", e)
+            finally:
+                self._loop.close()
         
     async def _websocket_loop(self):
-        """Main WebSocket connection and message loop."""
+        """Main WebSocket connection and message loop with exponential retry."""
         uri = f"{self.server_url}/ws/room/{self.room_id}/{self.client_type}"
         retry_delay = 1
         
@@ -63,6 +85,9 @@ class NetworkWorker(QThread):
                     for task in pending:
                         task.cancel()
                         
+            except asyncio.CancelledError:
+                # Propagate cancellation so the run() loop can exit cleanly
+                raise
             except (websockets.ConnectionClosed, ConnectionRefusedError, Exception) as e:
                 self._ws = None
                 if self._is_running:
@@ -78,6 +103,8 @@ class NetworkWorker(QThread):
                 self.message_received.emit(data)
         except websockets.ConnectionClosed:
             logger.warning("WebSocket connection closed during receive.")
+        except asyncio.CancelledError:
+            pass
 
     async def _send_messages(self, ws: websockets.WebSocketClientProtocol):
         """Coroutine to handle outgoing messages from queue."""
@@ -88,6 +115,8 @@ class NetworkWorker(QThread):
                 self._send_queue.task_done()
         except websockets.ConnectionClosed:
             logger.warning("WebSocket connection closed during send.")
+        except asyncio.CancelledError:
+            pass
 
     def send_sign_event(self, sign_data: dict):
         """Dispatch a sign detection event to the backend. Thread-safe."""
@@ -112,11 +141,16 @@ class NetworkWorker(QThread):
     def stop(self):
         """Gracefully stop the network worker."""
         self._is_running = False
-        if self._ws:
-            self._loop.call_soon_threadsafe(asyncio.create_task, self._ws.close())
         
-        # Stop the loop
+        def cancel_all():
+            if self._ws:
+                asyncio.create_task(self._ws.close())
+            for task in asyncio.all_tasks(loop=self._loop):
+                task.cancel()
+                
+        # Do not forcefully stop the loop while futures are pending
+        # Instead schedule task cancellation thread-safely
         if self._loop.is_running():
-            self._loop.call_soon_threadsafe(self._loop.stop)
+            self._loop.call_soon_threadsafe(cancel_all)
             
         self.wait()

@@ -433,8 +433,8 @@ class IsharaMainWindow(QMainWindow):
         if hasattr(self, 'sentence_ticker'):
             self.sentence_ticker.update_ticker(data)
         
-        # Send to backend
-        if self.network_worker and data.get("is_stable"):
+        # Send to backend only on new triggers
+        if self.network_worker and data.get("is_stable") and data.get("is_new_trigger", True):
             try:
                 self.network_worker.send_sign_event(data)
             except Exception as e:

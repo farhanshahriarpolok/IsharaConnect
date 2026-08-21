@@ -1,6 +1,6 @@
 """Inference Engine subsystem: ONNX Runtime, temporal smoothing, debounce filtering, and Ensemble Prediction."""
 
 from core_engine.inference.predictor import RealTimePredictor
-from core_engine.inference.ensemble_predictor import EnsemblePredictor
+from core_engine.inference.ensemble_predictor import EnsemblePredictor, PredictionLatch, LatchState
 
-__all__ = ["RealTimePredictor", "EnsemblePredictor"]
+__all__ = ["RealTimePredictor", "EnsemblePredictor", "PredictionLatch", "LatchState"]

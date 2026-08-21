@@ -8,6 +8,8 @@ from core_engine.audio.audio_player import player_instance
 from core_engine.nlp.advanced_grammar_engine import AdvancedBdSLGrammarEngine
 import logging
 
+from desktop_app.controllers.audio_player import audio_controller
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,10 +70,14 @@ class SentenceTickerWidget(QWidget):
         
     @pyqtSlot(dict)
     def update_ticker(self, sign_data: dict):
-        """Called when a new sign is stabilized."""
+        """Called when a sign prediction occurs. Only single-trigger (new) gestures append tokens."""
         if not sign_data or sign_data.get("sign_id") == -1:
             return
             
+        # Single-trigger latch check: Ignore held/sustained frames
+        if not sign_data.get("is_new_trigger", True):
+            return
+
         bn = sign_data.get("label_bn", "").strip()
         en = sign_data.get("label_en", "").strip()
         
@@ -103,9 +109,9 @@ class SentenceTickerWidget(QWidget):
         
     def _on_revoice(self):
         if self.finalized_sentence_bn:
-            # Play text using the audio engine
+            # Play synthesized text using Bengali audio controller
             clean_text = self.finalized_sentence_bn.rstrip("।!?")
-            player_instance.play_text(clean_text, lang="bn")
+            audio_controller.speak_bengali(clean_text)
             
     def clear_buffer(self):
         self.gloss_buffer = []
@@ -118,3 +124,7 @@ class SentenceTickerWidget(QWidget):
                 
         self.sentence_label.setText("অপেক্ষা করছি...")
         self.subtitle_label.setText("Waiting for signs...")
+
+    def clear_ticker(self):
+        """Alias for clear_buffer."""
+        self.clear_buffer()

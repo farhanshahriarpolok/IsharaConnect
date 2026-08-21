@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import (
 )
 
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
+from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +32,20 @@ class AcademyDashboard(QWidget):
     def __init__(self):
         super().__init__()
         self.spatial_engine = SpatialHandEngine()
+        self.ghost_painter = GhostOverlayPainter()
+        
+        # Interactive Quiz State
+        self.quiz_active = False
+        self.countdown_ticks = 0
+        self.xp_score = 0
+        self.streak = 0
+        
+        # Simulated Reference Data (for demonstration of ghost overlay tracking)
+        # In production this would be loaded from a dataset
+        self.mock_ref_landmarks = []
+        for i in range(42):
+            self.mock_ref_landmarks.append((100 + i*5, 100 + (i%5)*5))
+            
         self._init_ui()
         
     def _init_ui(self):
@@ -177,6 +193,16 @@ class AcademyDashboard(QWidget):
         self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>AI Posture Tutor:</b> Ready.")
         practice_layout.addWidget(self.posture_hud)
         
+        # Score HUD
+        score_layout = QHBoxLayout()
+        self.xp_label = QLabel("XP: 0")
+        self.xp_label.setStyleSheet(f"color: {ACCENT_COLOR}; font-weight: bold;")
+        self.streak_label = QLabel("Streak: 0 🔥")
+        self.streak_label.setStyleSheet(f"color: {ERROR_COLOR}; font-weight: bold;")
+        score_layout.addWidget(self.xp_label)
+        score_layout.addWidget(self.streak_label)
+        practice_layout.addLayout(score_layout)
+        
         self.match_progress = QProgressBar()
         self.match_progress.setRange(0, 100)
         self.match_progress.setValue(0)
@@ -237,8 +263,14 @@ class AcademyDashboard(QWidget):
     def _start_practice(self):
         self.content_stack.setCurrentWidget(self.practice_page)
         self.cap = cv2.VideoCapture(0)
-        self.timer.start(30) # ~33fps
-        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>AI Posture Tutor:</b> ডান হাতের তর্জনী দিয়ে বাম হাতের তালু স্পর্শ করুন। (Touch the left palm with the right index finger).")
+        self.timer.start(33) # ~30fps
+        
+        # Start Quiz
+        self.quiz_active = True
+        self.countdown_ticks = 150 # 5 seconds at 30fps
+        
+        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting!</b> Get ready to sign...")
+        self.target_overlay.setText("Quiz Active")
         
     def _stop_practice(self):
         self.timer.stop()
@@ -247,6 +279,7 @@ class AcademyDashboard(QWidget):
             self.cap = None
         self.content_stack.setCurrentWidget(self.anatomy_page)
         self.match_progress.setValue(0)
+        
         
     def _update_practice_frame(self):
         if not self.cap:
@@ -261,31 +294,51 @@ class AcademyDashboard(QWidget):
         # Extract features
         features = self.spatial_engine.extract_spatial_features(frame)
         
-        # Simple simulated grading based on hand presence
-        score = 0
-        if features["has_left"] and features["has_right"]:
-            score = 85
-        elif features["has_right"] or features["has_left"]:
-            score = 45
-            
-        self.match_progress.setValue(score)
-        if score > 80:
-            self.posture_hud.setHtml(f"<b style='color:{SUCCESS_COLOR};'>Excellent! Hold it.</b>")
-        else:
-            self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>AI Posture Tutor:</b> Adjust your hand orientation.")
+        # Process Live Landmarks
+        live_landmarks = []
+        if features["has_left"] or features["has_right"]:
+            for i in range(42):
+                if np.any(features["raw_landmarks"][i]):
+                    x = float(features["raw_landmarks"][i][0] * frame.shape[1])
+                    y = float(features["raw_landmarks"][i][1] * frame.shape[0])
+                    live_landmarks.append((x, y))
         
-        # Draw basic landmarks for visual feedback
-        for i in range(42):
-            if np.any(features["raw_landmarks"][i]):
-                x, y = int(features["raw_landmarks"][i][0] * frame.shape[1]), int(features["raw_landmarks"][i][1] * frame.shape[0])
-                cv2.circle(frame, (x, y), 3, (0, 255, 0), -1)
-        
+        # Ghost Overlay rendering
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
         qt_img = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
-        pixmap = QPixmap.fromImage(qt_img).scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio)
+        
+        # Add overlay
+        final_img = self.ghost_painter.draw_overlay(qt_img, self.mock_ref_landmarks, live_landmarks)
+        pixmap = QPixmap.fromImage(final_img).scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio)
         self.camera_feed.setPixmap(pixmap)
+        
+        # Quiz Logic
+        if self.quiz_active:
+            if self.countdown_ticks > 0:
+                self.countdown_ticks -= 1
+                secs = self.countdown_ticks // 30
+                self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz:</b> Show sign in {secs}s...")
+                
+                score = self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks)
+                self.match_progress.setValue(int(score))
+                
+                if score > 80.0:
+                    self.posture_hud.setHtml(f"<b style='color:{SUCCESS_COLOR};'>Excellent! Perfect Match.</b>")
+                    self.xp_score += 50
+                    self.streak += 1
+                    self.quiz_active = False # End quiz early on success
+            else:
+                self.posture_hud.setHtml(f"<b style='color:{ERROR_COLOR};'>Time's Up!</b>")
+                self.streak = 0
+                self.quiz_active = False
+                
+            self.xp_label.setText(f"XP: {self.xp_score}")
+            self.streak_label.setText(f"Streak: {self.streak} 🔥")
+            
+        else:
+            self.match_progress.setValue(0)
         
     def closeEvent(self, event):
         self._stop_practice()

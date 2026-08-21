@@ -4,24 +4,27 @@ venv/
 env/
 ENV/
 
-# Python Cache
+# Python Cache & Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .pytest_cache/
+.coverage
+htmlcov/
 
-# Git
+# Git & Repository Metadata
 .git/
 .gitignore
+.gitattributes
 
-# IDE / Editor Files
+# IDE & Editor Configuration
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# AI Metadata
+# AI Metadata & Context Logs
 .ai/
 TASKS.md
 MEMORY.md
@@ -29,11 +32,23 @@ RUNBOOK.md
 GEMINI.md
 AGENTS.md
 
+# Build Artifacts & Dist
+build/
+dist/
+*.spec
+python_installer.exe
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+
 # Large Data & Checkpoints
 dataset/external/
 dataset/raw_landmarks/
 models/*.pt
 models/checkpoints/
 
-# Other
+# System Files
 .DS_Store
+Thumbs.db

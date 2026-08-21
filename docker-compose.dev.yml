@@ -5,38 +5,41 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: isharaconnect_backend
+    container_name: isharaconnect_backend_dev
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-ishara}:${POSTGRES_PASSWORD:-ishara_secret}@db:5432/${POSTGRES_DB:-isharaconnect}
       - REDIS_URL=redis://redis:6379/0
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./models:/app/models
+      - ./dataset:/app/dataset
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    expose:
-      - "8000"
-    volumes:
-      - ./models:/app/models
-      - ./dataset:/app/dataset
-      - ./certificates:/app/certificates
+    command: ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     networks:
-      - ishara_network
+      - ishara_dev_network
 
   db:
     image: postgres:16-alpine
-    container_name: isharaconnect_db
+    container_name: isharaconnect_db_dev
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ishara}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ishara_secret}
       POSTGRES_DB: ${POSTGRES_DB:-isharaconnect}
+    ports:
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ishara} -d ${POSTGRES_DB:-isharaconnect}"]
       interval: 10s
@@ -44,15 +47,16 @@ services:
       retries: 5
       start_period: 5s
     networks:
-      - ishara_network
+      - ishara_dev_network
 
   redis:
     image: redis:7-alpine
-    container_name: isharaconnect_redis
+    container_name: isharaconnect_redis_dev
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_dev_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,31 +64,12 @@ services:
       retries: 5
       start_period: 3s
     networks:
-      - ishara_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: isharaconnect_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./backend/static:/var/www/static:ro
-      - ./dataset/visual_cards:/var/www/visual_cards:ro
-    depends_on:
-      - backend
-    networks:
-      - ishara_network
+      - ishara_dev_network
 
 volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
+  postgres_dev_data:
+  redis_dev_data:
 
 networks:
-  ishara_network:
+  ishara_dev_network:
     driver: bridge

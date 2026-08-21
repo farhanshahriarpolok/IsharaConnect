@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 
 from core_engine.vision.hand_detector import HandDetector
 from core_engine.preprocessing.normalizer import LandmarkNormalizer
+from desktop_app.utils.url_helpers import get_http_url
 
 logger = logging.getLogger(__name__)
 
@@ -170,8 +171,9 @@ class ProposeSignDialog(QDialog):
         }
         
         try:
+            http_url = get_http_url(self.server_url, "/api/v1/signs/propose")
             req = urllib.request.Request(
-                f"{self.server_url}/api/v1/signs/propose",
+                http_url,
                 data=json.dumps(payload).encode('utf-8'),
                 headers={'Content-Type': 'application/json'}
             )

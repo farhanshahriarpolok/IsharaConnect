@@ -50,6 +50,12 @@ async def serve_root():
     return HTMLResponse("<h1>IsharaConnect Backend Running</h1>")
 
 
+@app.get("/health")
+async def health_check():
+    """Ultra-fast root health endpoint for launcher and health probes."""
+    return {"status": "healthy", "service": "IsharaConnect-Backend"}
+
+
 
 @app.websocket("/ws/room/{room_id}/{client_type}")
 async def websocket_endpoint(websocket: WebSocket, room_id: str, client_type: ClientType):

@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 from desktop_app.controllers.camera_worker import CameraWorker
 from desktop_app.controllers.network_worker import NetworkWorker
 from desktop_app.ui.propose_sign_dialog import ProposeSignDialog
+from desktop_app.ui.learning_hub import LearningHubWidget
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +107,14 @@ class IsharaMainWindow(QMainWindow):
         self.propose_btn.clicked.connect(self._open_propose_dialog)
         
         header_layout.addWidget(title_label)
+        
+        # Top-level navigation
+        self.nav_mode = QComboBox()
+        self.nav_mode.addItems(["💬 Communication Mode", "🎓 Learning Hub"])
+        self.nav_mode.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self.nav_mode.currentTextChanged.connect(self._change_app_mode)
+        header_layout.addWidget(self.nav_mode)
+        
         header_layout.addStretch()
         header_layout.addWidget(self.status_badge)
         header_layout.addWidget(self.room_input)
@@ -119,9 +128,11 @@ class IsharaMainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.signer_view = self._create_signer_view()
         self.speaker_view = self._create_speaker_view()
+        self.learning_view = LearningHubWidget()
         
         self.stacked_widget.addWidget(self.signer_view)
         self.stacked_widget.addWidget(self.speaker_view)
+        self.stacked_widget.addWidget(self.learning_view)
         
         if self.mode.lower() == "signer":
             self.stacked_widget.setCurrentWidget(self.signer_view)
@@ -129,6 +140,10 @@ class IsharaMainWindow(QMainWindow):
             self.stacked_widget.setCurrentWidget(self.speaker_view)
             
         main_layout.addWidget(self.stacked_widget)
+        
+        # Connect Learning Hub Signals
+        self.learning_view.request_camera_start.connect(self._ensure_camera_running)
+        self.learning_view.request_camera_stop.connect(self._stop_camera)
 
     def _create_signer_view(self) -> QWidget:
         """Create the layout for Deaf/Mute users."""
@@ -257,6 +272,49 @@ class IsharaMainWindow(QMainWindow):
         self.network_worker.message_received.connect(self._on_network_message)
         self.network_worker.start()
 
+    def _change_app_mode(self, new_mode_str: str):
+        """Switch between Communication Mode and Learning Hub."""
+        is_learning = "Learning" in new_mode_str
+        
+        if is_learning:
+            self.stacked_widget.setCurrentWidget(self.learning_view)
+            self.status_badge.hide()
+            self.room_input.hide()
+            self.join_btn.hide()
+            self.mode_selector.hide()
+            self.propose_btn.hide()
+            if self.network_worker:
+                self.network_worker.stop()
+        else:
+            if self.mode.lower() == "signer":
+                self.stacked_widget.setCurrentWidget(self.signer_view)
+            else:
+                self.stacked_widget.setCurrentWidget(self.speaker_view)
+            self.status_badge.show()
+            self.room_input.show()
+            self.join_btn.show()
+            self.mode_selector.show()
+            self.propose_btn.show()
+            self._reconnect()
+            self._ensure_camera_running()
+            
+    def _ensure_camera_running(self):
+        """Starts camera if not already running (for Signer mode or Learning Hub)."""
+        idx = self.cam_selector.currentIndex() if hasattr(self, 'cam_selector') else 0
+        if not self.camera_worker:
+            self.camera_worker = CameraWorker(camera_id=idx)
+            self.camera_worker.frame_ready.connect(self._update_camera_feed)
+            self.camera_worker.sign_detected.connect(self._on_sign_detected)
+            self.camera_worker.fps_updated.connect(self._update_fps)
+            self.camera_worker.error_occurred.connect(self._on_camera_error)
+            self.camera_worker.start()
+
+    def _stop_camera(self):
+        """Stops camera."""
+        if self.camera_worker:
+            self.camera_worker.stop()
+            self.camera_worker = None
+
     def _change_mode(self, new_mode: str):
         """Switch between Signer and Speaker modes."""
         self.mode = new_mode.lower()
@@ -268,13 +326,7 @@ class IsharaMainWindow(QMainWindow):
             
         if self.mode == "signer":
             self.stacked_widget.setCurrentWidget(self.signer_view)
-            idx = self.cam_selector.currentIndex() if hasattr(self, 'cam_selector') else 0
-            self.camera_worker = CameraWorker(camera_id=idx)
-            self.camera_worker.frame_ready.connect(self._update_camera_feed)
-            self.camera_worker.sign_detected.connect(self._on_sign_detected)
-            self.camera_worker.fps_updated.connect(self._update_fps)
-            self.camera_worker.error_occurred.connect(self._on_camera_error)
-            self.camera_worker.start()
+            self._ensure_camera_running()
         else:
             self.stacked_widget.setCurrentWidget(self.speaker_view)
             
@@ -316,8 +368,12 @@ class IsharaMainWindow(QMainWindow):
     def _update_camera_feed(self, image: QImage):
         # Scale to fit label while maintaining aspect ratio
         pixmap = QPixmap.fromImage(image)
-        scaled = pixmap.scaled(self.camera_label.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        self.camera_label.setPixmap(scaled)
+        # Route to the appropriate view
+        if self.stacked_widget.currentWidget() == self.learning_view:
+            self.learning_view.update_camera_feed(image)
+        elif hasattr(self, 'camera_label'):
+            scaled = pixmap.scaled(self.camera_label.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.camera_label.setPixmap(scaled)
 
     @pyqtSlot(float)
     def _update_fps(self, fps: float):
@@ -325,7 +381,11 @@ class IsharaMainWindow(QMainWindow):
 
     @pyqtSlot(dict)
     def _on_sign_detected(self, data: dict):
-        # Update local UI
+        if self.stacked_widget.currentWidget() == self.learning_view:
+            self.learning_view.process_prediction(data)
+            return
+
+        # Update local UI for Communication Mode
         label = data.get("label_bn", "")
         conf = data.get("confidence", 0.0)
         

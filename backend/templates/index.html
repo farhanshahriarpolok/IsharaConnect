@@ -2,301 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IsharaConnect Web Client</title>
-    
-    <!-- PWA Setup -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#0F172A">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- MediaPipe Hands -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <style>
-        body { background-color: #0F172A; color: #F8FAFC; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .panel { background-color: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
-        .btn-blue { background-color: #06B6D4; color: #0F172A; font-weight: bold; border-radius: 8px; padding: 8px 16px; border: none; }
-        .btn-blue:hover { background-color: #22D3EE; }
-        .input-dark { background-color: #0F172A; color: #F8FAFC; border: 1px solid #334155; border-radius: 6px; padding: 8px; }
-        .input-dark:focus { border: 1px solid #06B6D4; outline: none; }
-        .hidden { display: none !important; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="h-screen flex flex-col p-4">
-    <!-- Navbar -->
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 class="text-2xl font-bold text-[#06B6D4]">IsharaConnect Web</h1>
-        <div class="flex items-center space-x-2 flex-wrap">
-            <span id="status-badge" class="font-bold text-[#F43F5E]">🔴 Offline</span>
-            <input type="text" id="room-id" value="default-room" class="input-dark w-32" placeholder="Room ID">
-            <button id="connect-btn" class="btn-blue">Connect</button>
-            <select id="role-select" class="input-dark">
-                <option value="signer">Signer</option>
-                <option value="speaker">Speaker</option>
-            </select>
-            <select id="mode-select" class="input-dark">
-                <option value="comm">💬 Communication</option>
-                <option value="learn">🎓 Learning Hub</option>
-            </select>
-        </div>
-    </div>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">👐</span>
+                <span class="logo-text">IsharaConnect</span>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot disconnected" id="status-dot"></span>
+                <span class="status-text" id="status-text">Disconnected</span>
+            </div>
+        </header>
 
-    <!-- Main Container -->
-    <div class="flex-grow flex gap-4 overflow-hidden">
-        
-        <!-- SIGNER VIEW -->
-        <div id="signer-view" class="panel flex-grow flex flex-col p-4 hidden">
-            <h2 class="text-xl font-bold mb-2">Camera Feed</h2>
-            <div class="flex-grow relative bg-black rounded-lg overflow-hidden">
-                <video id="input-video" class="absolute inset-0 w-full h-full object-contain hidden" playsinline></video>
-                <canvas id="output-canvas" class="absolute inset-0 w-full h-full object-contain"></canvas>
-            </div>
-            <div class="mt-4 flex items-center justify-between">
-                <div>
-                    <h3 class="text-lg text-gray-400">Current Translation:</h3>
-                    <p id="signer-preview" class="text-3xl font-bold text-[#A6E3A1]">---</p>
-                </div>
-                <div class="text-right">
-                    <p id="speaker-reply" class="text-xl text-[#F38BA8] mt-2 border-l-4 border-[#F38BA8] pl-2">Waiting for speaker reply...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SPEAKER VIEW -->
-        <div id="speaker-view" class="panel flex-grow flex flex-col p-4 hidden">
-            <h2 class="text-xl font-bold mb-2">Live Translation Feed</h2>
-            <div id="chat-history" class="flex-grow bg-[#181825] border border-[#313244] rounded p-4 overflow-y-auto mb-4 space-y-2">
-                <!-- Chat bubbles go here -->
-            </div>
-            <div class="flex gap-2">
-                <button id="mic-btn" class="btn-blue w-1/3">🎤 Start Speaking</button>
-                <input type="text" id="text-reply" class="input-dark flex-grow" placeholder="Type a reply...">
-                <button id="send-reply-btn" class="btn-blue">Send</button>
-            </div>
-        </div>
-
-        <!-- LEARNING HUB VIEW -->
-        <div id="learning-view" class="panel flex-grow flex p-4 hidden gap-4">
-            <div class="w-1/4 bg-[#181825] border border-[#313244] rounded p-4 overflow-y-auto">
-                <h3 class="font-bold mb-2">📚 Lessons</h3>
-                <ul id="lesson-list" class="space-y-2">
-                    <li class="p-2 bg-[#89B4FA] text-[#11111B] font-bold rounded cursor-pointer">অ (Vowel A)</li>
-                    <li class="p-2 hover:bg-[#313244] rounded cursor-pointer">ক (Consonant Ka)</li>
-                    <li class="p-2 hover:bg-[#313244] rounded cursor-pointer">ধন্যবাদ (Thank You)</li>
-                </ul>
-            </div>
-            <div class="flex-grow flex flex-col relative bg-black rounded-lg overflow-hidden">
-                <h2 id="learn-target" class="absolute top-4 left-0 right-0 text-center text-3xl font-bold text-[#89B4FA] z-10 drop-shadow-md">🎯 Practice: অ (Vowel A)</h2>
-                <canvas id="learn-canvas" class="absolute inset-0 w-full h-full object-contain"></canvas>
-                <div class="absolute bottom-4 left-4 right-4 bg-[#2A2B3D]/80 p-4 rounded-lg flex items-center gap-4">
-                    <div class="flex-grow bg-gray-700 h-4 rounded-full overflow-hidden">
-                        <div id="learn-progress" class="bg-[#A6E3A1] h-full" style="width: 0%;"></div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Camera Section -->
+            <div class="video-container glass-panel">
+                <div class="video-wrapper">
+                    <video id="local-video" autoplay playsinline muted></video>
+                    <div class="video-overlay" id="video-overlay">
+                        <button class="primary-btn" id="start-btn">
+                            <span class="btn-icon">▶</span> Start Interpretation
+                        </button>
                     </div>
-                    <span id="learn-feedback" class="font-bold text-xl">অপেক্ষা করছি...</span>
                 </div>
             </div>
-        </div>
 
+            <!-- Translation Output Section -->
+            <div class="translation-container glass-panel">
+                <div class="translation-header">
+                    <h2>Live Translation</h2>
+                    <div class="speaker-btn" id="speak-btn" title="Text to Speech">
+                        🔊
+                    </div>
+                </div>
+                <div class="output-box" id="output-box">
+                    <p class="placeholder-text">Waiting for sign language input...</p>
+                </div>
+                <div class="gloss-box" id="gloss-box">
+                    <span class="gloss-label">Gloss:</span>
+                    <span id="gloss-output">-</span>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/static/sw.js').then(registration => {
-                    console.log('SW registered: ', registration);
-                }).catch(registrationError => {
-                    console.log('SW registration failed: ', registrationError);
-                });
-            });
-        }
-    
-        const wsUrlBase = `ws://${window.location.host}/ws/room/`;
-        let ws = null;
-        let activeRole = 'signer';
-        
-        // UI Elements
-        const statusBadge = document.getElementById('status-badge');
-        const connectBtn = document.getElementById('connect-btn');
-        const signerView = document.getElementById('signer-view');
-        const speakerView = document.getElementById('speaker-view');
-        const learningView = document.getElementById('learning-view');
-        const roleSelect = document.getElementById('role-select');
-        const modeSelect = document.getElementById('mode-select');
-
-        // Signer Logic (MediaPipe)
-        const videoElement = document.getElementById('input-video');
-        const canvasElement = document.getElementById('output-canvas');
-        const canvasCtx = canvasElement.getContext('2d');
-        let camera = null;
-        let hands = null;
-
-        // Speaker Logic (Speech)
-        let recognition = null;
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'bn-BD';
-            
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('text-reply').value = transcript;
-                sendSpeechReply(transcript);
-            };
-        }
-
-        function switchView() {
-            signerView.classList.add('hidden');
-            speakerView.classList.add('hidden');
-            learningView.classList.add('hidden');
-
-            if (modeSelect.value === 'learn') {
-                learningView.classList.remove('hidden');
-                initMediaPipe(document.getElementById('learn-canvas'));
-            } else {
-                if (roleSelect.value === 'signer') {
-                    signerView.classList.remove('hidden');
-                    initMediaPipe(canvasElement);
-                } else {
-                    speakerView.classList.remove('hidden');
-                    stopCamera();
-                }
-            }
-        }
-
-        roleSelect.addEventListener('change', () => { activeRole = roleSelect.value; switchView(); connectWs(); });
-        modeSelect.addEventListener('change', () => { switchView(); });
-
-        connectBtn.addEventListener('click', connectWs);
-
-        function connectWs() {
-            if (ws) ws.close();
-            const roomId = document.getElementById('room-id').value || 'default';
-            ws = new WebSocket(`${wsUrlBase}${roomId}/${activeRole}`);
-            
-            ws.onopen = () => {
-                statusBadge.textContent = '🟢 Connected';
-                statusBadge.className = 'font-bold text-[#A6E3A1]';
-            };
-            ws.onclose = () => {
-                statusBadge.textContent = '🔴 Offline';
-                statusBadge.className = 'font-bold text-[#F38BA8]';
-            };
-            ws.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if (data.type === 'SIGN_TRANSLATION' && activeRole === 'speaker') {
-                    appendChatBubble('Signer', data.data.label_bn, data.data.audio_payload_base64);
-                } else if (data.type === 'SPEECH_TEXT' && activeRole === 'signer') {
-                    document.getElementById('speaker-reply').textContent = `Speaker: ${data.data.transcript}`;
-                }
-            };
-        }
-
-        function appendChatBubble(sender, text, audioB64) {
-            const chatHistory = document.getElementById('chat-history');
-            const div = document.createElement('div');
-            div.className = 'bg-[#313244] p-3 rounded-lg w-3/4';
-            div.innerHTML = `<span class="font-bold text-[#89B4FA]">${sender}:</span> ${text}`;
-            
-            if (audioB64) {
-                const btn = document.createElement('button');
-                btn.className = 'ml-4 text-xs bg-[#11111B] text-[#A6E3A1] px-2 py-1 rounded';
-                btn.textContent = '🔊 Play';
-                btn.onclick = () => {
-                    const audio = new Audio("data:audio/mp3;base64," + audioB64);
-                    audio.play();
-                };
-                div.appendChild(btn);
-                
-                // Auto-TTS fallback if audiob64 is missing, but here we just play the payload
-                const audio = new Audio("data:audio/mp3;base64," + audioB64);
-                audio.play();
-            } else {
-                // Web Speech API fallback
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'bn-BD';
-                speechSynthesis.speak(utterance);
-            }
-            
-            chatHistory.appendChild(div);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-        }
-
-        function sendSpeechReply(text) {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'SPEECH_TEXT', data: { transcript: text } }));
-                appendChatBubble('You', text, null);
-            }
-        }
-
-        document.getElementById('send-reply-btn').addEventListener('click', () => {
-            const text = document.getElementById('text-reply').value;
-            if (text) { sendSpeechReply(text); document.getElementById('text-reply').value = ''; }
-        });
-
-        document.getElementById('mic-btn').addEventListener('click', () => {
-            if (recognition) recognition.start();
-        });
-
-        function initMediaPipe(targetCanvas) {
-            if (hands) return; // already init
-            
-            hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
-            hands.setOptions({
-                maxNumHands: 2,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
-            
-            hands.onResults((results) => {
-                const ctx = targetCanvas.getContext('2d');
-                ctx.save();
-                ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-                ctx.drawImage(results.image, 0, 0, targetCanvas.width, targetCanvas.height);
-                if (results.multiHandLandmarks) {
-                    for (const landmarks of results.multiHandLandmarks) {
-                        drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 5});
-                        drawLandmarks(ctx, landmarks, {color: '#FF0000', lineWidth: 2});
-                    }
-                    
-                    // Transmit to websocket dummy mock
-                    // In a real scenario, we extract array and send to websocket
-                    if (ws && ws.readyState === WebSocket.OPEN && activeRole === 'signer' && modeSelect.value === 'comm') {
-                        // Mocking prediction text for visual feedback
-                        document.getElementById('signer-preview').textContent = "Tracking...";
-                    }
-                }
-                ctx.restore();
-            });
-
-            camera = new Camera(videoElement, {
-                onFrame: async () => {
-                    targetCanvas.width = videoElement.videoWidth;
-                    targetCanvas.height = videoElement.videoHeight;
-                    await hands.send({image: videoElement});
-                },
-                width: 640,
-                height: 480
-            });
-            camera.start();
-        }
-
-        function stopCamera() {
-            if (camera) {
-                camera.stop();
-                hands.close();
-                camera = null;
-                hands = null;
-            }
-        }
-
-        // Initialize default view
-        switchView();
-    </script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

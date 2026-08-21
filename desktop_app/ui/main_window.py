@@ -423,7 +423,10 @@ class IsharaMainWindow(QMainWindow):
         
         # Send to backend
         if self.network_worker and data.get("is_stable"):
-            self.network_worker.send_sign_event(data)
+            try:
+                self.network_worker.send_sign_event(data)
+            except Exception as e:
+                logger.warning("MainWindow: Failed to forward sign event to NetworkWorker: %s", e)
 
     @pyqtSlot(dict)
     def _on_network_message(self, data: dict):

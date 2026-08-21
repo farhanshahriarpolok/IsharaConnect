@@ -37,6 +37,7 @@ from desktop_app.ui.components.circular_gauge import CircularAccuracyGauge
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 from desktop_app.ui.components.sign_card_viewer import SignCardViewer
+from desktop_app.ui.components.human_rig_viewer import HumanRigViewer
 from desktop_app.ui.theme import ThemeStyles
 
 logger = logging.getLogger(__name__)
@@ -386,11 +387,44 @@ class AcademyDashboard(QWidget):
         self.ref_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_badge)
 
-        # Middle: High-Fidelity Dedicated SVG Visual Card Viewer
+        # Row 5: Segmented View Mode Switch: [ 🖼️ স্পষ্ট চিত্র ] vs [ 🎬 জীবন্ত অ্যাকশন (Motion Demo) ]
+        toggle_layout = QHBoxLayout()
+        toggle_layout.setSpacing(6)
+
+        self.btn_view_static = QPushButton("🖼️ স্পষ্ট চিত্র")
+        self.btn_view_static.setCheckable(True)
+        self.btn_view_static.setChecked(True)
+        self.btn_view_static.setFixedHeight(30)
+        self.btn_view_static.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self.btn_view_static.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+        self.btn_view_static.clicked.connect(lambda: self._set_reference_view_mode(0))
+
+        self.btn_view_motion = QPushButton("🎬 জীবন্ত অ্যাকশন")
+        self.btn_view_motion.setCheckable(True)
+        self.btn_view_motion.setChecked(False)
+        self.btn_view_motion.setFixedHeight(30)
+        self.btn_view_motion.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self.btn_view_motion.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {TEXT_COLOR}; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+        self.btn_view_motion.clicked.connect(lambda: self._set_reference_view_mode(1))
+
+        toggle_layout.addWidget(self.btn_view_static)
+        toggle_layout.addWidget(self.btn_view_motion)
+        right_layout.addLayout(toggle_layout)
+
+        # Middle: Stacked Widget containing SVG SignCardViewer (0) and 2D Kinematic HumanRigViewer (1)
+        self.ref_display_stack = QStackedWidget()
+        self.ref_display_stack.setFixedSize(280, 240)
+
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.sign_card_viewer.setFixedSize(280, 220)
+        self.sign_card_viewer.setFixedSize(280, 240)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
-        right_layout.addWidget(self.sign_card_viewer, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        self.human_rig_viewer = HumanRigViewer("dhonnobad", "ধন্যবাদ", "Thank you")
+        self.human_rig_viewer.setFixedSize(280, 240)
+
+        self.ref_display_stack.addWidget(self.sign_card_viewer)  # Index 0: Static Card
+        self.ref_display_stack.addWidget(self.human_rig_viewer)  # Index 1: Live Motion Rig
+        right_layout.addWidget(self.ref_display_stack, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Bottom: Anatomical Step-by-Step Instruction Guide
         self.ref_instructions = QTextEdit()
@@ -398,6 +432,7 @@ class AcademyDashboard(QWidget):
         self.ref_instructions.setMinimumHeight(150)
         self.ref_instructions.setStyleSheet("background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px; font-size: 13px; color: #E2E8F0;")
         right_layout.addWidget(self.ref_instructions)
+
 
         right_scroll.setWidget(right_panel)
         splitter.addWidget(right_scroll)
@@ -524,8 +559,24 @@ class AcademyDashboard(QWidget):
         # Reset coach banner
         self.update_posture_coach(f"ক্যামেরার সামনে '{bn}' এর ভঙ্গি প্রদর্শন করুন...", state="idle")
 
-        # Load Visual Card via bulletproof SignCardViewer
+        # Load Visual Card via bulletproof SignCardViewer and 2D Kinematic Rig
         self.sign_card_viewer.load_sign(slug, bn, en)
+        self.human_rig_viewer.load_sign_motion(slug, bn, en)
+
+    def _set_reference_view_mode(self, mode_idx: int):
+        """Switches between Static Card (0) and Kinematic Human Rig Motion Demo (1)."""
+        self.ref_display_stack.setCurrentIndex(mode_idx)
+        if mode_idx == 0:
+            self.btn_view_static.setChecked(True)
+            self.btn_view_motion.setChecked(False)
+            self.btn_view_static.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+            self.btn_view_motion.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {TEXT_COLOR}; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+        else:
+            self.btn_view_static.setChecked(False)
+            self.btn_view_motion.setChecked(True)
+            self.btn_view_static.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {TEXT_COLOR}; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+            self.btn_view_motion.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; border-radius: 6px; padding: 4px 10px; font-weight: bold;")
+            self.human_rig_viewer.play()
 
     def update_posture_coach(self, advice_text: str, state: str = "idle"):
         """Updates the Live Posture Coach notification banner."""

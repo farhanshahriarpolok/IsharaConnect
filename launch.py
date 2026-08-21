@@ -8,6 +8,11 @@ import time
 import urllib.request
 from pathlib import Path
 
+# Explicitly add project root to PYTHONPATH to prevent module import crashes
+project_root = Path(__file__).resolve().parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("launcher")
 
@@ -59,17 +64,15 @@ def main():
         
     logger.info("Backend server is healthy and running.")
     
-    # 3. Start PyQt6 Desktop Client
-    logger.info("Launching PyQt6 Desktop Client...")
-    desktop_script = Path("desktop_app/main.py").resolve()
-    
+    # 3. Start PyQt6 Desktop Client in the active interactive foreground process
+    logger.info("Launching PyQt6 Desktop Client in foreground...")
     try:
-        # Blocking call to keep launcher alive while UI runs
-        subprocess.run([sys.executable, str(desktop_script)], check=True)
-    except subprocess.CalledProcessError as e:
-        logger.error("Desktop client exited with error: %s", e)
+        from desktop_app.main import main as desktop_main
+        desktop_main()
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        logger.error("Desktop client exited with error: %s", e)
     finally:
         # 4. Cleanup on exit
         logger.info("Cleaning up backend process...")

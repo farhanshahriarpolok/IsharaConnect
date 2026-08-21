@@ -36,6 +36,7 @@ from desktop_app.controllers.certificate_generator import CertificateGenerator
 from desktop_app.ui.components.circular_gauge import CircularAccuracyGauge
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
+from desktop_app.ui.components.sign_card_viewer import SignCardViewer
 from desktop_app.ui.theme import ThemeStyles
 
 logger = logging.getLogger(__name__)
@@ -345,23 +346,10 @@ class AcademyDashboard(QWidget):
         self.ref_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_badge)
 
-        # SVG Visual Illustration Card Container (minimum 280x220)
-        self.svg_container = QWidget()
-        self.svg_container.setFixedSize(280, 220)
-        self.svg_layout = QVBoxLayout(self.svg_container)
-        self.svg_layout.setContentsMargins(0, 0, 0, 0)
-
-        if SVG_WIDGET_AVAILABLE:
-            self.svg_widget = QSvgWidget()
-            self.svg_widget.setFixedSize(280, 220)
-            self.svg_layout.addWidget(self.svg_widget)
-        else:
-            self.svg_widget = QLabel("[Visual Card]")
-            self.svg_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.svg_widget.setFixedSize(280, 220)
-            self.svg_layout.addWidget(self.svg_widget)
-
-        right_layout.addWidget(self.svg_container, alignment=Qt.AlignmentFlag.AlignCenter)
+        # SVG / Geometric Visual Illustration Card
+        self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
+        self.svg_widget = self.sign_card_viewer  # compatibility alias
+        right_layout.addWidget(self.sign_card_viewer, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Interactive Pronunciation Button
         self.listen_btn = QPushButton("🔊 উচ্চারণ শুনুন (Pronounce)")
@@ -466,23 +454,8 @@ class AcademyDashboard(QWidget):
             instructions_html += "<br>• নির্ভুল স্কোরের জন্য ক্যামেরার সামনে হাত স্থির রাখুন।"
         self.ref_instructions.setHtml(instructions_html)
 
-        # Load SVG Visual Card
-        svg_path = Path(f"dataset/visual_cards/{slug}.svg")
-        if not svg_path.exists():
-            for f in Path("dataset/visual_cards").glob("*.svg"):
-                if slug in f.stem or f.stem in slug:
-                    svg_path = f
-                    break
-
-        if svg_path.exists():
-            if SVG_WIDGET_AVAILABLE and isinstance(self.svg_widget, QSvgWidget):
-                self.svg_widget.load(str(svg_path))
-            else:
-                pix = QPixmap(str(svg_path)).scaled(280, 220, Qt.AspectRatioMode.KeepAspectRatio)
-                self.svg_widget.setPixmap(pix)
-        else:
-            if isinstance(self.svg_widget, QLabel):
-                self.svg_widget.setText(f"[{bn} Visual Reference]")
+        # Load Visual Card via bulletproof SignCardViewer
+        self.sign_card_viewer.load_sign(slug, bn, en)
 
     def _on_curriculum_selected(self, item: QTreeWidgetItem, column: int):
         """Triggered when user clicks a lesson in the curriculum tree."""

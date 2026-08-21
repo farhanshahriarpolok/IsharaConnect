@@ -1,11 +1,11 @@
-"""Bulletproof SignCardViewer Widget for rendering SVG Visual Cards and Geometric Fallbacks."""
+"""Bulletproof SignCardViewer Widget for rendering SVG/PNG Visual Cards and Geometric Fallbacks."""
 
 import logging
 from pathlib import Path
 from typing import Optional
 
 from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen
+from PyQt6.QtGui import QBrush, QColor, QFont, QImage, QPainter, QPainterPath, QPen, QPixmap
 from PyQt6.QtWidgets import QWidget
 
 try:
@@ -24,7 +24,7 @@ COLOR_EMERALD = QColor("#10B981")
 
 
 class SignCardViewer(QWidget):
-    """Renders visual BdSL sign cards via SVG with high-contrast canvas fallback."""
+    """Renders visual BdSL sign cards via SVG/PNG with high-contrast canvas fallback."""
 
     def __init__(
         self,
@@ -38,13 +38,14 @@ class SignCardViewer(QWidget):
         self.label_bn = label_bn
         self.label_en = label_en
         self.svg_renderer: Optional[QSvgRenderer] = None
-        self.svg_path: Optional[Path] = None
+        self.pixmap: Optional[QPixmap] = None
+        self.asset_path: Optional[Path] = None
 
-        self.setMinimumSize(280, 220)
+        self.setMinimumSize(280, 240)
         self.load_sign(slug, label_bn, label_en)
 
     def load_sign(self, slug: str, label_bn: str = "", label_en: str = "") -> bool:
-        """Resolves and loads the visual SVG card for the given sign."""
+        """Resolves and loads the visual SVG or PNG card for the given sign."""
         self.slug = slug
         if label_bn:
             self.label_bn = label_bn
@@ -52,46 +53,55 @@ class SignCardViewer(QWidget):
             self.label_en = label_en
 
         self.svg_renderer = None
-        self.svg_path = self._resolve_svg_path(slug)
+        self.pixmap = None
+        self.asset_path = self._resolve_asset_path(slug)
 
-        if self.svg_path and SVG_AVAILABLE:
-            try:
-                renderer = QSvgRenderer(str(self.svg_path))
-                if renderer.isValid():
-                    self.svg_renderer = renderer
-            except Exception as e:
-                logger.debug(f"Failed loading SVG {self.svg_path}: {e}")
+        if self.asset_path and self.asset_path.exists():
+            if self.asset_path.suffix.lower() == ".svg" and SVG_AVAILABLE:
+                try:
+                    renderer = QSvgRenderer(str(self.asset_path))
+                    if renderer.isValid():
+                        self.svg_renderer = renderer
+                except Exception as e:
+                    logger.debug(f"Failed loading SVG {self.asset_path}: {e}")
+            elif self.asset_path.suffix.lower() in [".png", ".jpg", ".jpeg"]:
+                try:
+                    pm = QPixmap(str(self.asset_path))
+                    if not pm.isNull():
+                        self.pixmap = pm
+                except Exception as e:
+                    logger.debug(f"Failed loading Pixmap {self.asset_path}: {e}")
 
         self.update()
-        return self.svg_renderer is not None
+        return (self.svg_renderer is not None) or (self.pixmap is not None)
 
-    def _resolve_svg_path(self, slug: str) -> Optional[Path]:
-        """Resolves the absolute path to dataset/visual_cards/{slug}.svg."""
+    def _resolve_asset_path(self, slug: str) -> Optional[Path]:
+        """Resolves the absolute path to dataset/visual_cards/{slug}.svg or .png."""
         if not slug:
             return None
 
         clean_slug = slug.strip().lower()
-        candidates = [
-            Path(__file__).resolve().parents[3] / "dataset" / "visual_cards" / f"{clean_slug}.svg",
-            Path.cwd() / "dataset" / "visual_cards" / f"{clean_slug}.svg",
-            Path("dataset/visual_cards") / f"{clean_slug}.svg"
+        search_dirs = [
+            Path(__file__).resolve().parents[3] / "dataset" / "visual_cards",
+            Path.cwd() / "dataset" / "visual_cards",
+            Path("dataset/visual_cards")
         ]
 
-        for p in candidates:
-            if p.exists():
-                return p
-
-        # Check in visual_cards directory with exact stem match ignoring case
-        vc_dir = Path.cwd() / "dataset" / "visual_cards"
-        if vc_dir.exists():
-            for f in vc_dir.glob("*.svg"):
-                if f.stem.lower() == clean_slug:
+        for s_dir in search_dirs:
+            if not s_dir.exists():
+                continue
+            for ext in [".svg", ".png", ".jpg"]:
+                p = s_dir / f"{clean_slug}{ext}"
+                if p.exists():
+                    return p
+            for f in s_dir.glob(f"*{clean_slug}*"):
+                if f.suffix.lower() in [".svg", ".png", ".jpg"]:
                     return f
 
         return None
 
     def paintEvent(self, event):
-        """Paints SVG or cyber high-contrast geometric fallback."""
+        """Paints SVG, Pixmap, or cyber high-contrast geometric fallback."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
@@ -108,9 +118,13 @@ class SignCardViewer(QWidget):
 
         # 2. Render SVG Card if available
         if self.svg_renderer and self.svg_renderer.isValid():
-            # Inset SVG to keep rounded card border
-            inner_rect = QRectF(10, 10, w - 20, h - 20)
+            inner_rect = QRectF(8, 8, w - 16, h - 16)
             self.svg_renderer.render(painter, inner_rect)
+        elif self.pixmap and not self.pixmap.isNull():
+            scaled = self.pixmap.scaled(int(w - 16), int(h - 16), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            px = int((w - scaled.width()) / 2)
+            py = int((h - scaled.height()) / 2)
+            painter.drawPixmap(px, py, scaled)
         else:
             # 3. Fallback High-Contrast Cyber Graphic
             self._paint_fallback_graphic(painter, w, h)

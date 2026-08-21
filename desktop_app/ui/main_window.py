@@ -107,28 +107,44 @@ class IsharaMainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.signer_view = self._create_signer_view()
         self.speaker_view = self._create_speaker_view()
-        self.learning_view = LearningHubWidget()
         self.academy_view = AcademyDashboard()
+        self.learning_view = self.academy_view  # Unified 3-column AcademyDashboard
+        self.academy_dashboard = self.academy_view
         self.scenario_view = ScenarioSimulator()
         
         self.stacked_widget.addWidget(self.signer_view)
         self.stacked_widget.addWidget(self.speaker_view)
-        self.stacked_widget.addWidget(self.learning_view)
         self.stacked_widget.addWidget(self.academy_view)
         self.stacked_widget.addWidget(self.scenario_view)
         
-        if self.mode.lower() == "signer":
+        if self.mode == "signer":
             self.stacked_widget.setCurrentWidget(self.signer_view)
         else:
             self.stacked_widget.setCurrentWidget(self.speaker_view)
             
         main_layout.addWidget(self.stacked_widget)
         
-        # Connect Learning Hub Signals
-        self.learning_view.request_camera_start.connect(self._ensure_camera_running)
-        self.learning_view.request_camera_stop.connect(self._stop_camera)
+        # Connect Learning Hub / Academy Signals
         self.academy_view.request_back.connect(lambda: self.nav_mode.setCurrentIndex(0))
         self.scenario_view.request_back.connect(lambda: self.nav_mode.setCurrentIndex(0))
+
+    def _set_mode(self, mode_str: str):
+        """Sets application mode programmatically."""
+        m = mode_str.lower()
+        if "learn" in m or "academy" in m:
+            self.nav_mode.setCurrentIndex(1)
+            self._change_app_mode("Learning Hub")
+        elif "scenario" in m:
+            self.nav_mode.setCurrentIndex(3)
+            self._change_app_mode("Scenario Simulator")
+        elif "speaker" in m:
+            self._change_mode("Speaker")
+        else:
+            self._change_mode("Signer")
+
+    def set_mode(self, mode_str: str):
+        """Public alias for _set_mode."""
+        self._set_mode(mode_str)
 
     def _create_signer_view(self) -> QWidget:
         """Create the layout for Deaf/Mute users."""
@@ -282,15 +298,12 @@ class IsharaMainWindow(QMainWindow):
         self.network_worker.start()
 
     def _change_app_mode(self, new_mode_str: str):
-        """Switch between Communication Mode and Learning Hub."""
-        is_learning = "Learning" in new_mode_str
-        is_academy = "Academy" in new_mode_str
+        """Switch between Communication Mode, Learning Hub, and Scenario Simulator."""
+        is_learning = ("Learning" in new_mode_str) or ("Academy" in new_mode_str)
         is_scenario = "Scenario" in new_mode_str
         
-        if is_learning or is_academy or is_scenario:
+        if is_learning or is_scenario:
             if is_learning:
-                self.stacked_widget.setCurrentWidget(self.learning_view)
-            elif is_academy:
                 self.stacked_widget.setCurrentWidget(self.academy_view)
             elif is_scenario:
                 self.stacked_widget.setCurrentWidget(self.scenario_view)

@@ -186,6 +186,7 @@ class AcademyDashboard(QWidget):
         left_panel = QFrame()
         left_panel.setObjectName("GlassCard")
         left_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 8px;")
+        left_panel.setMinimumWidth(220)
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -213,6 +214,7 @@ class AcademyDashboard(QWidget):
         center_panel = QFrame()
         center_panel.setObjectName("GlassCard")
         center_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px;")
+        center_panel.setMinimumWidth(400)
         center_layout = QVBoxLayout(center_panel)
 
         # Center Arena Header
@@ -313,6 +315,8 @@ class AcademyDashboard(QWidget):
         right_panel = QFrame()
         right_panel.setObjectName("GlassCard")
         right_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px; border: 1px solid rgba(6, 182, 212, 0.2);")
+        right_panel.setMinimumWidth(320)
+        right_panel.setMinimumHeight(450)
         right_layout = QVBoxLayout(right_panel)
 
         right_header = QLabel("📖 ইশারা নির্দেশিকা (Sign Guide)")
@@ -348,6 +352,7 @@ class AcademyDashboard(QWidget):
 
         # SVG / Geometric Visual Illustration Card
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
+        self.sign_card_viewer.setMinimumSize(280, 240)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
         right_layout.addWidget(self.sign_card_viewer, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -366,8 +371,11 @@ class AcademyDashboard(QWidget):
 
         splitter.addWidget(right_panel)
 
-        # Proportions: 20% (200), 45% (450), 35% (350)
-        splitter.setSizes([200, 450, 350])
+        # Explicit Splitter Stretch Factors: Left 20%, Center 45%, Right 35%
+        splitter.setSizes([220, 480, 360])
+        splitter.setStretchFactor(0, 20)
+        splitter.setStretchFactor(1, 45)
+        splitter.setStretchFactor(2, 35)
         main_layout.addWidget(splitter)
 
         # Camera frame timer

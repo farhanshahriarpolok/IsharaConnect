@@ -1,25 +1,33 @@
-<svg width="400" height="500" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background -->
-    <rect width="100%" height="100%" rx="15" fill="#1E1E2E"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 240" width="300" height="240">
+  <rect width="296" height="236" x="2" y="2" rx="14" fill="#181825" stroke="#06B6D4" stroke-width="2" />
+  
+  <!-- Category Badge -->
+  <rect x="12" y="12" width="70" height="18" rx="5" fill="#313244" />
+  <text x="47" y="24" fill="#A6E3A1" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" text-anchor="middle">External Dataset</text>
+
+  <!-- Large Bengali Character -->
+  <text x="150" y="55" fill="#89B4FA" font-family="SolaimanLipi, Arial, sans-serif" font-size="34" font-weight="bold" text-anchor="middle">অজ্ঞাত (training)</text>
+
+  <!-- English Subtitle -->
+  <text x="150" y="78" fill="#CDD6F4" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" text-anchor="middle">Training</text>
+
+  <!-- Anatomical Hand Gesture -->
+  <g transform="translate(0, 10)">
+    <circle cx="150" cy="160" r="22" fill="#313244" stroke="#06B6D4" stroke-width="2" />
+<circle cx="150" cy="184" r="5" fill="#89B4FA" />
+<line x1="139.4" y1="145.4" x2="138.2" y2="143.8" stroke="rgba(6, 182, 212, 0.6)" stroke-width="4" stroke-linecap="round" />
+<circle cx="138.2" cy="143.8" r="4" fill="#10B981" />
+<line x1="144.4" y1="142.9" x2="137.0" y2="120.1" stroke="rgba(6, 182, 212, 0.6)" stroke-width="4" stroke-linecap="round" />
+<circle cx="137.0" cy="120.1" r="4" fill="#10B981" />
+<line x1="150.0" y1="142.0" x2="150.0" y2="140.0" stroke="rgba(6, 182, 212, 0.6)" stroke-width="4" stroke-linecap="round" />
+<circle cx="150.0" cy="140.0" r="4" fill="#10B981" />
+<line x1="155.6" y1="142.9" x2="163.0" y2="120.1" stroke="rgba(6, 182, 212, 0.6)" stroke-width="4" stroke-linecap="round" />
+<circle cx="163.0" cy="120.1" r="4" fill="#10B981" />
+<line x1="160.6" y1="145.4" x2="174.7" y2="126.0" stroke="rgba(6, 182, 212, 0.6)" stroke-width="4" stroke-linecap="round" />
+<circle cx="174.7" cy="126.0" r="4" fill="#10B981" />
     
-    <!-- Header Text -->
-    <text x="200" y="50" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#89B4FA" text-anchor="middle">অজ্ঞাত (training)</text>
-    <text x="200" y="80" font-family="Arial, sans-serif" font-size="18" fill="#CDD6F4" text-anchor="middle">Training</text>
-    
-    <!-- Central Geometric Hand Stand-in -->
-    <circle cx="200" cy="220" r="80" fill="#313244" stroke="#F9E2AF" stroke-width="4"/>
-    <rect x="190" y="140" width="20" height="60" rx="10" fill="#A6E3A1"/> <!-- Finger stand-in -->
-    <circle cx="200" cy="140" r="10" fill="#F38BA8"/> <!-- Touch point -->
-    
-    <!-- Info Footer -->
-    <rect x="20" y="380" width="360" height="100" rx="10" fill="#181825"/>
-    <text x="40" y="410" font-family="Arial, sans-serif" font-size="14" fill="#CDD6F4" font-weight="bold">Type: Unknown | Unknown Handed</text>
-    
-    <!-- Word-wrap isn't native to SVG 1.1 text, so we split description -->
-    <text x="40" y="440" font-family="Arial, sans-serif" font-size="12" fill="#A6ADC8">
-        
-    </text>
-    <text x="40" y="460" font-family="Arial, sans-serif" font-size="12" fill="#A6ADC8">
-        
-    </text>
+  </g>
+
+  <!-- Footnote -->
+  <text x="150" y="224" fill="#94A3B8" font-family="Segoe UI, sans-serif" font-size="9" text-anchor="middle">BdSL Canonical Standard Vector Card</text>
 </svg>

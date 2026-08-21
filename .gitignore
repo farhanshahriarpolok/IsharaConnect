@@ -36,11 +36,15 @@ wheels/
 # Data & Large Artifacts
 dataset/raw_landmarks/
 dataset/processed/
+dataset/external/
 models/checkpoints/
 *.npy
 *.mp4
 *.avi
 *.mov
+*.jpg
+*.jpeg
+*.png
 dataset/processed/*.zip
 !models/onnx/.gitkeep
 !models/labels/.gitkeep

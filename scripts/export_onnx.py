@@ -6,6 +6,16 @@ from pathlib import Path
 import torch
 import onnxruntime as ort
 import numpy as np
+import sys
+
+# Fix Windows console encoding issue when torch prints checkmark emojis
+if sys.stdout.encoding.lower() != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core_engine.inference.model import BdSLSequenceClassifier
 
@@ -15,19 +25,28 @@ logger = logging.getLogger("export_onnx")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export PyTorch BdSL Checkpoint to ONNX")
-    parser.add_argument("--model-path", type=str, required=True, help="Path to PyTorch checkpoint (.pt)")
+    parser.add_argument("--model-path", type=str, default="models/checkpoints/bdsl_model_best.pth", help="Path to PyTorch checkpoint (.pt)")
     parser.add_argument("--output", type=str, default="models/onnx/bdsl_model.onnx", help="Output ONNX model path")
-    parser.add_argument("--num-classes", type=int, default=24, help="Number of classes in the model")
 
     args = parser.parse_args()
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    
+    import json
+    labels_file = Path("dataset/labels.json")
+    if labels_file.exists():
+        with open(labels_file, "r", encoding="utf-8") as f:
+            labels_data = json.load(f)
+        num_classes = len(labels_data.get("signs", []))
+    else:
+        num_classes = 24
+        logger.warning("labels.json not found. Defaulting to 24 classes.")
     
     if not Path(args.model_path).exists():
         logger.error("Model path %s does not exist", args.model_path)
         return
 
     logger.info("Loading PyTorch model from %s", args.model_path)
-    model = BdSLSequenceClassifier(input_dim=128, num_classes=args.num_classes)
+    model = BdSLSequenceClassifier(input_dim=128, num_classes=num_classes)
     model.load_state_dict(torch.load(args.model_path, map_location=torch.device('cpu')))
     model.eval()
 

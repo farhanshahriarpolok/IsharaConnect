@@ -11,6 +11,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 import math
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from core_engine.inference.model import BdSLSequenceClassifier
 
@@ -44,16 +47,40 @@ def generate_synthetic_baseline(num_classes: int, samples_per_class: int = 50, s
 
 
 def load_dataset(dataset_dir: str, num_classes: int):
-    """Load dataset, or fallback to synthetic generation."""
-    # In a real scenario, this would load .npy files from dataset_dir
-    # Here we fallback to synthetic for pipeline validation as requested
-    logger.warning("Using synthetic baseline data generation for pipeline validation.")
-    return generate_synthetic_baseline(num_classes)
+    """Load dataset from .npy files in dataset_dir."""
+    dataset_path = Path(dataset_dir)
+    X = []
+    y = []
+    
+    # Check if there are real .npy files
+    npy_files = list(dataset_path.glob("**/*.npy"))
+    if not npy_files:
+        logger.warning("No real data found in %s. Using synthetic baseline.", dataset_dir)
+        return generate_synthetic_baseline(num_classes)
+        
+    logger.info("Found %d real .npy sequences in %s", len(npy_files), dataset_dir)
+    
+    for f in npy_files:
+        try:
+            # f.parent.name should be the class ID
+            label = int(f.parent.name)
+            seq = np.load(f)
+            # seq shape should be (30, 128) or similar
+            X.append(seq)
+            y.append(label)
+        except Exception as e:
+            logger.warning("Failed to load %s: %s", f, e)
+            
+    if not X:
+        logger.warning("No valid sequences loaded. Falling back to synthetic.")
+        return generate_synthetic_baseline(num_classes)
+        
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train BdSL Landmark Recognition Models")
-    parser.add_argument("--dataset-dir", type=str, default="dataset/processed", help="Path to preprocessed dataset")
+    parser.add_argument("--dataset-dir", type=str, default="dataset/raw_landmarks", help="Path to preprocessed dataset")
     parser.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
     parser.add_argument("--learning-rate", type=float, default=1e-3, help="Learning rate")
@@ -73,15 +100,20 @@ def main() -> None:
     
     X, y = load_dataset(args.dataset_dir, num_classes)
     
-    # Needs to match 128 for input if using normalizer output. 
-    # Normalizer outputs 128 (126 + 2 presence flags).
-    # Since synthetic uses 126, let's pad to 128 to match production dimensions
-    X_padded = np.zeros((X.shape[0], X.shape[1], 128), dtype=np.float32)
-    X_padded[:, :, :126] = X
-    X_padded[:, :, 126:] = 1.0 # Set presence flags
-    X = X_padded
+    # Ensure input matches 128 dimensions expected by model
+    if X.shape[-1] != 128:
+        X_padded = np.zeros((X.shape[0], X.shape[1], 128), dtype=np.float32)
+        X_padded[:, :, :X.shape[-1]] = X
+        if X.shape[-1] == 126:
+            X_padded[:, :, 126:] = 1.0 # Set presence flags
+        X = X_padded
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+    classes, counts = np.unique(y, return_counts=True)
+    if any(c < 2 for c in counts):
+        logger.warning("Some classes have fewer than 2 samples. Disabling stratified split.")
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+    else:
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
     
     train_dataset = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
     val_dataset = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
@@ -120,6 +152,9 @@ def main() -> None:
         model.eval()
         val_loss = 0.0
         correct = 0
+        class_correct = {i: 0 for i in range(num_classes)}
+        class_total = {i: 0 for i in range(num_classes)}
+        
         with torch.no_grad():
             for batch_X, batch_y in val_loader:
                 batch_X, batch_y = batch_X.to(device), batch_y.to(device)
@@ -130,11 +165,21 @@ def main() -> None:
                 _, preds = torch.max(outputs, 1)
                 correct += torch.sum(preds == batch_y).item()
                 
+                for p, t in zip(preds, batch_y):
+                    class_correct[t.item()] += (p == t).item()
+                    class_total[t.item()] += 1
+                
         val_loss /= len(val_loader.dataset)
         val_acc = correct / len(val_loader.dataset)
         
         if epoch % 5 == 0 or epoch == args.epochs - 1:
             logger.info(f"Epoch {epoch+1}/{args.epochs} - Train Loss: {train_loss:.4f} - Val Loss: {val_loss:.4f} - Val Acc: {val_acc:.4f}")
+            # Print class-wise accuracy for last epoch
+            if epoch == args.epochs - 1:
+                logger.info("Class-wise Accuracy:")
+                for i in range(num_classes):
+                    if class_total[i] > 0:
+                        logger.info(f"  Class {i} ({labels_data['signs'][i]['slug'] if i < len(labels_data['signs']) else 'unknown'}): {class_correct[i]/class_total[i]:.2f}")
             
         if val_loss < best_val_loss:
             best_val_loss = val_loss

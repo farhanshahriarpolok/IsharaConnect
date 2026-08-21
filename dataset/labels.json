@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "language": "Bangla Sign Language (BdSL)",
-  "total_signs": 24,
+  "total_signs": 27,
   "signs": [
     {
       "id": 0,
@@ -218,6 +218,27 @@
       "category": "static",
       "hands": 1,
       "description": "Index, middle, and ring fingers extended"
+    },
+    {
+      "id": 24,
+      "slug": "preprocessing",
+      "bangla": "অজ্ঞাত (preprocessing)",
+      "english": "Preprocessing",
+      "category": "External Dataset"
+    },
+    {
+      "id": 25,
+      "slug": "resources",
+      "bangla": "অজ্ঞাত (resources)",
+      "english": "Resources",
+      "category": "External Dataset"
+    },
+    {
+      "id": 26,
+      "slug": "training",
+      "bangla": "অজ্ঞাত (training)",
+      "english": "Training",
+      "category": "External Dataset"
     }
   ]
 }

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 from desktop_app.ui.theme import (
     ThemeStyles, ThemeColors, BORDER_RADIUS, BORDER_RADIUS_SM,
     BORDER_RADIUS_MD, BORDER_RADIUS_LG, BG_COLOR, PANEL_COLOR,
-    SURFACE_COLOR, TEXT_COLOR, ACCENT_BLUE, ACCENT_GREEN, ACCENT_RED
+    SURFACE_COLOR, TEXT_COLOR, TEXT_MUTED, ACCENT_BLUE, ACCENT_GREEN, ACCENT_RED
 )
 from desktop_app.ui.components.badges import PulsingStatusBadge
 from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
@@ -33,7 +33,7 @@ from desktop_app.ui.components.gesture_avatar import GestureAvatarWidget
 class IsharaMainWindow(QMainWindow):
     """Main Application Window."""
 
-    def __init__(self, mode: str, room_id: str, server_url: str):
+    def __init__(self, mode: str = "signer", room_id: str = "room_public_01", server_url: str = "ws://127.0.0.1:8000"):
         super().__init__()
         self.mode = mode
         self.room_id = room_id
@@ -64,6 +64,9 @@ class IsharaMainWindow(QMainWindow):
         title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
         title_label.setStyleSheet("color: #06B6D4;")
         
+        self.fps_lbl = QLabel("FPS: 0.0")
+        self.fps_lbl.setStyleSheet(f"color: {TEXT_MUTED}; font-family: monospace; font-size: 11px; padding: 2px 6px;")
+
         self.status_badge = PulsingStatusBadge("Offline", "#F43F5E")
         
         self.room_input = QLineEdit(self.room_id)
@@ -91,6 +94,7 @@ class IsharaMainWindow(QMainWindow):
         header_layout.addWidget(self.nav_mode)
         
         header_layout.addStretch()
+        header_layout.addWidget(self.fps_lbl)
         header_layout.addWidget(self.status_badge)
         header_layout.addWidget(self.room_input)
         header_layout.addWidget(self.join_btn)
@@ -234,6 +238,7 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker = CameraWorker()
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
+            self.camera_worker.trajectory_ready.connect(self._on_trajectory_ready)
             self.camera_worker.fps_updated.connect(self._update_fps)
             self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
@@ -269,6 +274,8 @@ class IsharaMainWindow(QMainWindow):
                 self.stacked_widget.setCurrentWidget(self.scenario_view)
                 
             self.status_badge.hide()
+            if hasattr(self, 'fps_lbl') and self.fps_lbl is not None:
+                self.fps_lbl.hide()
             self.room_input.hide()
             self.join_btn.hide()
             self.mode_selector.hide()
@@ -281,6 +288,8 @@ class IsharaMainWindow(QMainWindow):
             else:
                 self.stacked_widget.setCurrentWidget(self.speaker_view)
             self.status_badge.show()
+            if hasattr(self, 'fps_lbl') and self.fps_lbl is not None:
+                self.fps_lbl.show()
             self.room_input.show()
             self.join_btn.show()
             self.mode_selector.show()
@@ -361,6 +370,7 @@ class IsharaMainWindow(QMainWindow):
         self.camera_worker = CameraWorker(camera_id=index)
         self.camera_worker.frame_ready.connect(self._update_camera_feed)
         self.camera_worker.sign_detected.connect(self._on_sign_detected)
+        self.camera_worker.trajectory_ready.connect(self._on_trajectory_ready)
         self.camera_worker.fps_updated.connect(self._update_fps)
         self.camera_worker.error_occurred.connect(self._on_camera_error)
         self.camera_worker.start()
@@ -378,7 +388,8 @@ class IsharaMainWindow(QMainWindow):
 
     @pyqtSlot(float)
     def _update_fps(self, fps: float):
-        self.fps_lbl.setText(f"FPS: {fps:.1f}")
+        if hasattr(self, "fps_lbl") and self.fps_lbl is not None:
+            self.fps_lbl.setText(f"FPS: {fps:.1f}")
 
     @pyqtSlot(dict)
     def _on_trajectory_ready(self, data: dict):
@@ -486,6 +497,7 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker = CameraWorker(camera_id=idx)
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
+            self.camera_worker.trajectory_ready.connect(self._on_trajectory_ready)
             self.camera_worker.fps_updated.connect(self._update_fps)
             self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()

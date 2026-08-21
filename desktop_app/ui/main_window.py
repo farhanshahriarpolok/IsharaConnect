@@ -6,13 +6,15 @@ from PyQt6.QtGui import QImage, QPixmap, QFont, QColor
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QPushButton, QLineEdit, QComboBox, 
-    QFrame, QStackedWidget, QTextEdit, QProgressBar
+    QFrame, QStackedWidget, QTextEdit, QProgressBar,
+    QTextBrowser, QCheckBox
 )
 
 from desktop_app.controllers.camera_worker import CameraWorker
 from desktop_app.controllers.network_worker import NetworkWorker
 from desktop_app.ui.propose_sign_dialog import ProposeSignDialog
 from desktop_app.ui.learning_hub import LearningHubWidget
+from core_engine.audio.audio_player import player_instance
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +68,7 @@ class IsharaMainWindow(QMainWindow):
         
         self.camera_worker = None
         self.network_worker = None
+        self.audio_cache = {}
         
         self._init_ui()
         self._start_workers()
@@ -211,10 +214,19 @@ class IsharaMainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Transcript View
-        self.transcript_area = QTextEdit()
-        self.transcript_area.setReadOnly(True)
+        self.transcript_area = QTextBrowser()
+        self.transcript_area.setOpenLinks(False)
+        self.transcript_area.anchorClicked.connect(self._on_play_voice_clicked)
         self.transcript_area.setFont(QFont("Segoe UI", 16))
         self.transcript_area.setStyleSheet(f"background-color: {PANEL_COLOR}; padding: 10px;")
+        
+        # Audio Options
+        audio_layout = QHBoxLayout()
+        self.auto_play_cb = QCheckBox("Auto-Play TTS")
+        self.auto_play_cb.setChecked(True)
+        self.auto_play_cb.setStyleSheet(f"color: {TEXT_COLOR}; font-weight: bold;")
+        audio_layout.addWidget(self.auto_play_cb)
+        audio_layout.addStretch()
         
         # Bottom Controls
         controls = QHBoxLayout()
@@ -234,6 +246,7 @@ class IsharaMainWindow(QMainWindow):
         controls.addWidget(self.mic_btn)
         
         layout.addWidget(QLabel("Live Translation Feed (from Signer):"))
+        layout.addLayout(audio_layout)
         layout.addWidget(self.transcript_area)
         layout.addLayout(controls)
         return widget
@@ -402,15 +415,35 @@ class IsharaMainWindow(QMainWindow):
         payload = data.get("data", {})
         
         if event_type == "SIGN_TRANSLATION" and self.mode == "speaker":
+            player_instance.play_chime("notify")
             text = payload.get("label_bn", "")
-            self.transcript_area.append(f"<b>Signer:</b> {text}")
+            base64_audio = payload.get("audio_payload_base64", "")
             
-            # Optional: Play TTS audio if audio_payload_base64 exists
-            # import base64, io, pydub ...
+            if base64_audio:
+                msg_id = len(self.audio_cache)
+                self.audio_cache[msg_id] = base64_audio
+                self.transcript_area.append(f"<b>Signer:</b> {text} &nbsp;&nbsp; <a href='play:{msg_id}' style='color:{ACCENT_GREEN}; text-decoration:none;'>🔊 Play Voice</a>")
+                
+                if self.auto_play_cb.isChecked():
+                    player_instance.play_base64(base64_audio)
+            else:
+                self.transcript_area.append(f"<b>Signer:</b> {text}")
             
         elif event_type == "SPEECH_TEXT" and self.mode == "signer":
+            player_instance.play_chime("notify")
             transcript = payload.get("transcript", "")
             self.subtitle_lbl.setText(transcript)
+            
+    def _on_play_voice_clicked(self, url):
+        """Handle inline play voice links."""
+        scheme = url.scheme()
+        if scheme == "play":
+            try:
+                msg_id = int(url.path())
+                if msg_id in self.audio_cache:
+                    player_instance.play_base64(self.audio_cache[msg_id])
+            except ValueError:
+                pass
 
     def _send_reply(self):
         """Send typed text from speaker to signer."""

@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
 )
 
 from desktop_app.controllers.practice_controller import PracticeSessionManager
+from core_engine.audio.audio_player import player_instance
 
 logger = logging.getLogger(__name__)
 
@@ -225,5 +226,6 @@ class LearningHubWidget(QWidget):
             self.feedback_badge.setStyleSheet(f"color: {ACCENT_GREEN};")
             self.next_btn.setEnabled(True)
             self.accuracy_bar.setValue(100)
+            player_instance.play_chime("success")
         else:
             self.feedback_badge.setStyleSheet(f"color: {TEXT_COLOR};")

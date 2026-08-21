@@ -29,4 +29,5 @@ flutter:
   assets:
     - assets/models/
     - assets/curriculum/
+    - assets/dataset/
     - assets/images/

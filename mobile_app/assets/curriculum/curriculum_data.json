@@ -1,0 +1,294 @@
+{
+  "version": "2.0.0",
+  "curriculum_title": "National BdSL Interpreter & Accessibility Academy Curriculum",
+  "description": "Comprehensive 4-Tier Interactive Bangla Sign Language (BdSL) Training Curriculum",
+  "total_tiers": 4,
+  "tiers": [
+    {
+      "tier_id": 1,
+      "tier_name": "Level 1: Alphabets, Vowels & Digits (বর্ণমালা ও সংখ্যা)",
+      "description": "Foundational single-hand finger configurations, touch contact points, and numeric counting rules.",
+      "modules": [
+        {
+          "module_id": "t1_m1",
+          "module_title": "স্বরবর্ণ (Vowels)",
+          "lessons": [
+            {
+              "sign_id": "vowel_a",
+              "symbol": "অ",
+              "name_en": "Vowel A",
+              "phonetic": "Aw",
+              "handedness": "single",
+              "mnemonic": "Fist with thumb resting flat over curled fingers.",
+              "touch_rule": "Thumb tip touching index intermediate phalange.",
+              "exercise_prompt": "Form the letter 'অ' holding steady for 3 seconds."
+            },
+            {
+              "sign_id": "vowel_aa",
+              "symbol": "আ",
+              "name_en": "Vowel Aa",
+              "phonetic": "Aah",
+              "handedness": "single",
+              "mnemonic": "Open palm facing forward with thumb extended wide.",
+              "touch_rule": "No finger touch, all 5 digits fully spread.",
+              "exercise_prompt": "Present the letter 'আ' to the camera."
+            },
+            {
+              "sign_id": "vowel_i",
+              "symbol": "ই",
+              "name_en": "Vowel I",
+              "phonetic": "Ee",
+              "handedness": "single",
+              "mnemonic": "Index finger pointing up, other fingers curled.",
+              "touch_rule": "Thumb tip locks over middle and ring fingernails.",
+              "exercise_prompt": "Sign 'ই' with strict vertical index alignment."
+            },
+            {
+              "sign_id": "vowel_ee",
+              "symbol": "ঈ",
+              "name_en": "Vowel Ee",
+              "phonetic": "Long Ee",
+              "handedness": "single",
+              "mnemonic": "Index and middle fingers extended in a V-shape.",
+              "touch_rule": "Thumb locks ring and pinky fingers.",
+              "exercise_prompt": "Form 'ঈ' with standard victory spacing."
+            },
+            {
+              "sign_id": "vowel_u",
+              "symbol": "উ",
+              "name_en": "Vowel U",
+              "phonetic": "Oo",
+              "handedness": "single",
+              "mnemonic": "All four fingers curved forward touching thumb tip in an O shape.",
+              "touch_rule": "Fingertips (index, middle, ring, pinky) meet thumb tip.",
+              "exercise_prompt": "Create the enclosed 'উ' cup shape."
+            }
+          ]
+        },
+        {
+          "module_id": "t1_m2",
+          "module_title": "ব্যঞ্জনবর্ণ (Consonants)",
+          "lessons": [
+            {
+              "sign_id": "cons_k",
+              "symbol": "ক",
+              "name_en": "Consonant Ka",
+              "phonetic": "Kaw",
+              "handedness": "single",
+              "mnemonic": "Index and thumb form an open C curve facing left.",
+              "touch_rule": "No contact, arc opening approx 5cm.",
+              "exercise_prompt": "Demonstrate the curved 'ক' shape."
+            },
+            {
+              "sign_id": "cons_kh",
+              "symbol": "খ",
+              "name_en": "Consonant Kha",
+              "phonetic": "Khaw",
+              "handedness": "single",
+              "mnemonic": "Three middle fingers extended upward, thumb and pinky touching.",
+              "touch_rule": "Thumb pad touches pinky fingertip.",
+              "exercise_prompt": "Hold 'খ' steady with 3 upright digits."
+            },
+            {
+              "sign_id": "cons_g",
+              "symbol": "গ",
+              "name_en": "Consonant Ga",
+              "phonetic": "Gaw",
+              "handedness": "single",
+              "mnemonic": "Index and middle fingers pointing horizontally forward.",
+              "touch_rule": "Thumb rests on ring finger.",
+              "exercise_prompt": "Point horizontally for 'গ'."
+            },
+            {
+              "sign_id": "cons_gh",
+              "symbol": "ঘ",
+              "name_en": "Consonant Gha",
+              "phonetic": "Ghaw",
+              "handedness": "single",
+              "mnemonic": "Four fingers straight, thumb tucked inside palm.",
+              "touch_rule": "Thumb across palm base.",
+              "exercise_prompt": "Display upright flat hand for 'ঘ'."
+            }
+          ]
+        },
+        {
+          "module_id": "t1_m3",
+          "module_title": "সংখ্যা (Digits 0-9)",
+          "lessons": [
+            {
+              "sign_id": "digit_0",
+              "symbol": "০",
+              "name_en": "Zero",
+              "mnemonic": "O-ring with thumb and index fingers.",
+              "exercise_prompt": "Form zero circle."
+            },
+            {
+              "sign_id": "digit_1",
+              "symbol": "১",
+              "name_en": "One",
+              "mnemonic": "Index finger extended straight up.",
+              "exercise_prompt": "Show 1."
+            },
+            {
+              "sign_id": "digit_5",
+              "symbol": "৫",
+              "name_en": "Five",
+              "mnemonic": "Full open five-finger palm.",
+              "exercise_prompt": "Display 5 with all digits extended."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tier_id": 2,
+      "tier_name": "Level 2: 30 Essential Vocabulary Words (জরুরি শব্দভাণ্ডার)",
+      "description": "High-frequency communicative BdSL signs for daily interactions, healthcare, emergency, and social life.",
+      "categories": [
+        {
+          "category_name": "Greetings & Social (শুভেচ্ছা ও সৌজন্য)",
+          "words": [
+            { "id": 0, "bn": "আসসালামু আলাইকুম", "en": "Peace be upon you / Hello", "motion": "dynamic", "hands": 1, "description": "Hand touches forehead and moves outward." },
+            { "id": 1, "bn": "ধন্যবাদ", "en": "Thank you", "motion": "dynamic", "hands": 1, "description": "Hand touches chin and moves forward." },
+            { "id": 2, "bn": "স্বাগতম", "en": "Welcome", "motion": "dynamic", "hands": 2, "description": "Both palms open facing up moving gently inward." },
+            { "id": 3, "bn": "কেমন আছেন", "en": "How are you?", "motion": "dynamic", "hands": 2, "description": "Cupped hands rotating outward inquiringly." },
+            { "id": 4, "bn": "ভালো", "en": "Good / Fine", "motion": "static", "hands": 1, "description": "Thumbs-up at chest level." },
+            { "id": 5, "bn": "খারাপ", "en": "Bad", "motion": "dynamic", "hands": 1, "description": "Thumbs-down moving slightly down." }
+          ]
+        },
+        {
+          "category_name": "Family & Relationships (পরিবার ও সম্পর্ক)",
+          "words": [
+            { "id": 6, "bn": "মা", "en": "Mother", "motion": "dynamic", "hands": 1, "description": "Open thumb touches right cheek twice." },
+            { "id": 7, "bn": "বাবা", "en": "Father", "motion": "dynamic", "hands": 1, "description": "Open thumb touches forehead twice." },
+            { "id": 8, "bn": "ভাই", "en": "Brother", "motion": "dynamic", "hands": 2, "description": "Index fingers tap together horizontally." },
+            { "id": 9, "bn": "বোন", "en": "Sister", "motion": "dynamic", "hands": 2, "description": "Pinky fingers interlock and move forward." },
+            { "id": 10, "bn": "বন্ধু", "en": "Friend", "motion": "dynamic", "hands": 2, "description": "Both index fingers hook together." },
+            { "id": 11, "bn": "নাম", "en": "Name", "motion": "dynamic", "hands": 2, "description": "H-hands tapping across each other twice." }
+          ]
+        },
+        {
+          "category_name": "Healthcare & Emergency (চিকিৎসা ও জরুরি সেবা)",
+          "words": [
+            { "id": 12, "bn": "ডাক্তার", "en": "Doctor", "motion": "dynamic", "hands": 2, "description": "Two fingers tap on left wrist pulse." },
+            { "id": 13, "bn": "হাসপাতাল", "en": "Hospital", "motion": "dynamic", "hands": 2, "description": "Index fingers form a cross (+) on upper arm." },
+            { "id": 14, "bn": "ওষুধ", "en": "Medicine", "motion": "dynamic", "hands": 2, "description": "Middle finger rotates on palm as if grinding pill." },
+            { "id": 15, "bn": "ব্যথা", "en": "Pain", "motion": "dynamic", "hands": 2, "description": "Index fingers twist toward each other near pain site." },
+            { "id": 16, "bn": "সাহায্য", "en": "Help", "motion": "dynamic", "hands": 2, "description": "Closed fist on open palm moving upward together." },
+            { "id": 17, "bn": "জরুরি", "en": "Emergency", "motion": "dynamic", "hands": 1, "description": "E-hand shaking rapidly in the air." },
+            { "id": 18, "bn": "পুলিশ", "en": "Police", "motion": "static", "hands": 1, "description": "C-hand at left chest simulating badge." },
+            { "id": 19, "bn": "অ্যাম্বুলেন্স", "en": "Ambulance", "motion": "dynamic", "hands": 1, "description": "Rotating hand above head simulating beacon light." }
+          ]
+        },
+        {
+          "category_name": "Daily Needs & Food (দৈনন্দিন প্রয়োজন ও খাদ্য)",
+          "words": [
+            { "id": 20, "bn": "পানি", "en": "Water", "motion": "dynamic", "hands": 1, "description": "W-hand taps chin twice." },
+            { "id": 21, "bn": "খাবার", "en": "Food / Eat", "motion": "dynamic", "hands": 1, "description": "Squashed O-hand moves to mouth twice." },
+            { "id": 22, "bn": "টাকা", "en": "Money", "motion": "dynamic", "hands": 2, "description": "Fingers rubbing against thumb tip." },
+            { "id": 23, "bn": "বাথরুম", "en": "Washroom / Toilet", "motion": "dynamic", "hands": 1, "description": "T-hand shaking gently side to side." },
+            { "id": 24, "bn": "যাওয়া", "en": "Go", "motion": "dynamic", "hands": 2, "description": "Index fingers arc forward away from body." },
+            { "id": 25, "bn": "আসা", "en": "Come", "motion": "dynamic", "hands": 2, "description": "Index fingers beckon toward chest." },
+            { "id": 26, "bn": "প্রয়োজন", "en": "Need", "motion": "dynamic", "hands": 1, "description": "Bent index finger nods downward firmly." },
+            { "id": 27, "bn": "হ্যাঁ", "en": "Yes", "motion": "dynamic", "hands": 1, "description": "Fist nods up and down like a head nodding." },
+            { "id": 28, "bn": "না", "en": "No", "motion": "dynamic", "hands": 1, "description": "Index and middle fingers snap onto thumb." },
+            { "id": 29, "bn": "থামা", "en": "Stop", "motion": "dynamic", "hands": 2, "description": "Vertical flat palm chops into horizontal open palm." }
+          ]
+        }
+      ]
+    },
+    {
+      "tier_id": 3,
+      "tier_name": "Level 3: Sentence Grammar & Syntax (বাক্যতত্ত্ব ও ব্যাকরণ)",
+      "description": "Constructing multi-sign continuous sentences with Subject-Object-Verb (SOV) order, case inflections (বিভক্তি), and questions.",
+      "grammar_rules": [
+        {
+          "rule_name": "Subject-Object-Verb (SOV) Syntax",
+          "explanation": "BdSL follows Subject -> Object -> Verb structure. E.g., [আমি] [পানি] [খাব] instead of English SVO.",
+          "sample_glosses": ["আমি", "পানি", "পান"],
+          "natural_bengali": "আমি পানি পান করব।",
+          "natural_english": "I will drink water."
+        },
+        {
+          "rule_name": "Need & Possession Pronoun Transformation",
+          "explanation": "When followed by 'প্রয়োজন' (Need), Nominative pronoun 'আমি' inflects into Genitive 'আমার'.",
+          "sample_glosses": ["আমি", "জরুরি", "সাহায্য", "প্রয়োজন"],
+          "natural_bengali": "আমার জরুরি সাহায্য প্রয়োজন।",
+          "natural_english": "I need emergency help."
+        },
+        {
+          "rule_name": "Human Destination Postposition ('কাছে')",
+          "explanation": "When moving toward a person entity (ডাক্তার, পুলিশ), add 'কাছে' after genitive noun.",
+          "sample_glosses": ["আমি", "ডাক্তার", "যাওয়া", "প্রয়োজন"],
+          "natural_bengali": "আমার ডাক্তারের কাছে যাওয়া প্রয়োজন।",
+          "natural_english": "I need to visit a doctor."
+        },
+        {
+          "rule_name": "Negation Placement",
+          "explanation": "Negation markers ('না', 'নেই') are positioned at the sentence end in Bengali.",
+          "sample_glosses": ["আমি", "বুঝেছি", "না"],
+          "natural_bengali": "আমি বুঝতে পারিনি।",
+          "natural_english": "I did not understand."
+        },
+        {
+          "rule_name": "Question Markers (WH-Questions)",
+          "explanation": "Questions place interrogative words (কোথায়, কেমন, কেন) immediately before verb/predicate.",
+          "sample_glosses": ["হাসপাতাল", "কোথায়"],
+          "natural_bengali": "হাসপাতালটি কোথায়?",
+          "natural_english": "Where is the hospital?"
+        }
+      ]
+    },
+    {
+      "tier_id": 4,
+      "tier_name": "Level 4: Scenario Simulation & Dialogue Mastery (বাস্তব পরিস্থিতি ও কথোপকথন)",
+      "description": "Multi-turn roleplay simulations for critical institutional environments: Police, Hospital, Bank, and Broadcast.",
+      "scenarios": [
+        {
+          "scenario_id": "sec_hospital",
+          "title": "Hospital Emergency Consultation (জরুরি স্বাস্থ্যসেবা)",
+          "location": "Emergency Room, Dhaka Medical College",
+          "dialogue_steps": [
+            { "turn": 1, "speaker": "Doctor", "text": "আপনার কী সমস্যা হচ্ছে?" },
+            { "turn": 2, "signer": "Patient", "glosses": ["আমার", "বুকে", "তীব্র", "ব্যথা"], "expected_bn": "আমার বুকে তীব্র ব্যথা।" },
+            { "turn": 3, "speaker": "Doctor", "text": "ব্যথাটি কতক্ষণ ধরে হচ্ছে?" },
+            { "turn": 4, "signer": "Patient", "glosses": ["দুই", "ঘণ্টা", "ধরে", "হচ্ছে"], "expected_bn": "দুই ঘণ্টা ধরে হচ্ছে।" },
+            { "turn": 5, "speaker": "Doctor", "text": "আপনি এখনই এই জরুরি ওষুধটি সেবন করুন।" }
+          ]
+        },
+        {
+          "scenario_id": "sec_police",
+          "title": "Police Station Emergency Assistance (থানা ও আইনি সহায়তা)",
+          "location": "Police Station Front Desk",
+          "dialogue_steps": [
+            { "turn": 1, "speaker": "Officer", "text": "আসসালামু আলাইকুম। আপনাকে কীভাবে সাহায্য করতে পারি?" },
+            { "turn": 2, "signer": "Citizen", "glosses": ["আমার", "মানিব্যাগ", "টাকা", "চুরি", "হয়েছে"], "expected_bn": "আমার মানিব্যাগ ও টাকা চুরি হয়েছে।" },
+            { "turn": 3, "speaker": "Officer", "text": "ঘটনাটি কোথায় ঘটেছে?" },
+            { "turn": 4, "signer": "Citizen", "glosses": ["বাস", "স্ট্যান্ড", "কাছে"], "expected_bn": "বাস স্ট্যান্ডের কাছে।" },
+            { "turn": 5, "speaker": "Officer", "text": "আমরা দ্রুত অভিযোগ লিপিবদ্ধ করছি।" }
+          ]
+        },
+        {
+          "scenario_id": "sec_bank",
+          "title": "Banking & Financial Services (ব্যাংক সেবা ও অর্থ লেনদেন)",
+          "location": "Bank Customer Service",
+          "dialogue_steps": [
+            { "turn": 1, "speaker": "Banker", "text": "শুভ সকাল। কী ধরনের সেবা প্রয়োজন?" },
+            { "turn": 2, "signer": "Customer", "glosses": ["আমি", "নতুন", "অ্যাকাউন্ট", "খুলতে", "চাই"], "expected_bn": "আমি নতুন অ্যাকাউন্ট খুলতে চাই।" },
+            { "turn": 3, "speaker": "Banker", "text": "আপনার জাতীয় পরিচয়পত্র সাথে এনেছেন?" },
+            { "turn": 4, "signer": "Customer", "glosses": ["হ্যাঁ", "আমার", "কাছে", "আছে"], "expected_bn": "হ্যাঁ, আমার কাছে আছে।" }
+          ]
+        },
+        {
+          "scenario_id": "sec_broadcast",
+          "title": "National TV News Interpretation (টেলিভিশন সংবাদ অনুবাদ)",
+          "location": "Live News Studio",
+          "dialogue_steps": [
+            { "turn": 1, "speaker": "News Anchor", "text": "আজকের প্রধান সংবাদ: সারাদেশে আবহাওয়া স্বাভাবিক থাকবে।" },
+            { "turn": 2, "signer": "Interpreter", "glosses": ["আজকে", "প্রধান", "সংবাদ", "সারাদেশে", "আবহাওয়া", "ভালো", "থাকবে"], "expected_bn": "আজকের প্রধান সংবাদ: সারাদেশে আবহাওয়া ভালো থাকবে।" }
+          ]
+        }
+      ]
+    }
+  ]
+}

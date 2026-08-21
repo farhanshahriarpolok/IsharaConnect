@@ -1,0 +1,649 @@
+{
+  "version": "1.0.0",
+  "language": "Bangla Sign Language (BdSL)",
+  "total_signs": 63,
+  "signs": [
+    {
+      "id": 0,
+      "slug": "assalamu_alaikum",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Right hand touches forehead and moves outward",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "আসসালামু আলাইকুম",
+      "label_en": "Peace be upon you / Hello"
+    },
+    {
+      "id": 1,
+      "slug": "dhonnobad",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Flat open hand touches chin and moves forward toward interlocutor",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "ধন্যবাদ",
+      "label_en": "Thank you"
+    },
+    {
+      "id": 2,
+      "slug": "shagotom",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Both open palms facing upward moving gently inward",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "স্বাগতম",
+      "label_en": "Welcome"
+    },
+    {
+      "id": 3,
+      "slug": "kemon_achen",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Bent hands rotating outwards questioning expression",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "কেমন আছেন",
+      "label_en": "How are you?"
+    },
+    {
+      "id": 4,
+      "slug": "bhalo",
+      "category": "static",
+      "hands": 1,
+      "description": "Thumbs up gesture positioned near chest height",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "ভালো",
+      "label_en": "Good / Fine"
+    },
+    {
+      "id": 5,
+      "slug": "kharap",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Thumbs down rotating downwards",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "খারাপ",
+      "label_en": "Bad"
+    },
+    {
+      "id": 6,
+      "slug": "ami",
+      "category": "static",
+      "hands": 1,
+      "description": "Index finger pointing directly to chest",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "আমি",
+      "label_en": "I / Me"
+    },
+    {
+      "id": 7,
+      "slug": "apni",
+      "category": "static",
+      "hands": 1,
+      "description": "Open flat palm extended toward interlocutor",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "আপনি",
+      "label_en": "You (Formal)"
+    },
+    {
+      "id": 8,
+      "slug": "tumi",
+      "category": "static",
+      "hands": 1,
+      "description": "Index finger pointing toward interlocutor",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "তুমি",
+      "label_en": "You (Informal)"
+    },
+    {
+      "id": 9,
+      "slug": "naam",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Index and middle fingers of both hands crossing/tapping",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "নাম",
+      "label_en": "Name"
+    },
+    {
+      "id": 10,
+      "slug": "shahajjo",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Closed fist supported by flat palm moving upward",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "সাহায্য",
+      "label_en": "Help"
+    },
+    {
+      "id": 11,
+      "slug": "pani",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "W-shape or finger tapping near side of mouth",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "পানি",
+      "label_en": "Water"
+    },
+    {
+      "id": 12,
+      "slug": "khabar",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Closed fingertips brought toward mouth repeatedly",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "খাবার",
+      "label_en": "Food / Eat"
+    },
+    {
+      "id": 13,
+      "slug": "daktar",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Fingers tapping wrist (checking pulse motion)",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "ডাক্তার",
+      "label_en": "Doctor"
+    },
+    {
+      "id": 14,
+      "slug": "osud",
+      "category": "dynamic",
+      "hands": 2,
+      "description": "Middle finger rubbing circular on palm (grinding pill)",
+      "tier": "word",
+      "handedness": "dual",
+      "motion_type": "dynamic",
+      "label_bn": "ওষুধ",
+      "label_en": "Medicine"
+    },
+    {
+      "id": 15,
+      "slug": "hospital",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Drawing cross on upper shoulder/arm",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "হাসপাতাল",
+      "label_en": "Hospital"
+    },
+    {
+      "id": 16,
+      "slug": "thik_ache",
+      "category": "static",
+      "hands": 1,
+      "description": "O and K finger formation or standard OK sign",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "ঠিক আছে",
+      "label_en": "Okay / Alright"
+    },
+    {
+      "id": 17,
+      "slug": "ha",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Fist nodding up and down like a head nod",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "হ্যাঁ",
+      "label_en": "Yes"
+    },
+    {
+      "id": 18,
+      "slug": "na",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger wagging side to side",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "না",
+      "label_en": "No"
+    },
+    {
+      "id": 19,
+      "slug": "bujhechi",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger flicking upwards near temple",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "বুঝেছি",
+      "label_en": "Understood"
+    },
+    {
+      "id": 20,
+      "slug": "bujhini",
+      "category": "dynamic",
+      "hands": 1,
+      "description": "Index finger tapping temple with slight head shake",
+      "tier": "word",
+      "handedness": "single",
+      "motion_type": "dynamic",
+      "label_bn": "বুঝিনি",
+      "label_en": "Did not understand"
+    },
+    {
+      "id": 21,
+      "slug": "ek",
+      "category": "static",
+      "hands": 1,
+      "description": "Single index finger pointing vertically",
+      "tier": "digit",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "১ (এক)",
+      "label_en": "One"
+    },
+    {
+      "id": 22,
+      "slug": "dui",
+      "category": "static",
+      "hands": 1,
+      "description": "Index and middle fingers extended in V-shape",
+      "tier": "digit",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "২ (দুই)",
+      "label_en": "Two"
+    },
+    {
+      "id": 23,
+      "slug": "tin",
+      "category": "static",
+      "hands": 1,
+      "description": "Index, middle, and ring fingers extended",
+      "tier": "digit",
+      "handedness": "single",
+      "motion_type": "static",
+      "label_bn": "৩ (তিন)",
+      "label_en": "Three"
+    },
+    {
+      "id": 24,
+      "slug": "preprocessing",
+      "category": "External Dataset",
+      "tier": "external",
+      "handedness": "unknown",
+      "motion_type": "unknown",
+      "label_bn": "অজ্ঞাত (preprocessing)",
+      "label_en": "Preprocessing"
+    },
+    {
+      "id": 25,
+      "slug": "resources",
+      "category": "External Dataset",
+      "tier": "external",
+      "handedness": "unknown",
+      "motion_type": "unknown",
+      "label_bn": "অজ্ঞাত (resources)",
+      "label_en": "Resources"
+    },
+    {
+      "id": 26,
+      "slug": "training",
+      "category": "External Dataset",
+      "tier": "external",
+      "handedness": "unknown",
+      "motion_type": "unknown",
+      "label_bn": "অজ্ঞাত (training)",
+      "label_en": "Training"
+    },
+    {
+      "id": 27,
+      "slug": "a",
+      "label_bn": "অ",
+      "label_en": "A",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 28,
+      "slug": "aa",
+      "label_bn": "আ",
+      "label_en": "Aa",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 29,
+      "slug": "i",
+      "label_bn": "ই",
+      "label_en": "I",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 30,
+      "slug": "u",
+      "label_bn": "উ",
+      "label_en": "U",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 31,
+      "slug": "e",
+      "label_bn": "এ",
+      "label_en": "E",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 32,
+      "slug": "o",
+      "label_bn": "ও",
+      "label_en": "O",
+      "tier": "vowel",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 33,
+      "slug": "ka",
+      "label_bn": "ক",
+      "label_en": "Ka",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 34,
+      "slug": "kha",
+      "label_bn": "খ",
+      "label_en": "Kha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 35,
+      "slug": "ga",
+      "label_bn": "গ",
+      "label_en": "Ga",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 36,
+      "slug": "gha",
+      "label_bn": "ঘ",
+      "label_en": "Gha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 37,
+      "slug": "nga",
+      "label_bn": "ঙ",
+      "label_en": "Nga",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 38,
+      "slug": "cha",
+      "label_bn": "চ",
+      "label_en": "Cha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 39,
+      "slug": "chha",
+      "label_bn": "ছ",
+      "label_en": "Chha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 40,
+      "slug": "ja",
+      "label_bn": "জ",
+      "label_en": "Ja",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 41,
+      "slug": "jha",
+      "label_bn": "ঝ",
+      "label_en": "Jha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 42,
+      "slug": "nya",
+      "label_bn": "ঞ",
+      "label_en": "Nya",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 43,
+      "slug": "ta",
+      "label_bn": "ট",
+      "label_en": "Ta",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 44,
+      "slug": "tha",
+      "label_bn": "ঠ",
+      "label_en": "Tha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 45,
+      "slug": "da",
+      "label_bn": "ড",
+      "label_en": "Da",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 46,
+      "slug": "dha",
+      "label_bn": "ঢ",
+      "label_en": "Dha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 47,
+      "slug": "na",
+      "label_bn": "ণ",
+      "label_en": "Na",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 48,
+      "slug": "ta_",
+      "label_bn": "ত",
+      "label_en": "Ta_",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 49,
+      "slug": "tha_",
+      "label_bn": "থ",
+      "label_en": "Tha_",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 50,
+      "slug": "da_",
+      "label_bn": "দ",
+      "label_en": "Da_",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 51,
+      "slug": "dha_",
+      "label_bn": "ধ",
+      "label_en": "Dha_",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 52,
+      "slug": "na_",
+      "label_bn": "ন",
+      "label_en": "Na_",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 53,
+      "slug": "pa",
+      "label_bn": "প",
+      "label_en": "Pa",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 54,
+      "slug": "pha",
+      "label_bn": "ফ",
+      "label_en": "Pha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 55,
+      "slug": "ba",
+      "label_bn": "ব",
+      "label_en": "Ba",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 56,
+      "slug": "bha",
+      "label_bn": "ভ",
+      "label_en": "Bha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 57,
+      "slug": "ma",
+      "label_bn": "ম",
+      "label_en": "Ma",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 58,
+      "slug": "ya",
+      "label_bn": "য",
+      "label_en": "Ya",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 59,
+      "slug": "ra",
+      "label_bn": "র",
+      "label_en": "Ra",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 60,
+      "slug": "la",
+      "label_bn": "ল",
+      "label_en": "La",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 61,
+      "slug": "sha",
+      "label_bn": "শ",
+      "label_en": "Sha",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    },
+    {
+      "id": 62,
+      "slug": "sa",
+      "label_bn": "স",
+      "label_en": "Sa",
+      "tier": "consonant",
+      "handedness": "single",
+      "motion_type": "static"
+    }
+  ]
+}

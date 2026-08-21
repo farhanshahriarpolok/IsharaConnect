@@ -20,7 +20,11 @@ from core_engine.audio.audio_player import player_instance
 
 logger = logging.getLogger(__name__)
 
-from desktop_app.ui.theme import ThemeStyles
+from desktop_app.ui.theme import (
+    ThemeStyles, ThemeColors, BORDER_RADIUS, BORDER_RADIUS_SM,
+    BORDER_RADIUS_MD, BORDER_RADIUS_LG, BG_COLOR, PANEL_COLOR,
+    SURFACE_COLOR, TEXT_COLOR, ACCENT_BLUE, ACCENT_GREEN, ACCENT_RED
+)
 from desktop_app.ui.components.badges import PulsingStatusBadge
 from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
@@ -124,24 +128,6 @@ class IsharaMainWindow(QMainWindow):
 
     def _create_signer_view(self) -> QWidget:
         """Create the layout for Deaf/Mute users."""
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Top: Camera + Local Sign Detection Status
-        top_layout = QHBoxLayout()
-        
-        # Camera Feed
-        self.camera_label = QLabel("Camera Feed Initializing...")
-        self.camera_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.camera_label.setStyleSheet(f"background-color: #000000; border-radius: {BORDER_RADIUS};")
-        self.camera_label.setMinimumSize(640, 480)
-        
-        # Status Panel
-        status_panel = QFrame()
-        status_panel.setFixedWidth(250)
-        status_layout = QVBoxLayout(status_panel)
-        
         self.comm_view = QWidget()
         comm_layout = QVBoxLayout(self.comm_view)
         
@@ -202,13 +188,13 @@ class IsharaMainWindow(QMainWindow):
         self.transcript_area.setOpenLinks(False)
         self.transcript_area.anchorClicked.connect(self._on_play_voice_clicked)
         self.transcript_area.setFont(QFont("Segoe UI", 16))
-        self.transcript_area.setStyleSheet(f"background-color: {PANEL_COLOR}; padding: 10px;")
+        self.transcript_area.setStyleSheet(f"background-color: {ThemeColors.PANEL_DARK}; padding: 10px;")
         
         # Audio Options
         audio_layout = QHBoxLayout()
         self.auto_play_cb = QCheckBox("Auto-Play TTS")
         self.auto_play_cb.setChecked(True)
-        self.auto_play_cb.setStyleSheet(f"color: {TEXT_COLOR}; font-weight: bold;")
+        self.auto_play_cb.setStyleSheet(f"color: {ThemeColors.TEXT_PRIMARY}; font-weight: bold;")
         audio_layout.addWidget(self.auto_play_cb)
         audio_layout.addStretch()
         
@@ -511,3 +497,8 @@ class IsharaMainWindow(QMainWindow):
         if self.network_worker:
             self.network_worker.stop()
         event.accept()
+
+
+# Alias for backward compatibility
+MainWindow = IsharaMainWindow
+

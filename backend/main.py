@@ -32,7 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-app.include_router(admin_router)
+app.include_router(admin_router, prefix="/api/v1")
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")

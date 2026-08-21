@@ -120,26 +120,23 @@ class NetworkWorker(QThread):
 
     def send_sign_event(self, sign_data: dict):
         """Dispatch a sign detection event to the backend. Thread-safe."""
-        if self._loop is None or not self._loop.is_running() or self._loop.is_closed():
-            logger.debug("NetworkWorker: Loop not ready. Dropping sign event.")
-            return
-            
         payload = {
             "type": "SIGN_TRANSLATION",
             "data": sign_data
         }
-        # Safely put into asyncio queue from PyQt main thread
-        try:
-            self._loop.call_soon_threadsafe(self._send_queue.put_nowait, payload)
-        except (RuntimeError, AttributeError) as e:
-            logger.warning("NetworkWorker: Failed to queue sign event: %s", e)
+        if self._loop is not None and self._loop.is_running():
+            try:
+                self._loop.call_soon_threadsafe(self._send_queue.put_nowait, payload)
+            except (RuntimeError, AttributeError) as e:
+                logger.warning("NetworkWorker: Failed to queue sign event: %s", e)
+        else:
+            try:
+                self._send_queue.put_nowait(payload)
+            except Exception as e:
+                logger.warning("NetworkWorker: Failed to queue sign event directly: %s", e)
 
     def send_speech_event(self, transcript: str):
         """Dispatch a speech transcript event to the backend. Thread-safe."""
-        if self._loop is None or not self._loop.is_running() or self._loop.is_closed():
-            logger.debug("NetworkWorker: Loop not ready. Dropping speech event.")
-            return
-            
         payload = {
             "type": "SPEECH_TEXT",
             "data": {
@@ -147,10 +144,16 @@ class NetworkWorker(QThread):
                 "is_final": True
             }
         }
-        try:
-            self._loop.call_soon_threadsafe(self._send_queue.put_nowait, payload)
-        except (RuntimeError, AttributeError) as e:
-            logger.warning("NetworkWorker: Failed to queue speech event: %s", e)
+        if self._loop is not None and self._loop.is_running():
+            try:
+                self._loop.call_soon_threadsafe(self._send_queue.put_nowait, payload)
+            except (RuntimeError, AttributeError) as e:
+                logger.warning("NetworkWorker: Failed to queue speech event: %s", e)
+        else:
+            try:
+                self._send_queue.put_nowait(payload)
+            except Exception as e:
+                logger.warning("NetworkWorker: Failed to queue speech event directly: %s", e)
 
     def stop(self):
         """Gracefully stop the network worker."""

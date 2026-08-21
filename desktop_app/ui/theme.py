@@ -19,7 +19,33 @@ class ThemeColors:
     GLASS_BG = "rgba(30, 41, 59, 0.7)"
     GLASS_BORDER = "rgba(255, 255, 255, 0.1)"
 
+
+# Standard Radii & Layout Tokens
+BORDER_RADIUS = "12px"
+BORDER_RADIUS_SM = "6px"
+BORDER_RADIUS_MD = "10px"
+BORDER_RADIUS_LG = "16px"
+
+# Standard Palette Aliases for Backward Compatibility
+BG_COLOR = ThemeColors.BG_DARK
+PANEL_COLOR = ThemeColors.PANEL_DARK
+SURFACE_COLOR = ThemeColors.SURFACE_DARK
+TEXT_COLOR = ThemeColors.TEXT_PRIMARY
+TEXT_MUTED = ThemeColors.TEXT_SECONDARY
+ACCENT_COLOR = ThemeColors.CYAN_ACCENT
+ACCENT_BLUE = ThemeColors.CYAN_ACCENT
+ACCENT_GREEN = ThemeColors.EMERALD_SUCCESS
+ACCENT_RED = ThemeColors.CORAL_ERROR
+SUCCESS_COLOR = ThemeColors.EMERALD_SUCCESS
+ERROR_COLOR = ThemeColors.CORAL_ERROR
+
+
 class ThemeStyles:
+    BORDER_RADIUS = BORDER_RADIUS
+    BORDER_RADIUS_SM = BORDER_RADIUS_SM
+    BORDER_RADIUS_MD = BORDER_RADIUS_MD
+    BORDER_RADIUS_LG = BORDER_RADIUS_LG
+
     @staticmethod
     def get_global_stylesheet() -> str:
         return f"""

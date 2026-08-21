@@ -31,15 +31,20 @@ class RealTimePredictor:
         spatial_model_path: str = "models/onnx/bdsl_spatial_model.onnx",
         labels_path: str = "dataset/labels.json",
         config: InferenceConfig = None,
-        agreement_threshold: float = 0.7
+        agreement_threshold: float = 0.7,
+        sequence_length: Optional[int] = None,
+        agreement_window: Optional[int] = None,
+        debounce_cooldown_sec: Optional[float] = None,
+        confidence_threshold: Optional[float] = None,
+        **kwargs
     ):
         if config is None:
             config = InferenceConfig()
             
-        self.sequence_length = config.sequence_length
-        self.confidence_threshold = config.confidence_threshold
-        self.debounce_cooldown_sec = config.cooldown_seconds
-        self.agreement_window = config.agreement_window
+        self.sequence_length = sequence_length if sequence_length is not None else config.sequence_length
+        self.confidence_threshold = confidence_threshold if confidence_threshold is not None else config.confidence_threshold
+        self.debounce_cooldown_sec = debounce_cooldown_sec if debounce_cooldown_sec is not None else config.cooldown_seconds
+        self.agreement_window = agreement_window if agreement_window is not None else config.agreement_window
         self.allow_ood_rejection = config.allow_ood_rejection
         self.entropy_threshold = config.entropy_threshold
         self.agreement_threshold = agreement_threshold

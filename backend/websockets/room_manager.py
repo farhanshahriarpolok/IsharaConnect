@@ -9,7 +9,7 @@ from fastapi import WebSocket
 from abc import ABC, abstractmethod
 
 from core_engine.audio.tts_engine import TextToSpeechEngine
-from core_engine.nlp.gloss_translator import BdSLGlossTranslator
+from core_engine.nlp.advanced_grammar_engine import AdvancedBdSLGrammarEngine
 from backend.config import settings
 
 try:
@@ -121,7 +121,7 @@ class ConnectionManager:
         self.last_sign_time: Dict[WebSocket, float] = {}
         self.idle_timeout = 2.0
         self.tts_engine = TextToSpeechEngine()
-        self.gloss_translator = BdSLGlossTranslator()
+        self.gloss_translator = AdvancedBdSLGrammarEngine()
 
     async def connect(self, websocket: WebSocket, room_id: str, client_type: ClientType):
         await self.adapter.connect(websocket, room_id, client_type)
@@ -152,16 +152,19 @@ class ConnectionManager:
             
         self.last_sign_time[sender] = now
         
-        translation = self.gloss_translator.translate_gloss_sequence(buffer)
-        bengali_sentence = translation["bengali_sentence"]
+        translation = self.gloss_translator.generate_natural_sentence(buffer)
+        bengali_sentence = translation["bengali"]
+        english_sentence = translation["english"]
         
         if bengali_sentence:
             import base64
-            audio_bytes = self.tts_engine.synthesize_to_bytes(text=bengali_sentence, lang="bn")
+            clean_audio_text = bengali_sentence.rstrip("।!?")
+            audio_bytes = self.tts_engine.synthesize_to_bytes(text=clean_audio_text, lang="bn")
             if audio_bytes:
                 payload["audio_payload_base64"] = base64.b64encode(audio_bytes).decode('utf-8')
             payload["label_bn"] = bengali_sentence
-            payload["label_en"] = translation["english_sentence"]
+            payload["label_en"] = english_sentence
+            payload["nlp_confidence"] = translation.get("confidence", 0.9)
                 
         await self.adapter.broadcast_message(room_id, {"type": "SIGN_TRANSLATION", "data": payload}, sender)
 

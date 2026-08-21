@@ -1,13 +1,15 @@
 """Live Sentence Ticker HUD Component."""
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QFrame
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QFont
 from desktop_app.ui.theme import ThemeColors
 from core_engine.audio.audio_player import player_instance
+from core_engine.nlp.advanced_grammar_engine import AdvancedBdSLGrammarEngine
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class SentenceTickerWidget(QWidget):
     """HUD for building sentences from incoming glosses."""
@@ -17,6 +19,7 @@ class SentenceTickerWidget(QWidget):
         self.gloss_buffer = []
         self.finalized_sentence_bn = ""
         self.finalized_sentence_en = ""
+        self.grammar_engine = AdvancedBdSLGrammarEngine()
         
         self.setObjectName("GlassCard")
         self._init_ui()
@@ -69,9 +72,12 @@ class SentenceTickerWidget(QWidget):
         if not sign_data or sign_data.get("sign_id") == -1:
             return
             
-        bn = sign_data.get("label_bn", "")
-        en = sign_data.get("label_en", "")
+        bn = sign_data.get("label_bn", "").strip()
+        en = sign_data.get("label_en", "").strip()
         
+        if not bn:
+            return
+            
         self.gloss_buffer.append((bn, en))
         
         # Add chip UI
@@ -85,13 +91,12 @@ class SentenceTickerWidget(QWidget):
         """)
         self.chips_layout.addWidget(chip)
         
-        # Mock NLP Translation for sprint demonstration
-        # In reality, this would call core_engine/nlp/translator.py
-        bns = [g[0] for g in self.gloss_buffer]
-        ens = [g[1] for g in self.gloss_buffer]
+        # Advanced Continuous Grammar NLP Generation
+        gloss_list = [g[0] for g in self.gloss_buffer]
+        nlp_result = self.grammar_engine.generate_natural_sentence(gloss_list)
         
-        self.finalized_sentence_bn = " ".join(bns) + "।"
-        self.finalized_sentence_en = " ".join(ens) + "."
+        self.finalized_sentence_bn = nlp_result["bengali"]
+        self.finalized_sentence_en = nlp_result["english"]
         
         self.sentence_label.setText(self.finalized_sentence_bn)
         self.subtitle_label.setText(self.finalized_sentence_en)
@@ -99,7 +104,8 @@ class SentenceTickerWidget(QWidget):
     def _on_revoice(self):
         if self.finalized_sentence_bn:
             # Play text using the audio engine
-            player_instance.play_text(self.finalized_sentence_bn, lang="bn")
+            clean_text = self.finalized_sentence_bn.rstrip("।!?")
+            player_instance.play_text(clean_text, lang="bn")
             
     def clear_buffer(self):
         self.gloss_buffer = []

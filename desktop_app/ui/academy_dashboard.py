@@ -198,6 +198,40 @@ class AcademyDashboard(QWidget):
         self.cap = None
         
     def _build_curriculum(self):
+        import os
+        import json
+        curriculum_file = "dataset/curriculum_data.json"
+        
+        if os.path.exists(curriculum_file):
+            try:
+                with open(curriculum_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for tier in data.get("tiers", []):
+                    t_item = QTreeWidgetItem(self.tree, [tier.get("tier_name", "Tier")])
+                    if "modules" in tier:
+                        for mod in tier["modules"]:
+                            m_item = QTreeWidgetItem(t_item, [mod.get("module_title", "Module")])
+                            for lesson in mod.get("lessons", []):
+                                sym = lesson.get('symbol', '')
+                                name = lesson.get('name_en', '')
+                                QTreeWidgetItem(m_item, [f"{sym} - {name}"])
+                    elif "categories" in tier:
+                        for cat in tier["categories"]:
+                            c_item = QTreeWidgetItem(t_item, [cat.get("category_name", "Category")])
+                            for word in cat.get("words", []):
+                                QTreeWidgetItem(c_item, [f"{word.get('bn', '')} ({word.get('en', '')})"])
+                    elif "grammar_rules" in tier:
+                        for rule in tier["grammar_rules"]:
+                            QTreeWidgetItem(t_item, [rule.get("rule_name", "Rule")])
+                    elif "scenarios" in tier:
+                        for sc in tier["scenarios"]:
+                            QTreeWidgetItem(t_item, [sc.get("title", "Scenario")])
+                self.tree.expandAll()
+                return
+            except Exception as e:
+                pass
+                
+        # Fallback curriculum
         l1 = QTreeWidgetItem(self.tree, ["Level 1: Alphabets & Digits"])
         QTreeWidgetItem(l1, ["স্বরবর্ণ (Vowels)"])
         QTreeWidgetItem(l1, ["ব্যঞ্জনবর্ণ (Consonants)"])

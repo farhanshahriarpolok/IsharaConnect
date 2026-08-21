@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 from desktop_app.ui.theme import ThemeStyles
 from desktop_app.ui.components.badges import PulsingStatusBadge
 from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
+from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 
 class IsharaMainWindow(QMainWindow):
     """Main Application Window."""
@@ -146,12 +147,19 @@ class IsharaMainWindow(QMainWindow):
         # Upper area: Camera and Chat
         upper_comm = QHBoxLayout()
         
-        # Signer View (Camera)
-        self.camera_feed = QLabel("Initializing Camera Engine...")
+        # Signer View (Camera with Motion Trajectory Viewer overlay)
+        cam_container = QWidget()
+        cam_container.setFixedSize(640, 480)
+        
+        self.camera_feed = QLabel(cam_container)
         self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.camera_feed.setFixedSize(640, 480)
         self.camera_feed.setObjectName("GlassCard")
-        upper_comm.addWidget(self.camera_feed)
+        
+        self.trajectory_viewer = MotionTrajectoryViewer(cam_container)
+        self.trajectory_viewer.setFixedSize(640, 480)
+        
+        upper_comm.addWidget(cam_container)
         
         # Speaker View (Chat/History)
         chat_layout = QVBoxLayout()
@@ -296,6 +304,7 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker = CameraWorker(camera_id=idx)
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
+            self.camera_worker.trajectory_ready.connect(self._on_trajectory_ready)
             self.camera_worker.fps_updated.connect(self._update_fps)
             self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
@@ -378,6 +387,16 @@ class IsharaMainWindow(QMainWindow):
     @pyqtSlot(float)
     def _update_fps(self, fps: float):
         self.fps_lbl.setText(f"FPS: {fps:.1f}")
+
+    @pyqtSlot(dict)
+    def _on_trajectory_ready(self, data: dict):
+        if hasattr(self, 'trajectory_viewer'):
+            self.trajectory_viewer.update_trajectory(
+                left_wrist=data.get("left_wrist"),
+                right_wrist=data.get("right_wrist"),
+                left_index=data.get("left_index"),
+                right_index=data.get("right_index")
+            )
 
     @pyqtSlot(dict)
     def _on_sign_detected(self, data: dict):

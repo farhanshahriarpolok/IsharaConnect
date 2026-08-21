@@ -23,6 +23,7 @@ class CameraWorker(QThread):
     # Signals
     frame_ready = pyqtSignal(QImage)
     sign_detected = pyqtSignal(dict)
+    trajectory_ready = pyqtSignal(dict)
     fps_updated = pyqtSignal(float)
     error_occurred = pyqtSignal(str)
 
@@ -114,6 +115,22 @@ class CameraWorker(QThread):
                 annotated_frame = self.detector.find_hands(frame, draw=True)
                 extraction = self.detector.extract_landmarks(frame.shape)
                 
+                # 2. Extract Trajectory Points
+                left_w, right_w, left_idx, right_idx = None, None, None, None
+                if extraction["raw_left"] is not None and len(extraction["raw_left"]) >= 9:
+                    left_w = (float(extraction["raw_left"][0][0]), float(extraction["raw_left"][0][1]))
+                    left_idx = (float(extraction["raw_left"][8][0]), float(extraction["raw_left"][8][1]))
+                if extraction["raw_right"] is not None and len(extraction["raw_right"]) >= 9:
+                    right_w = (float(extraction["raw_right"][0][0]), float(extraction["raw_right"][0][1]))
+                    right_idx = (float(extraction["raw_right"][8][0]), float(extraction["raw_right"][8][1]))
+                
+                self.trajectory_ready.emit({
+                    "left_wrist": left_w,
+                    "right_wrist": right_w,
+                    "left_index": left_idx,
+                    "right_index": right_idx
+                })
+
                 # Check for two hands
                 if extraction["raw_left"] is not None and extraction["raw_right"] is not None:
                     # Dual-hand: get 151-D vector
@@ -122,7 +139,7 @@ class CameraWorker(QThread):
                     touch_matrix_flat = spatial_features["touch_matrix"].flatten()
                     feature_vector = np.concatenate([normalized_landmarks_flat, touch_matrix_flat])
                 else:
-                    # 2. Normalization
+                    # Normalization
                     feature_vector = LandmarkNormalizer.process_frame(
                         extraction["raw_left"], extraction["raw_right"]
                     )

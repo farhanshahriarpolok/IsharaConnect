@@ -314,59 +314,61 @@ class AcademyDashboard(QWidget):
         # =========================================================================
         right_panel = QFrame()
         right_panel.setObjectName("GlassCard")
-        right_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px; border: 1px solid rgba(6, 182, 212, 0.2);")
+        right_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 12px; border: 1px solid rgba(6, 182, 212, 0.25);")
         right_panel.setMinimumWidth(320)
         right_panel.setMinimumHeight(450)
         right_layout = QVBoxLayout(right_panel)
+        right_layout.setSpacing(8)
 
         right_header = QLabel("📖 ইশারা নির্দেশিকা (Sign Guide)")
-        right_header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        right_header.setStyleSheet(f"color: {CYAN_ACCENT};")
+        right_header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        right_header.setStyleSheet(f"color: {CYAN_ACCENT}; padding: 2px;")
         right_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(right_header)
 
         # Large Bengali Sign Glyph
         self.ref_sign_bn = QLabel("ধন্যবাদ")
-        self.ref_sign_bn.setFont(QFont("SolaimanLipi", 26, QFont.Weight.Bold))
-        self.ref_sign_bn.setStyleSheet(f"color: {ACCENT_COLOR};")
+        self.ref_sign_bn.setFont(QFont("SolaimanLipi", 38, QFont.Weight.Black))
+        self.ref_sign_bn.setStyleSheet("color: #F8FAFC; font-weight: 900; padding: 0px;")
         self.ref_sign_bn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_sign_bn)
 
         # English Label & Phonetic Guide
         self.ref_sign_en = QLabel("Thank you")
-        self.ref_sign_en.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        self.ref_sign_en.setStyleSheet(f"color: {TEXT_COLOR};")
+        self.ref_sign_en.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self.ref_sign_en.setStyleSheet("color: #38BDF8; font-weight: bold;")
         self.ref_sign_en.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_sign_en)
 
         self.ref_phonetic = QLabel("🔊 উচ্চারণ: [dhon-no-baad]")
-        self.ref_phonetic.setStyleSheet(f"color: {SUCCESS_COLOR}; font-family: monospace; font-size: 11px;")
+        self.ref_phonetic.setStyleSheet("color: #10B981; background-color: rgba(16, 185, 129, 0.12); border-radius: 6px; padding: 4px 10px; font-weight: 600; font-size: 13px;")
         self.ref_phonetic.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_phonetic)
 
         # Category Badge
         self.ref_badge = QLabel("Type: Dynamic | Single Hand")
-        self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: #BAC2DE; border-radius: 8px; padding: 3px 8px; font-size: 11px;")
+        self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: #CBD5E1; border-radius: 8px; padding: 3px 8px; font-size: 12px;")
         self.ref_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_badge)
 
         # SVG / Geometric Visual Illustration Card
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.sign_card_viewer.setMinimumSize(280, 240)
+        self.sign_card_viewer.setMinimumSize(280, 250)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
         right_layout.addWidget(self.sign_card_viewer, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Interactive Pronunciation Button
         self.listen_btn = QPushButton("🔊 উচ্চারণ শুনুন (Pronounce)")
-        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; padding: 7px;")
+        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; font-size: 13px; padding: 8px; border-radius: 8px;")
         self.listen_btn.clicked.connect(self._on_listen_pronunciation)
         right_layout.addWidget(self.listen_btn)
 
-        # Anatomical Step-by-Step Instruction Guide
+        # Anatomical Step-by-Step Instruction Guide (Enlarged Typography)
         self.ref_instructions = QTextEdit()
         self.ref_instructions.setReadOnly(True)
-        self.ref_instructions.setMaximumHeight(100)
-        self.ref_instructions.setStyleSheet("background: transparent; border: none; font-size: 11px; color: #BAC2DE;")
+        self.ref_instructions.setMinimumHeight(140)
+        self.ref_instructions.setMaximumHeight(200)
+        self.ref_instructions.setStyleSheet("background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 6px; font-size: 13px; color: #E2E8F0;")
         right_layout.addWidget(self.ref_instructions)
 
         splitter.addWidget(right_panel)
@@ -378,9 +380,9 @@ class AcademyDashboard(QWidget):
         splitter.setStretchFactor(2, 35)
         main_layout.addWidget(splitter)
 
-        # Camera frame timer
+        # Practice / Quiz countdown timer (pure state countdown, no camera capture)
         self.timer = QTimer()
-        self.timer.timeout.connect(self._update_practice_frame)
+        self.timer.timeout.connect(self._on_practice_tick)
         self.cap = None
 
         # Load initial sign
@@ -426,21 +428,31 @@ class AcademyDashboard(QWidget):
     def _update_reference_card(self, sign_key: str):
         """Updates the Center Arena title and Right Sub-Panel with visual illustration and instructions."""
         meta = self.curriculum_data.get(sign_key, {})
+        if not meta and " - " in sign_key:
+            parts = [p.strip() for p in sign_key.split(" - ")]
+            for part in parts:
+                if part in self.curriculum_data:
+                    meta = self.curriculum_data[part]
+                    break
+
         if not meta:
             # Try fuzzy match
             for k, v in self.curriculum_data.items():
-                if k in sign_key or sign_key in k:
+                if k and (k == sign_key or k in sign_key or sign_key in k):
                     meta = v
                     break
 
+        raw_bn = sign_key.split(" - ")[0].strip() if " - " in sign_key else sign_key
+        raw_en = sign_key.split(" - ")[1].strip() if " - " in sign_key else sign_key
+
         slug = meta.get("slug") or "dhonnobad"
-        bn = meta.get("label_bn") or sign_key.split(" - ")[0]
-        en = meta.get("label_en") or sign_key
+        bn = meta.get("label_bn") or raw_bn
+        en = meta.get("label_en") or raw_en
         phonetic = meta.get("phonetic") or slug.replace("_", " ").title()
         cat = meta.get("category", "General")
         handedness = meta.get("handedness", "single")
-        mnemonic = meta.get("mnemonic", "Align fingers with target reference.")
-        touch_rule = meta.get("touch_rule", "")
+        mnemonic = meta.get("mnemonic") or meta.get("description") or "ক্যামেরার সামনে হাতের অঙ্গুলি ও তালু নির্দেশিত চিত্রমোতাবেক প্রস্তুত রাখুন।"
+        touch_rule = meta.get("touch_rule") or ("কোনো স্পর্শ নেই (উন্মুক্ত হাতের একক ভঙ্গি)" if handedness == "single" else "উভয় হাতের নির্দেশিত সংযোগ বিন্দু স্পর্শ করুন")
 
         self.current_sign_slug = slug
         self.current_sign_bn = bn
@@ -455,11 +467,15 @@ class AcademyDashboard(QWidget):
         self.ref_phonetic.setText(f"🔊 উচ্চারণ: [{phonetic}]")
         self.ref_badge.setText(f"Category: {cat} | Handedness: {handedness.title()}")
 
-        instructions_html = f"<b>🖐️ ধাপসমূহ ও কৌশল:</b><br>• {mnemonic}"
-        if touch_rule:
-            instructions_html += f"<br>• <b>স্পর্শ নিয়ম:</b> {touch_rule}"
-        else:
-            instructions_html += "<br>• নির্ভুল স্কোরের জন্য ক্যামেরার সামনে হাত স্থির রাখুন।"
+        instructions_html = f"""
+        <div style="font-family: 'Segoe UI', Arial; font-size: 13px; line-height: 1.5; color: #E2E8F0;">
+          <b style="color: #38BDF8; font-size: 14px;">🎯 ধাপ ও কৌশল (Steps & Technique):</b><br>
+          • <b>ভঙ্গি:</b> {mnemonic}<br>
+          <div style="margin-top: 8px; padding: 8px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 13px;">
+            ✨ <b>স্পর্শের নিয়ম:</b> {touch_rule}
+          </div>
+        </div>
+        """
         self.ref_instructions.setHtml(instructions_html)
 
         # Load Visual Card via bulletproof SignCardViewer
@@ -523,14 +539,26 @@ class AcademyDashboard(QWidget):
         self.start_practice_btn.setText("⏹ Stop Practice")
         self.start_practice_btn.setStyleSheet(f"background-color: {ERROR_COLOR}; color: #11111B; font-weight: bold; padding: 8px 14px;")
         self.temporal_frame_buffer.clear()
-        self.cap = cv2.VideoCapture(0)
-        self.timer.start(33)  # ~30fps
-
         self.quiz_active = True
         self.exam_active = False
         self.countdown_ticks = 150  # 5s
         mode_hint = "Dynamic Gesture" if self.is_dynamic_sign else "Static Posture"
         self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting ({mode_hint})!</b> Sign '{self.current_sign_bn}'...")
+        self.timer.start(100)
+
+    def _on_practice_tick(self):
+        """Countdown and exam progression tick."""
+        if self.countdown_ticks > 0:
+            self.countdown_ticks -= 1
+            if self.countdown_ticks == 0 and self.exam_active:
+                self.current_exam_index += 1
+                if self.current_exam_index < len(self.exam_signs):
+                    sign_curr = self.exam_signs[self.current_exam_index]
+                    self._update_reference_card(sign_curr)
+                    self.countdown_ticks = 150
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam:</b> Sign {self.current_exam_index + 1}/10: {sign_curr}")
+                else:
+                    self._end_exam()
 
     @pyqtSlot(object)
     def update_camera_feed(self, image):
@@ -594,8 +622,11 @@ class AcademyDashboard(QWidget):
         self.start_practice_btn.setText("▶ Start Practice")
         self.start_practice_btn.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; font-weight: bold; padding: 8px 14px;")
         self.timer.stop()
-        if self.cap:
-            self.cap.release()
+        if self.cap and hasattr(self.cap, "release"):
+            try:
+                self.cap.release()
+            except Exception:
+                pass
             self.cap = None
         self.camera_feed.setText("Webcam Idle. Click 'Start Practice' to begin.")
         self.quiz_active = False
@@ -638,7 +669,8 @@ class AcademyDashboard(QWidget):
             msg.exec()
 
     def _update_practice_frame(self):
-        if not self.cap or not self.cap.isOpened():
+        """Processes a frame if self.cap is opened (e.g. for mock unit tests)."""
+        if not self.cap or not hasattr(self.cap, "isOpened") or not self.cap.isOpened():
             return
 
         ret, frame = self.cap.read()

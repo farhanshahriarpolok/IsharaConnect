@@ -1,4 +1,8 @@
-"""Gamified BdSL Interpreter Academy with Side-by-Side Dual-Panel Sign Reference & Live Arena."""
+"""Gamified BdSL Interpreter Academy with 3-Column Split Layout:
+- Left Panel: Lessons List (Curriculum Tree)
+- Center Panel: Live Camera Practice Arena
+- Right Panel: Target Sign Reference Guide (SVG Card, Audio, & Anatomy)
+"""
 
 import json
 import logging
@@ -48,7 +52,7 @@ CYAN_ACCENT = "#06B6D4"
 
 
 class AcademyDashboard(QWidget):
-    """Gamified BdSL Interpreter Academy featuring Dual-Panel Learning & Practice."""
+    """Gamified BdSL Interpreter Academy featuring a 3-Column Split View."""
 
     request_back = pyqtSignal()
 
@@ -59,8 +63,9 @@ class AcademyDashboard(QWidget):
         self.rule_engine = BdSLGeometricRuleEngine()
         self.ghost_painter = GhostOverlayPainter()
 
-        # Curriculum metadata lookup table
+        # Curriculum metadata database
         self.curriculum_data = self._load_curriculum_database()
+        self.curriculum_items_order: List[str] = []
 
         # Temporal Frame Buffer for DTW Dynamic Sign Evaluation
         self.temporal_frame_buffer = []
@@ -137,7 +142,7 @@ class AcademyDashboard(QWidget):
                             "category": s.get("category", "General"),
                             "handedness": s.get("handedness", "single"),
                             "mnemonic": s.get("description", ""),
-                            "touch_rule": "Follow standard BdSL motion profile.",
+                            "touch_rule": "Follow standard BdSL motion trajectory.",
                             "exercise_prompt": f"Demonstrate '{bn}' ({en})."
                         }
                     database[bn] = database.get(slug, {})
@@ -170,71 +175,177 @@ class AcademyDashboard(QWidget):
         header_layout.addWidget(self.xp_header_lbl)
         main_layout.addLayout(header_layout)
 
-        # --- Horizontal Splitter: Left Curriculum Tree vs Right Dual-Panel Arena ---
+        # --- 3-COLUMN SPLITTER ---
+        # Panel 1: Left Curriculum (20%) | Panel 2: Center Camera Arena (45%) | Panel 3: Right Reference Guide (35%)
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # 1. Leftmost Curriculum Panel
-        curriculum_panel = QWidget()
-        curriculum_layout = QVBoxLayout(curriculum_panel)
-        curriculum_layout.setContentsMargins(0, 0, 0, 0)
+        # =========================================================================
+        # 1. LEFT PANEL (20% width): Lessons List (Curriculum Tree)
+        # =========================================================================
+        left_panel = QFrame()
+        left_panel.setObjectName("GlassCard")
+        left_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 8px;")
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(0, 0, 0, 0)
 
-        c_header = QLabel("Curriculum")
-        c_header.setObjectName("SubHeader")
-        curriculum_layout.addWidget(c_header)
+        left_header = QLabel("📚 পাঠ্যতালিকা (Curriculum)")
+        left_header.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        left_header.setStyleSheet(f"color: {CYAN_ACCENT}; padding: 4px;")
+        left_layout.addWidget(left_header)
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self._build_curriculum()
         self.tree.itemClicked.connect(self._on_curriculum_selected)
-        curriculum_layout.addWidget(self.tree)
+        left_layout.addWidget(self.tree)
 
         self.exam_btn = QPushButton("🎓 Take Certification Exam")
         self.exam_btn.setStyleSheet(f"background-color: {SUCCESS_COLOR}; color: #11111B; font-weight: bold; padding: 8px;")
         self.exam_btn.clicked.connect(self._start_exam)
-        curriculum_layout.addWidget(self.exam_btn)
+        left_layout.addWidget(self.exam_btn)
 
-        # 2. Main Center-Right Dual-Panel Workspace
-        workspace_panel = QWidget()
-        workspace_layout = QHBoxLayout(workspace_panel)
-        workspace_layout.setContentsMargins(10, 0, 0, 0)
+        splitter.addWidget(left_panel)
 
-        # === DUAL PANEL SUB-PANEL 1: Target Sign Reference Card (Left) ===
-        ref_card = QFrame()
-        ref_card.setObjectName("GlassCard")
-        ref_card.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px;")
-        ref_layout = QVBoxLayout(ref_card)
+        # =========================================================================
+        # 2. CENTER PANEL (45% width): Live Camera Practice Arena
+        # =========================================================================
+        center_panel = QFrame()
+        center_panel.setObjectName("GlassCard")
+        center_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px;")
+        center_layout = QVBoxLayout(center_panel)
 
-        ref_header = QLabel("🎯 Target Sign Reference")
-        ref_header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        ref_header.setStyleSheet(f"color: {CYAN_ACCENT};")
-        ref_layout.addWidget(ref_header, alignment=Qt.AlignmentFlag.AlignCenter)
+        # Center Arena Header
+        self.arena_title = QLabel("🎯 প্র্যাকটিস করুন: ধন্যবাদ (Thank you)")
+        self.arena_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self.arena_title.setStyleSheet(f"color: {CYAN_ACCENT};")
+        self.arena_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        center_layout.addWidget(self.arena_title)
 
-        # Sign Large Title (Bengali Glyph)
+        # Camera Container with MotionTrajectoryViewer overlay
+        cam_container = QWidget()
+        cam_container.setFixedSize(400, 270)
+
+        self.camera_feed = QLabel(cam_container)
+        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.camera_feed.setText("Webcam Idle. Click 'Start Practice' to begin.")
+        self.camera_feed.setFixedSize(400, 270)
+        self.camera_feed.setStyleSheet(f"background-color: {BG_COLOR}; border-radius: 8px;")
+
+        self.trajectory_viewer = MotionTrajectoryViewer(cam_container)
+        self.trajectory_viewer.setFixedSize(400, 270)
+
+        center_layout.addWidget(cam_container, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Accuracy Progress Bar (0-100%)
+        progress_layout = QHBoxLayout()
+        prog_label = QLabel("Match Accuracy:")
+        prog_label.setStyleSheet("color: #94A3B8; font-size: 11px;")
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setTextVisible(True)
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{
+                background-color: {SURFACE_COLOR};
+                border-radius: 6px;
+                text-align: center;
+                color: #FFFFFF;
+                font-weight: bold;
+                height: 14px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {CYAN_ACCENT};
+                border-radius: 6px;
+            }}
+        """)
+        progress_layout.addWidget(prog_label)
+        progress_layout.addWidget(self.progress_bar)
+        center_layout.addLayout(progress_layout)
+
+        # AI Posture Tutor / Checklist HUD
+        self.posture_hud = QTextEdit()
+        self.posture_hud.setReadOnly(True)
+        self.posture_hud.setMaximumHeight(55)
+        self.posture_hud.setHtml(f"<b style='color:{CYAN_ACCENT};'>AI Posture Tutor:</b> Ready.")
+        center_layout.addWidget(self.posture_hud)
+
+        # Telemetry Row (XP, Streak, Circular Gauge)
+        telemetry_row = QHBoxLayout()
+        self.xp_label = QLabel("XP: 0")
+        self.xp_label.setStyleSheet(f"color: {CYAN_ACCENT}; font-weight: bold;")
+        self.streak_label = QLabel("Streak: 0 🔥")
+        self.streak_label.setStyleSheet("color: #F43F5E; font-weight: bold;")
+        self.match_gauge = CircularAccuracyGauge(radius=24, thickness=6)
+
+        telemetry_row.addWidget(self.xp_label)
+        telemetry_row.addStretch()
+        telemetry_row.addWidget(self.match_gauge)
+        telemetry_row.addStretch()
+        telemetry_row.addWidget(self.streak_label)
+        center_layout.addLayout(telemetry_row)
+
+        # Arena Action Controls (Start/Stop, Next Sign, Restart)
+        action_row = QHBoxLayout()
+        self.start_practice_btn = QPushButton("▶ Start Practice")
+        self.start_practice_btn.setObjectName("ActionBtn")
+        self.start_practice_btn.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; font-weight: bold; padding: 8px 14px;")
+        self.start_practice_btn.clicked.connect(self._toggle_practice)
+
+        self.next_sign_btn = QPushButton("⏭ Next Sign")
+        self.next_sign_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {TEXT_COLOR}; font-weight: bold; padding: 8px 12px;")
+        self.next_sign_btn.clicked.connect(self._on_next_sign)
+
+        self.restart_sign_btn = QPushButton("🔄 Restart")
+        self.restart_sign_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {TEXT_COLOR}; font-weight: bold; padding: 8px 12px;")
+        self.restart_sign_btn.clicked.connect(self._on_restart_sign)
+
+        action_row.addWidget(self.start_practice_btn)
+        action_row.addWidget(self.next_sign_btn)
+        action_row.addWidget(self.restart_sign_btn)
+        center_layout.addLayout(action_row)
+
+        splitter.addWidget(center_panel)
+
+        # =========================================================================
+        # 3. RIGHT PANEL (35% width): Target Sign Reference Guide (SVG Card & Steps)
+        # =========================================================================
+        right_panel = QFrame()
+        right_panel.setObjectName("GlassCard")
+        right_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px; border: 1px solid rgba(6, 182, 212, 0.2);")
+        right_layout = QVBoxLayout(right_panel)
+
+        right_header = QLabel("📖 ইশারা নির্দেশিকা (Sign Guide)")
+        right_header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        right_header.setStyleSheet(f"color: {CYAN_ACCENT};")
+        right_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        right_layout.addWidget(right_header)
+
+        # Large Bengali Sign Glyph
         self.ref_sign_bn = QLabel("ধন্যবাদ")
         self.ref_sign_bn.setFont(QFont("SolaimanLipi", 26, QFont.Weight.Bold))
         self.ref_sign_bn.setStyleSheet(f"color: {ACCENT_COLOR};")
         self.ref_sign_bn.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ref_layout.addWidget(self.ref_sign_bn)
+        right_layout.addWidget(self.ref_sign_bn)
 
         # English Label & Phonetic Guide
         self.ref_sign_en = QLabel("Thank you")
-        self.ref_sign_en.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        self.ref_sign_en.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self.ref_sign_en.setStyleSheet(f"color: {TEXT_COLOR};")
         self.ref_sign_en.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ref_layout.addWidget(self.ref_sign_en)
+        right_layout.addWidget(self.ref_sign_en)
 
         self.ref_phonetic = QLabel("🔊 উচ্চারণ: [dhon-no-baad]")
         self.ref_phonetic.setStyleSheet(f"color: {SUCCESS_COLOR}; font-family: monospace; font-size: 11px;")
         self.ref_phonetic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ref_layout.addWidget(self.ref_phonetic)
+        right_layout.addWidget(self.ref_phonetic)
 
-        # Category & Handedness Badge
+        # Category Badge
         self.ref_badge = QLabel("Type: Dynamic | Single Hand")
         self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: #BAC2DE; border-radius: 8px; padding: 3px 8px; font-size: 11px;")
         self.ref_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        ref_layout.addWidget(self.ref_badge)
+        right_layout.addWidget(self.ref_badge)
 
-        # SVG Visual Reference Card Container
+        # SVG Visual Illustration Card Container (minimum 280x220)
         self.svg_container = QWidget()
         self.svg_container.setFixedSize(280, 220)
         self.svg_layout = QVBoxLayout(self.svg_container)
@@ -250,86 +361,25 @@ class AcademyDashboard(QWidget):
             self.svg_widget.setFixedSize(280, 220)
             self.svg_layout.addWidget(self.svg_widget)
 
-        ref_layout.addWidget(self.svg_container, alignment=Qt.AlignmentFlag.AlignCenter)
+        right_layout.addWidget(self.svg_container, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # Anatomical / Posture Instruction Text
+        # Interactive Pronunciation Button
+        self.listen_btn = QPushButton("🔊 উচ্চারণ শুনুন (Pronounce)")
+        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; padding: 7px;")
+        self.listen_btn.clicked.connect(self._on_listen_pronunciation)
+        right_layout.addWidget(self.listen_btn)
+
+        # Anatomical Step-by-Step Instruction Guide
         self.ref_instructions = QTextEdit()
         self.ref_instructions.setReadOnly(True)
-        self.ref_instructions.setMaximumHeight(90)
+        self.ref_instructions.setMaximumHeight(100)
         self.ref_instructions.setStyleSheet("background: transparent; border: none; font-size: 11px; color: #BAC2DE;")
-        ref_layout.addWidget(self.ref_instructions)
+        right_layout.addWidget(self.ref_instructions)
 
-        # Listen Pronunciation Button
-        self.listen_btn = QPushButton("🔊 Listen Pronunciation")
-        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; padding: 6px;")
-        self.listen_btn.clicked.connect(self._on_listen_pronunciation)
-        ref_layout.addWidget(self.listen_btn)
+        splitter.addWidget(right_panel)
 
-        workspace_layout.addWidget(ref_card, 1)
-
-        # === DUAL PANEL SUB-PANEL 2: Live Webcam & Posture Arena (Right) ===
-        arena_card = QFrame()
-        arena_card.setObjectName("GlassCard")
-        arena_card.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 10px;")
-        arena_layout = QVBoxLayout(arena_card)
-
-        arena_header = QLabel("📹 Live Webcam & Posture Arena")
-        arena_header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        arena_header.setStyleSheet(f"color: {CYAN_ACCENT};")
-        arena_layout.addWidget(arena_header, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        # Wrap camera in a widget to overlay trajectory viewer
-        cam_container = QWidget()
-        cam_container.setFixedSize(400, 270)
-
-        self.camera_feed = QLabel(cam_container)
-        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.camera_feed.setText("Webcam Idle. Click 'Start Practice' to begin.")
-        self.camera_feed.setFixedSize(400, 270)
-        self.camera_feed.setStyleSheet(f"background-color: {BG_COLOR}; border-radius: 8px;")
-
-        self.trajectory_viewer = MotionTrajectoryViewer(cam_container)
-        self.trajectory_viewer.setFixedSize(400, 270)
-
-        arena_layout.addWidget(cam_container, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        # AI Posture Tutor / Real-time Checklist HUD
-        self.posture_hud = QTextEdit()
-        self.posture_hud.setReadOnly(True)
-        self.posture_hud.setMaximumHeight(65)
-        self.posture_hud.setHtml(f"<b style='color:{CYAN_ACCENT};'>AI Posture Tutor:</b> Ready.")
-        arena_layout.addWidget(self.posture_hud)
-
-        # Telemetry & Score Row
-        score_layout = QHBoxLayout()
-        self.xp_label = QLabel("XP: 0")
-        self.xp_label.setStyleSheet(f"color: {CYAN_ACCENT}; font-weight: bold;")
-        self.streak_label = QLabel("Streak: 0 🔥")
-        self.streak_label.setStyleSheet("color: #F43F5E; font-weight: bold;")
-        score_layout.addWidget(self.xp_label)
-        score_layout.addStretch()
-        score_layout.addWidget(self.streak_label)
-        arena_layout.addLayout(score_layout)
-
-        # Accuracy Gauge & Action Buttons Row
-        action_layout = QHBoxLayout()
-        self.match_gauge = CircularAccuracyGauge(radius=30, thickness=7)
-        action_layout.addWidget(self.match_gauge)
-
-        self.start_practice_btn = QPushButton("▶ Start Practice")
-        self.start_practice_btn.setObjectName("ActionBtn")
-        self.start_practice_btn.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; font-weight: bold; padding: 8px 16px;")
-        self.start_practice_btn.clicked.connect(self._toggle_practice)
-        action_layout.addWidget(self.start_practice_btn)
-
-        arena_layout.addLayout(action_layout)
-
-        workspace_layout.addWidget(arena_card, 2)
-
-        splitter.addWidget(curriculum_panel)
-        splitter.addWidget(workspace_panel)
-        splitter.setSizes([260, 740])
-
+        # Proportions: 20% (200), 45% (450), 35% (350)
+        splitter.setSizes([200, 450, 350])
         main_layout.addWidget(splitter)
 
         # Camera frame timer
@@ -337,11 +387,12 @@ class AcademyDashboard(QWidget):
         self.timer.timeout.connect(self._update_practice_frame)
         self.cap = None
 
-        # Load default card
+        # Load initial sign
         self._update_reference_card("dhonnobad")
 
     def _build_curriculum(self):
         """Populates the curriculum tree widget."""
+        self.curriculum_items_order.clear()
         curriculum_file = "dataset/curriculum_data.json"
         if os.path.exists(curriculum_file):
             try:
@@ -355,7 +406,9 @@ class AcademyDashboard(QWidget):
                             for lesson in mod.get("lessons", []):
                                 sym = lesson.get("symbol", "")
                                 name = lesson.get("name_en", "")
-                                QTreeWidgetItem(m_item, [f"{sym} - {name}"])
+                                item_text = f"{sym} - {name}"
+                                QTreeWidgetItem(m_item, [item_text])
+                                self.curriculum_items_order.append(item_text)
                 self.tree.expandAll()
                 return
             except Exception as e:
@@ -363,18 +416,19 @@ class AcademyDashboard(QWidget):
 
         # Fallback items
         l1 = QTreeWidgetItem(self.tree, ["Level 1: Alphabets & Digits"])
-        QTreeWidgetItem(l1, ["স্বরবর্ণ (Vowels)"])
-        QTreeWidgetItem(l1, ["ব্যঞ্জনবর্ণ (Consonants)"])
-        QTreeWidgetItem(l1, ["সংখ্যা (Numbers)"])
+        for sign in ["অ - Vowel A", "আ - Vowel Aa", "ই - Vowel I", "ক - Consonant Ka", "১ - One", "২ - Two"]:
+            QTreeWidgetItem(l1, [sign])
+            self.curriculum_items_order.append(sign)
 
         l2 = QTreeWidgetItem(self.tree, ["Level 2: Daily Words"])
-        QTreeWidgetItem(l2, ["ধন্যবাদ - Thank you"])
-        QTreeWidgetItem(l2, ["সাহায্য - Help"])
-        QTreeWidgetItem(l2, ["স্বাগতম - Welcome"])
+        for sign in ["ধন্যবাদ - Thank you", "সাহায্য - Help", "স্বাগতম - Welcome"]:
+            QTreeWidgetItem(l2, [sign])
+            self.curriculum_items_order.append(sign)
+
         self.tree.expandAll()
 
     def _update_reference_card(self, sign_key: str):
-        """Updates the Left Sub-Panel with the visual card and metadata for the selected sign."""
+        """Updates the Center Arena title and Right Sub-Panel with visual illustration and instructions."""
         meta = self.curriculum_data.get(sign_key, {})
         if not meta:
             # Try fuzzy match
@@ -384,7 +438,7 @@ class AcademyDashboard(QWidget):
                     break
 
         slug = meta.get("slug") or "dhonnobad"
-        bn = meta.get("label_bn") or sign_key
+        bn = meta.get("label_bn") or sign_key.split(" - ")[0]
         en = meta.get("label_en") or sign_key
         phonetic = meta.get("phonetic") or slug.replace("_", " ").title()
         cat = meta.get("category", "General")
@@ -396,20 +450,25 @@ class AcademyDashboard(QWidget):
         self.current_sign_bn = bn
         self.current_sign_en = en
 
+        # Update Center Panel Title
+        self.arena_title.setText(f"🎯 প্র্যাকটিস করুন: {bn} ({en})")
+
+        # Update Right Panel Labels
         self.ref_sign_bn.setText(bn)
         self.ref_sign_en.setText(en)
         self.ref_phonetic.setText(f"🔊 উচ্চারণ: [{phonetic}]")
         self.ref_badge.setText(f"Category: {cat} | Handedness: {handedness.title()}")
 
-        instructions_html = f"<b>🖐️ কৌশল:</b> {mnemonic}"
+        instructions_html = f"<b>🖐️ ধাপসমূহ ও কৌশল:</b><br>• {mnemonic}"
         if touch_rule:
-            instructions_html += f"<br><b>🎯 স্পর্শ নিয়ম:</b> {touch_rule}"
+            instructions_html += f"<br>• <b>স্পর্শ নিয়ম:</b> {touch_rule}"
+        else:
+            instructions_html += "<br>• নির্ভুল স্কোরের জন্য ক্যামেরার সামনে হাত স্থির রাখুন।"
         self.ref_instructions.setHtml(instructions_html)
 
         # Load SVG Visual Card
         svg_path = Path(f"dataset/visual_cards/{slug}.svg")
         if not svg_path.exists():
-            # Fallback search
             for f in Path("dataset/visual_cards").glob("*.svg"):
                 if slug in f.stem or f.stem in slug:
                     svg_path = f
@@ -436,12 +495,40 @@ class AcademyDashboard(QWidget):
         ]
         self.is_dynamic_sign = any(k in text.lower() for k in dynamic_keywords)
 
+    def _on_lesson_selected(self, lesson_text: str):
+        """Programmatic selection of a lesson."""
+        self._update_reference_card(lesson_text)
+
     def _on_listen_pronunciation(self):
-        """Plays the spoken name/pronunciation of the current reference sign."""
+        """Plays the spoken pronunciation of the active sign."""
         if self.current_sign_bn:
             audio_controller.speak_bengali(self.current_sign_bn)
         elif self.current_sign_en:
             audio_controller.speak_bengali(self.current_sign_en)
+
+    def _on_next_sign(self):
+        """Advances to the next curriculum sign."""
+        if not self.curriculum_items_order:
+            return
+
+        current_idx = 0
+        for idx, item_text in enumerate(self.curriculum_items_order):
+            if self.current_sign_bn in item_text or self.current_sign_slug in item_text:
+                current_idx = idx
+                break
+
+        next_idx = (current_idx + 1) % len(self.curriculum_items_order)
+        next_item = self.curriculum_items_order[next_idx]
+        self._update_reference_card(next_item)
+        self._on_restart_sign()
+
+    def _on_restart_sign(self):
+        """Clears buffers and resets progress for the current sign."""
+        self.temporal_frame_buffer.clear()
+        self.progress_bar.setValue(0)
+        self.countdown_ticks = 150
+        mode_hint = "Dynamic Gesture" if self.is_dynamic_sign else "Static Posture"
+        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Practice ({mode_hint}):</b> Sign '{self.current_sign_bn}'...")
 
     def _toggle_practice(self):
         """Toggles webcam capture and live practice mode."""
@@ -453,7 +540,7 @@ class AcademyDashboard(QWidget):
     def _start_practice(self):
         self.practice_running = True
         self.start_practice_btn.setText("⏹ Stop Practice")
-        self.start_practice_btn.setStyleSheet(f"background-color: {ERROR_COLOR}; color: #11111B; font-weight: bold; padding: 8px 16px;")
+        self.start_practice_btn.setStyleSheet(f"background-color: {ERROR_COLOR}; color: #11111B; font-weight: bold; padding: 8px 14px;")
         self.temporal_frame_buffer.clear()
         self.cap = cv2.VideoCapture(0)
         self.timer.start(33)  # ~30fps
@@ -467,7 +554,7 @@ class AcademyDashboard(QWidget):
     def _stop_practice(self):
         self.practice_running = False
         self.start_practice_btn.setText("▶ Start Practice")
-        self.start_practice_btn.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; font-weight: bold; padding: 8px 16px;")
+        self.start_practice_btn.setStyleSheet(f"background-color: {CYAN_ACCENT}; color: #11111B; font-weight: bold; padding: 8px 14px;")
         self.timer.stop()
         if self.cap:
             self.cap.release()
@@ -475,6 +562,7 @@ class AcademyDashboard(QWidget):
         self.camera_feed.setText("Webcam Idle. Click 'Start Practice' to begin.")
         self.quiz_active = False
         self.exam_active = False
+        self.progress_bar.setValue(0)
 
     def _start_exam(self):
         self._start_practice()
@@ -572,6 +660,10 @@ class AcademyDashboard(QWidget):
         else:
             current_score = float(self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks))
 
+        # Update Accuracy Progress Bar & Circular Gauge
+        self.progress_bar.setValue(int(min(100.0, max(0.0, current_score))))
+        self.match_gauge.set_value(current_score if (features["has_left"] or features["has_right"]) else 0)
+
         # Checklist HTML formatting
         checklist_html = ""
         if checklist:
@@ -592,8 +684,6 @@ class AcademyDashboard(QWidget):
                     self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index + 1}/10 - {sign_type}]:</b> Sign in {secs}s...{checklist_html}")
                 else:
                     self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz ({sign_type}):</b> Sign in {secs}s...{checklist_html}")
-
-                self.match_gauge.set_value(current_score)
 
                 if current_score > 75.0:
                     audio_controller.play_chime("notify")
@@ -632,7 +722,6 @@ class AcademyDashboard(QWidget):
             self.xp_label.setText(f"XP: {self.xp_score}")
             self.streak_label.setText(f"Streak: {self.streak} 🔥")
         else:
-            self.match_gauge.set_value(current_score if (features["has_left"] or features["has_right"]) else 0)
             if checklist_html:
                 self.posture_hud.setHtml(f"<b style='color:{CYAN_ACCENT};'>AI Posture Checklist:</b>{checklist_html}")
 

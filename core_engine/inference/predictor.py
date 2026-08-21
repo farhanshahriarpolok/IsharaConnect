@@ -28,6 +28,7 @@ class RealTimePredictor:
     def __init__(
         self,
         model_path: str = "models/onnx/bdsl_model.onnx",
+        spatial_model_path: str = "models/onnx/bdsl_spatial_model.onnx",
         labels_path: str = "dataset/labels.json",
         config: InferenceConfig = None,
         agreement_threshold: float = 0.7
@@ -47,9 +48,8 @@ class RealTimePredictor:
         self.labels = self._load_labels(labels_path)
         
         # Buffers
-        # We need a buffer of shape (sequence_length, feature_dim).
-        # Feature dim is 128 from normalizer
         self.landmark_buffer = deque(maxlen=self.sequence_length)
+        self.spatial_buffer = deque(maxlen=self.sequence_length)
         
         # Buffer for recent predictions to apply temporal smoothing (majority voting)
         self.prediction_buffer = deque(maxlen=self.agreement_window)
@@ -58,17 +58,31 @@ class RealTimePredictor:
         self.last_emitted_id: Optional[int] = None
         self.last_emitted_time: float = 0.0
 
-        # Load ONNX session
+        # Load ONNX sessions
         self.ort_session = None
-        if ort is not None and Path(model_path).exists():
-            try:
-                self.ort_session = ort.InferenceSession(model_path)
-                self.input_name = self.ort_session.get_inputs()[0].name
-                logger.info("ONNX Runtime session initialized successfully.")
-            except Exception as e:
-                logger.error("Failed to load ONNX model: %s", e)
+        self.ort_spatial_session = None
+        if ort is not None:
+            if Path(model_path).exists():
+                try:
+                    self.ort_session = ort.InferenceSession(model_path)
+                    self.input_name = self.ort_session.get_inputs()[0].name
+                    logger.info("ONNX normal session initialized successfully.")
+                except Exception as e:
+                    logger.error("Failed to load ONNX normal model: %s", e)
+            else:
+                logger.warning("ONNX model %s not found.", model_path)
+                
+            if Path(spatial_model_path).exists():
+                try:
+                    self.ort_spatial_session = ort.InferenceSession(spatial_model_path)
+                    self.spatial_input_name = self.ort_spatial_session.get_inputs()[0].name
+                    logger.info("ONNX spatial session initialized successfully.")
+                except Exception as e:
+                    logger.error("Failed to load ONNX spatial model: %s", e)
+            else:
+                logger.warning("ONNX spatial model %s not found.", spatial_model_path)
         else:
-            logger.warning("ONNX model %s not found or onnxruntime not installed. Inference will be disabled.", model_path)
+            logger.warning("onnxruntime not installed. Inference will be disabled.")
 
     def _load_labels(self, path: str) -> Dict[int, dict]:
         """Load and index labels."""
@@ -91,35 +105,50 @@ class RealTimePredictor:
         """Process a single frame's landmarks and return a prediction if stable.
         
         Args:
-            landmarks: 1D numpy array of shape (128,)
+            landmarks: 1D numpy array of shape (128,) for single hand or (151,) for dual hand.
             
         Returns:
             Dictionary with prediction or None.
         """
-        if landmarks.shape != (128,):
-            logger.warning("Expected landmarks shape (128,), got %s", landmarks.shape)
-            return None
+        if landmarks.shape == (151,):
+            # Dual Hand Spatial Mode
+            self.spatial_buffer.append(landmarks)
+            if len(self.spatial_buffer) < self.sequence_length:
+                return None
+            if self.ort_spatial_session is None:
+                return None
+                
+            # Average across the temporal sequence to get (1, 151)
+            buffer_arr = np.array(self.spatial_buffer, dtype=np.float32)
+            input_data = np.mean(buffer_arr, axis=0, keepdims=True)
             
-        # Push into buffer
-        self.landmark_buffer.append(landmarks)
-        
-        # If buffer is not full, return None
-        if len(self.landmark_buffer) < self.sequence_length:
-            return None
-            
-        if self.ort_session is None:
-            return None
+            try:
+                ort_outs = self.ort_spatial_session.run(None, {self.spatial_input_name: input_data})
+                logits = ort_outs[0]
+            except Exception as e:
+                logger.error("ONNX spatial inference failed: %s", e)
+                return None
+                
+        elif landmarks.shape == (128,):
+            # Single Hand Mode
+            self.landmark_buffer.append(landmarks)
+            if len(self.landmark_buffer) < self.sequence_length:
+                return None
+            if self.ort_session is None:
+                return None
 
-        # Convert buffer to tensor shape (1, 30, 128)
-        input_data = np.array(self.landmark_buffer, dtype=np.float32)
-        input_data = np.expand_dims(input_data, axis=0) # Add batch dimension
-        
-        # Run inference
-        try:
-            ort_outs = self.ort_session.run(None, {self.input_name: input_data})
-            logits = ort_outs[0]
-        except Exception as e:
-            logger.error("ONNX inference failed: %s", e)
+            # Convert buffer to tensor shape (1, 30, 128)
+            input_data = np.array(self.landmark_buffer, dtype=np.float32)
+            input_data = np.expand_dims(input_data, axis=0) # Add batch dimension
+            
+            try:
+                ort_outs = self.ort_session.run(None, {self.input_name: input_data})
+                logits = ort_outs[0]
+            except Exception as e:
+                logger.error("ONNX inference failed: %s", e)
+                return None
+        else:
+            logger.warning("Expected landmarks shape (128,) or (151,), got %s", landmarks.shape)
             return None
 
         probs = self._softmax(logits)[0] # Shape (num_classes,)

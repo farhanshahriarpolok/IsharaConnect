@@ -6,8 +6,11 @@ from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPainter, QBrush, QPen
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QPushButton, QFrame, QProgressBar, QTreeWidget, QTreeWidgetItem, QSplitter,
-    QStackedWidget, QTextEdit
+    QStackedWidget, QTextEdit, QMessageBox
 )
+from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtCore import QUrl
+from desktop_app.controllers.certificate_generator import CertificateGenerator
 
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
@@ -36,9 +39,13 @@ class AcademyDashboard(QWidget):
         
         # Interactive Quiz State
         self.quiz_active = False
+        self.exam_active = False
         self.countdown_ticks = 0
         self.xp_score = 0
         self.streak = 0
+        self.exam_signs = []
+        self.current_exam_index = 0
+        self.exam_correct = 0
         
         # Simulated Reference Data (for demonstration of ghost overlay tracking)
         # In production this would be loaded from a dataset
@@ -141,6 +148,11 @@ class AcademyDashboard(QWidget):
         self.tree.setHeaderHidden(True)
         self._build_curriculum()
         curriculum_layout.addWidget(self.tree)
+        
+        self.exam_btn = QPushButton("🎓 Take Certification Exam")
+        self.exam_btn.setStyleSheet(f"background-color: {SUCCESS_COLOR}; color: #11111B;")
+        self.exam_btn.clicked.connect(self._start_exam)
+        curriculum_layout.addWidget(self.exam_btn)
         
         # Right Panel (Content)
         content_panel = QWidget()
@@ -267,10 +279,49 @@ class AcademyDashboard(QWidget):
         
         # Start Quiz
         self.quiz_active = True
+        self.exam_active = False
         self.countdown_ticks = 150 # 5 seconds at 30fps
         
         self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting!</b> Get ready to sign...")
         self.target_overlay.setText("Quiz Active")
+        
+    def _start_exam(self):
+        self.content_stack.setCurrentWidget(self.practice_page)
+        self.cap = cv2.VideoCapture(0)
+        self.timer.start(33)
+        
+        all_signs = ["স্বরবর্ণ (Vowels)", "ব্যঞ্জনবর্ণ (Consonants)", "সংখ্যা (Numbers)", "Greetings", "Family", "Emotions", "Subject-Object-Verb (SOV) Structure", "Questions & Negations", "News Broadcasting", "Public Speech Translation"]
+        self.exam_signs = random.choices(all_signs, k=10)
+        self.current_exam_index = 0
+        self.exam_correct = 0
+        
+        self.quiz_active = False
+        self.exam_active = True
+        self.countdown_ticks = 150
+        
+        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam Started!</b> Sign 1/10: {self.exam_signs[0]}")
+        self.target_overlay.setText(f"Exam: {self.exam_signs[0]}")
+        
+    def _end_exam(self):
+        self._stop_practice()
+        score_percent = (self.exam_correct / 10.0) * 100
+        
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Certification Exam Complete")
+        msg.setStyleSheet(f"background-color: {PANEL_COLOR}; color: {TEXT_COLOR};")
+        
+        if score_percent >= 70:
+            msg.setText(f"Congratulations! You passed with a score of {score_percent}%.\nWould you like to download your verifiable certificate?")
+            msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            ret = msg.exec()
+            if ret == QMessageBox.StandardButton.Yes:
+                cg = CertificateGenerator()
+                filepath = cg.generate("Jane Doe", "Tier 4 Master", score_percent, 45)
+                QDesktopServices.openUrl(QUrl.fromLocalFile(filepath))
+        else:
+            msg.setText(f"You scored {score_percent}%. Keep practicing and try again!")
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
         
     def _stop_practice(self):
         self.timer.stop()
@@ -315,11 +366,14 @@ class AcademyDashboard(QWidget):
         self.camera_feed.setPixmap(pixmap)
         
         # Quiz Logic
-        if self.quiz_active:
+        if self.quiz_active or self.exam_active:
             if self.countdown_ticks > 0:
                 self.countdown_ticks -= 1
                 secs = self.countdown_ticks // 30
-                self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz:</b> Show sign in {secs}s...")
+                if self.exam_active:
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index+1}/10]:</b> Show sign in {secs}s...")
+                else:
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz:</b> Show sign in {secs}s...")
                 
                 score = self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks)
                 self.match_progress.setValue(int(score))
@@ -328,11 +382,30 @@ class AcademyDashboard(QWidget):
                     self.posture_hud.setHtml(f"<b style='color:{SUCCESS_COLOR};'>Excellent! Perfect Match.</b>")
                     self.xp_score += 50
                     self.streak += 1
-                    self.quiz_active = False # End quiz early on success
+                    if self.exam_active:
+                        self.exam_correct += 1
+                        self.current_exam_index += 1
+                        if self.current_exam_index >= 10:
+                            self._end_exam()
+                            return
+                        else:
+                            self.countdown_ticks = 150
+                            self.target_overlay.setText(f"Exam: {self.exam_signs[self.current_exam_index]}")
+                    else:
+                        self.quiz_active = False # End quiz early on success
             else:
                 self.posture_hud.setHtml(f"<b style='color:{ERROR_COLOR};'>Time's Up!</b>")
                 self.streak = 0
-                self.quiz_active = False
+                if self.exam_active:
+                    self.current_exam_index += 1
+                    if self.current_exam_index >= 10:
+                        self._end_exam()
+                        return
+                    else:
+                        self.countdown_ticks = 150
+                        self.target_overlay.setText(f"Exam: {self.exam_signs[self.current_exam_index]}")
+                else:
+                    self.quiz_active = False
                 
             self.xp_label.setText(f"XP: {self.xp_score}")
             self.streak_label.setText(f"Streak: {self.streak} 🔥")

@@ -63,7 +63,7 @@ def load_dataset(dataset_dir: str, num_classes: int):
         return generate_synthetic_baseline(num_classes)
         
     logger.info("Found %d real .npy sequences in %s", len(npy_files), dataset_dir)
-    
+    for f in npy_files:
         try:
             # f.parent.name should be the class ID
             label = int(f.parent.name)

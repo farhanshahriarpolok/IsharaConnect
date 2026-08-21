@@ -12,6 +12,7 @@ from PyQt6.QtGui import QImage
 from core_engine.vision.hand_detector import HandDetector
 from core_engine.preprocessing.normalizer import LandmarkNormalizer
 from core_engine.inference.predictor import RealTimePredictor
+from core_engine.vision.spatial_hand_engine import SpatialHandEngine
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class CameraWorker(QThread):
         self._is_running = True
         
         self.detector: Optional[HandDetector] = None
+        self.spatial_engine: Optional[SpatialHandEngine] = None
         self.predictor: Optional[RealTimePredictor] = None
 
     def _open_camera(self) -> Optional[cv2.VideoCapture]:
@@ -62,6 +64,7 @@ class CameraWorker(QThread):
             logger.info("Initializing MediaPipe and ONNX engines...")
             # Initialize ML engines inside the thread to avoid context issues
             self.detector = HandDetector(max_num_hands=2)
+            self.spatial_engine = SpatialHandEngine()
             self.predictor = RealTimePredictor()
             logger.info("ML engines initialized successfully.")
         except Exception as e:
@@ -111,10 +114,18 @@ class CameraWorker(QThread):
                 annotated_frame = self.detector.find_hands(frame, draw=True)
                 extraction = self.detector.extract_landmarks(frame.shape)
                 
-                # 2. Normalization
-                feature_vector = LandmarkNormalizer.process_frame(
-                    extraction["raw_left"], extraction["raw_right"]
-                )
+                # Check for two hands
+                if extraction["raw_left"] is not None and extraction["raw_right"] is not None:
+                    # Dual-hand: get 151-D vector
+                    spatial_features = self.spatial_engine.extract_spatial_features(frame)
+                    normalized_landmarks_flat = spatial_features["normalized_landmarks"].flatten()
+                    touch_matrix_flat = spatial_features["touch_matrix"].flatten()
+                    feature_vector = np.concatenate([normalized_landmarks_flat, touch_matrix_flat])
+                else:
+                    # 2. Normalization
+                    feature_vector = LandmarkNormalizer.process_frame(
+                        extraction["raw_left"], extraction["raw_right"]
+                    )
                 
                 # 3. Inference
                 prediction = self.predictor.process_frame(feature_vector)

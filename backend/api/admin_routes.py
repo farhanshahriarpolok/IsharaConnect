@@ -80,3 +80,14 @@ async def reject_submission(submission_id: str) -> Dict[str, Any]:
         "status": "success",
         "message": f"Submission {submission_id} rejected."
     }
+
+@router.get("/verify-certificate/{cert_id}")
+async def verify_certificate(cert_id: str) -> Dict[str, Any]:
+    """Verify a BdSL Interpreter Certificate."""
+    # Mock database verification
+    return {
+        "status": "success",
+        "valid": True,
+        "cert_id": cert_id,
+        "message": "Certificate is valid and officially recognized by the BdSL Academy."
+    }

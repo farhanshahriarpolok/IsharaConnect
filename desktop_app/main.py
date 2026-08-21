@@ -3,6 +3,12 @@
 import argparse
 import sys
 import logging
+from pathlib import Path
+
+# Explicitly add project root to PYTHONPATH to prevent module import crashes
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon

@@ -150,6 +150,12 @@ class IsharaMainWindow(QMainWindow):
         status_panel.setFixedWidth(250)
         status_layout = QVBoxLayout(status_panel)
         
+        status_layout.addWidget(QLabel("Camera Device:"))
+        self.cam_selector = QComboBox()
+        self.cam_selector.addItems(["Auto (0)", "Camera 1", "Camera 2", "Camera 3"])
+        self.cam_selector.currentIndexChanged.connect(self._change_camera)
+        status_layout.addWidget(self.cam_selector)
+        
         status_layout.addWidget(QLabel("Current Sign (Local):"))
         self.local_sign_lbl = QLabel("---")
         self.local_sign_lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
@@ -231,6 +237,7 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
             self.camera_worker.fps_updated.connect(self._update_fps)
+            self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
 
     def _reconnect(self):
@@ -261,10 +268,12 @@ class IsharaMainWindow(QMainWindow):
             
         if self.mode == "signer":
             self.stacked_widget.setCurrentWidget(self.signer_view)
-            self.camera_worker = CameraWorker()
+            idx = self.cam_selector.currentIndex() if hasattr(self, 'cam_selector') else 0
+            self.camera_worker = CameraWorker(camera_id=idx)
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
             self.camera_worker.fps_updated.connect(self._update_fps)
+            self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
         else:
             self.stacked_widget.setCurrentWidget(self.speaker_view)
@@ -281,6 +290,27 @@ class IsharaMainWindow(QMainWindow):
             self.status_badge.setStyleSheet(f"color: {ACCENT_RED};")
             
         logger.info("Network Status: %s", message)
+
+    @pyqtSlot(str)
+    def _on_camera_error(self, message: str):
+        self.status_badge.setText(f"⚠️ Cam Error")
+        self.status_badge.setStyleSheet("color: yellow;")
+        self.camera_label.setText(message)
+        logger.error("Camera Error: %s", message)
+
+    def _change_camera(self, index: int):
+        """Restart camera worker with new index."""
+        if not self.camera_worker or self.mode != "signer":
+            return
+            
+        self.camera_worker.stop()
+        self.camera_label.setText("Initializing Camera...")
+        self.camera_worker = CameraWorker(camera_id=index)
+        self.camera_worker.frame_ready.connect(self._update_camera_feed)
+        self.camera_worker.sign_detected.connect(self._on_sign_detected)
+        self.camera_worker.fps_updated.connect(self._update_fps)
+        self.camera_worker.error_occurred.connect(self._on_camera_error)
+        self.camera_worker.start()
 
     @pyqtSlot(QImage)
     def _update_camera_feed(self, image: QImage):
@@ -345,10 +375,12 @@ class IsharaMainWindow(QMainWindow):
         
         # Resume camera worker
         if was_running and self.mode == "signer":
-            self.camera_worker = CameraWorker()
+            idx = self.cam_selector.currentIndex() if hasattr(self, 'cam_selector') else 0
+            self.camera_worker = CameraWorker(camera_id=idx)
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
             self.camera_worker.fps_updated.connect(self._update_fps)
+            self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
 
     def closeEvent(self, event):

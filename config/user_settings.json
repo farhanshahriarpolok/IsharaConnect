@@ -1,0 +1,14 @@
+{
+  "camera_id": 0,
+  "resolution": [
+    640,
+    480
+  ],
+  "confidence_threshold": 0.7,
+  "stability_timer": 2.0,
+  "sensitivity": "normal",
+  "mirror_mode": true,
+  "tts_volume": 100,
+  "tts_muted": false,
+  "server_url": "ws://127.0.0.1:8000"
+}

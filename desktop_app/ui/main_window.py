@@ -1,18 +1,21 @@
 """Modern PyQt6 MainWindow for IsharaConnect Desktop Client."""
 
 import logging
+from datetime import datetime
 from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPainter, QBrush, QPen
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QPushButton, QLineEdit, QComboBox, 
     QFrame, QStackedWidget, QTextEdit, QProgressBar,
-    QTextBrowser, QCheckBox
+    QTextBrowser, QCheckBox, QDialog
 )
 
 from desktop_app.controllers.camera_worker import CameraWorker
 from desktop_app.controllers.network_worker import NetworkWorker
 from desktop_app.ui.propose_sign_dialog import ProposeSignDialog
+from desktop_app.ui.dialogs.settings_dialog import SettingsDialog, load_user_settings
+from desktop_app.ui.dialogs.export_dialog import ExportTranscriptDialog
 from desktop_app.ui.learning_hub import LearningHubWidget
 from desktop_app.ui.academy_dashboard import AcademyDashboard
 from desktop_app.ui.scenario_simulator import ScenarioSimulator
@@ -42,6 +45,8 @@ class IsharaMainWindow(QMainWindow):
         self.camera_worker = None
         self.network_worker = None
         self.audio_cache = {}
+        self.user_settings = load_user_settings()
+        self.message_history = []
         
         self._init_ui()
         self._start_workers()
@@ -83,6 +88,14 @@ class IsharaMainWindow(QMainWindow):
         
         self.propose_btn = QPushButton("➕ Propose New Sign")
         self.propose_btn.clicked.connect(self._open_propose_dialog)
+
+        self.export_transcript_btn = QPushButton("💾 Export Transcript")
+        self.export_transcript_btn.setToolTip("Export live conversation history (PDF, TXT, JSON)")
+        self.export_transcript_btn.clicked.connect(self._open_export_dialog)
+
+        self.settings_btn = QPushButton("⚙️ Settings")
+        self.settings_btn.setToolTip("Device, Camera & AI Inference Settings")
+        self.settings_btn.clicked.connect(self._open_settings_dialog)
         
         header_layout.addWidget(title_label)
         
@@ -100,6 +113,8 @@ class IsharaMainWindow(QMainWindow):
         header_layout.addWidget(self.join_btn)
         header_layout.addWidget(self.mode_selector)
         header_layout.addWidget(self.propose_btn)
+        header_layout.addWidget(self.export_transcript_btn)
+        header_layout.addWidget(self.settings_btn)
         
         main_layout.addLayout(header_layout)
 
@@ -449,6 +464,14 @@ class IsharaMainWindow(QMainWindow):
         
         # Send to backend only on new triggers
         if self.network_worker and data.get("is_stable") and data.get("is_new_trigger", True):
+            label_bn = data.get("label_bn", "")
+            label_en = data.get("label_en", "")
+            if label_bn:
+                self.message_history.append({
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "sender": "Signer",
+                    "text": f"{label_bn} ({label_en})" if label_en else label_bn
+                })
             try:
                 self.network_worker.send_sign_event(data)
             except Exception as e:
@@ -464,6 +487,12 @@ class IsharaMainWindow(QMainWindow):
             text = payload.get("label_bn", "")
             base64_audio = payload.get("audio_payload_base64", "")
             
+            self.message_history.append({
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "sender": "Signer",
+                "text": text
+            })
+            
             if base64_audio:
                 msg_id = len(self.audio_cache)
                 self.audio_cache[msg_id] = base64_audio
@@ -477,6 +506,13 @@ class IsharaMainWindow(QMainWindow):
         elif event_type == "SPEECH_TEXT" and self.mode == "signer":
             player_instance.play_chime("notify")
             transcript = payload.get("transcript", "")
+            
+            self.message_history.append({
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "sender": "Speaker",
+                "text": transcript
+            })
+            
             if hasattr(self, 'subtitle_lbl'):
                 self.subtitle_lbl.setText(transcript)
             if hasattr(self, 'gesture_avatar'):
@@ -488,6 +524,11 @@ class IsharaMainWindow(QMainWindow):
         """Send typed text, play visual gesture avatar, and transmit to network."""
         text = self.text_input.text().strip()
         if text:
+            self.message_history.append({
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "sender": "You (Signer)" if self.mode == "signer" else "You (Speaker)",
+                "text": text
+            })
             if hasattr(self, 'gesture_avatar'):
                 self.gesture_avatar.synthesize_and_play(text)
             if self.network_worker:
@@ -510,6 +551,11 @@ class IsharaMainWindow(QMainWindow):
         """Send typed text from speaker to signer."""
         text = self.reply_input.text().strip()
         if text and self.network_worker:
+            self.message_history.append({
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "sender": "You (Speaker)",
+                "text": text
+            })
             self.network_worker.send_speech_event(text)
             self.transcript_area.append(f"<span style='color:{ACCENT_BLUE}'><b>You:</b> {text}</span>")
             self.reply_input.clear()
@@ -529,7 +575,7 @@ class IsharaMainWindow(QMainWindow):
         
         # Resume camera worker
         if was_running and self.mode == "signer":
-            idx = self.cam_selector.currentIndex() if hasattr(self, 'cam_selector') else 0
+            idx = self.user_settings.get("camera_id", 0)
             self.camera_worker = CameraWorker(camera_id=idx)
             self.camera_worker.frame_ready.connect(self._update_camera_feed)
             self.camera_worker.sign_detected.connect(self._on_sign_detected)
@@ -537,6 +583,44 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker.fps_updated.connect(self._update_fps)
             self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
+
+    @pyqtSlot()
+    def _open_settings_dialog(self):
+        """Open Advanced Device & Camera Settings Dialog."""
+        dialog = SettingsDialog(current_settings=self.user_settings, parent=self)
+        dialog.settings_applied.connect(self._on_settings_applied)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self._on_settings_applied(dialog.settings)
+
+    @pyqtSlot(dict)
+    def _on_settings_applied(self, settings: dict):
+        """Dynamically applies device and inference settings."""
+        self.user_settings = settings
+        
+        # 1. Update Camera Worker if running
+        if self.camera_worker:
+            cam_id = settings.get("camera_id", 0)
+            mirror = settings.get("mirror_mode", True)
+            sens = settings.get("sensitivity", "normal")
+            self.camera_worker.set_mirror_mode(mirror)
+            self.camera_worker.set_sensitivity(sens)
+            if self.camera_worker.camera_id != cam_id:
+                self._change_camera(cam_id)
+                
+        # 2. Update Server URL
+        if "server_url" in settings and settings["server_url"]:
+            self.server_url = settings["server_url"]
+
+    @pyqtSlot()
+    def _open_export_dialog(self):
+        """Open Conversation Transcript Exporter Dialog."""
+        dialog = ExportTranscriptDialog(
+            messages=self.message_history,
+            room_id=self.room_id,
+            mode=self.mode.title(),
+            parent=self
+        )
+        dialog.exec()
 
     @pyqtSlot(int)
     def _on_sensitivity_changed(self, index: int):

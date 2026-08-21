@@ -38,6 +38,7 @@ from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 from desktop_app.ui.components.sign_card_viewer import SignCardViewer
 from desktop_app.ui.components.human_rig_viewer import HumanRigViewer
+from desktop_app.ui.dialogs.exam_dialog import ExamDialog
 from desktop_app.ui.theme import ThemeStyles
 
 logger = logging.getLogger(__name__)
@@ -204,7 +205,7 @@ class AcademyDashboard(QWidget):
 
         self.exam_btn = QPushButton("🎓 Take Certification Exam")
         self.exam_btn.setStyleSheet(f"background-color: {SUCCESS_COLOR}; color: #11111B; font-weight: bold; padding: 8px;")
-        self.exam_btn.clicked.connect(self._start_exam)
+        self.exam_btn.clicked.connect(self.on_take_exam_clicked)
         left_layout.addWidget(self.exam_btn)
 
         splitter.addWidget(left_panel)
@@ -789,6 +790,12 @@ class AcademyDashboard(QWidget):
         self.quiz_active = False
         self.exam_active = False
         self.progress_bar.setValue(0)
+
+    @pyqtSlot()
+    def on_take_exam_clicked(self):
+        """Opens the standardized interactive Certification Exam Dialog."""
+        dialog = ExamDialog(candidate_name="BdSL Learner", parent=self)
+        dialog.exec()
 
     def _start_exam(self):
         self._start_practice()

@@ -412,12 +412,12 @@ class IsharaMainWindow(QMainWindow):
 
     @pyqtSlot(QImage)
     def _update_camera_feed(self, image: QImage):
-        # Scale to fit label while maintaining aspect ratio
-        pixmap = QPixmap.fromImage(image)
         # Route to the appropriate view
-        if self.stacked_widget.currentWidget() == self.learning_view:
-            self.learning_view.update_camera_feed(image)
+        if hasattr(self, "learning_view") and self.stacked_widget.currentWidget() == self.learning_view:
+            if hasattr(self.learning_view, "update_camera_feed"):
+                self.learning_view.update_camera_feed(image)
         elif hasattr(self, 'camera_feed'):
+            pixmap = QPixmap.fromImage(image)
             scaled = pixmap.scaled(self.camera_feed.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             self.camera_feed.setPixmap(scaled)
 
@@ -438,8 +438,9 @@ class IsharaMainWindow(QMainWindow):
 
     @pyqtSlot(dict)
     def _on_sign_detected(self, data: dict):
-        if self.stacked_widget.currentWidget() == self.learning_view:
-            self.learning_view.process_prediction(data)
+        if hasattr(self, "learning_view") and self.stacked_widget.currentWidget() == self.learning_view:
+            if hasattr(self.learning_view, "process_prediction"):
+                self.learning_view.process_prediction(data)
             return
 
         # Update Sentence Ticker

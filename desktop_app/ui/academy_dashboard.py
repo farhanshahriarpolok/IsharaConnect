@@ -532,6 +532,63 @@ class AcademyDashboard(QWidget):
         mode_hint = "Dynamic Gesture" if self.is_dynamic_sign else "Static Posture"
         self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting ({mode_hint})!</b> Sign '{self.current_sign_bn}'...")
 
+    @pyqtSlot(object)
+    def update_camera_feed(self, image):
+        """Updates the practice arena camera video feed.
+        
+        Supports QImage, QPixmap, and NumPy ndarray.
+        """
+        if image is None:
+            return
+
+        pixmap = None
+        if isinstance(image, QPixmap):
+            pixmap = image
+        elif isinstance(image, QImage):
+            pixmap = QPixmap.fromImage(image)
+        elif isinstance(image, np.ndarray):
+            try:
+                h, w, ch = image.shape
+                bytes_per_line = ch * w
+                if ch == 3:
+                    qt_img = QImage(image.data, w, h, bytes_per_line, QImage.Format.Format_BGR888)
+                else:
+                    qt_img = QImage(image.data, w, h, bytes_per_line, QImage.Format.Format_Grayscale8)
+                pixmap = QPixmap.fromImage(qt_img)
+            except Exception as e:
+                logger.debug(f"Failed converting ndarray to pixmap: {e}")
+                return
+
+        if pixmap and not pixmap.isNull():
+            target_size = self.camera_feed.size()
+            if target_size.width() <= 10 or target_size.height() <= 10:
+                target_size = self.camera_feed.sizeHint()
+            scaled = pixmap.scaled(target_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.camera_feed.setPixmap(scaled)
+
+    def update_frame(self, image):
+        """Alias for update_camera_feed."""
+        self.update_camera_feed(image)
+
+    def set_frame(self, image):
+        """Alias for update_camera_feed."""
+        self.update_camera_feed(image)
+
+    @pyqtSlot(dict)
+    def process_prediction(self, data: dict):
+        """Processes real-time prediction data forwarded from MainWindow camera worker."""
+        if not data:
+            return
+
+        label_bn = data.get("label_bn", "")
+        conf = float(data.get("confidence", 0.0)) * 100.0
+
+        if label_bn and (label_bn == self.current_sign_bn or self.current_sign_slug in str(data.get("label_en", "")).lower()):
+            self.progress_bar.setValue(int(min(100.0, max(0.0, conf))))
+            self.match_gauge.set_value(conf)
+            if conf > 75.0 and not self.practice_running:
+                self.posture_hud.setHtml(f"<b style='color:#10B981;'>Detected: {label_bn} ({conf:.1f}%)</b>")
+
     def _stop_practice(self):
         self.practice_running = False
         self.start_practice_btn.setText("▶ Start Practice")

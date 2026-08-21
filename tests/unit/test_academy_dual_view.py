@@ -103,3 +103,46 @@ def test_academy_dashboard_toggle_practice(qapp):
         dash._toggle_practice()
         assert dash.practice_running is False
         assert dash.timer.isActive() is False
+
+
+def test_academy_dashboard_update_camera_feed(qapp):
+    """Verify update_camera_feed handles QImage, QPixmap, and ndarray without errors."""
+    import numpy as np
+    from PyQt6.QtGui import QImage, QPixmap
+
+    dash = AcademyDashboard()
+    
+    # 1. QImage
+    img = QImage(640, 480, QImage.Format.Format_RGB888)
+    img.fill(0)
+    dash.update_camera_feed(img)
+    assert dash.camera_feed.pixmap() is not None
+
+    # 2. QPixmap
+    pm = QPixmap(320, 240)
+    dash.update_camera_feed(pm)
+    assert dash.camera_feed.pixmap() is not None
+
+    # 3. NumPy Array
+    arr = np.zeros((240, 320, 3), dtype=np.uint8)
+    dash.update_camera_feed(arr)
+    assert dash.camera_feed.pixmap() is not None
+
+    # 4. None safety
+    dash.update_camera_feed(None)
+
+
+def test_academy_dashboard_process_prediction(qapp):
+    """Verify process_prediction updates accuracy progress bar and posture HUD."""
+    dash = AcademyDashboard()
+    dash._update_reference_card("dhonnobad")
+
+    pred_data = {
+        "label_bn": "ধন্যবাদ",
+        "label_en": "Thank you",
+        "confidence": 0.88,
+        "is_stable": True
+    }
+    dash.process_prediction(pred_data)
+    assert dash.progress_bar.value() == 88
+    assert dash.match_gauge.value == 88.0

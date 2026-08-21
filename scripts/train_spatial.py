@@ -1,13 +1,28 @@
 """Training Script for the Dual-Hand Spatial Feature Model."""
 
 import os
+import sys
 import argparse
 import logging
+from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from sklearn.model_selection import GroupKFold
+
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 from core_engine.vision.dual_hand_trainer import SpatialFeatureDataset, DualHandSpatialModel
 
@@ -79,7 +94,7 @@ def train_and_export():
         train_dataset = SpatialFeatureDataset(X[train_idx], y[train_idx])
         val_dataset = SpatialFeatureDataset(X[val_idx], y[val_idx])
         
-        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, drop_last=True)
         val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
         
         model = DualHandSpatialModel(input_dim=151, hidden_dim=256, num_classes=num_classes)
@@ -128,17 +143,31 @@ def train_and_export():
     export_path = "models/onnx/bdsl_spatial_model.onnx"
     
     dummy_input = torch.randn(1, 151) # Batch size 1, 151 features
-    torch.onnx.export(
-        best_model, 
-        dummy_input, 
-        export_path,
-        export_params=True,
-        opset_version=14,
-        do_constant_folding=True,
-        input_names=['input'],
-        output_names=['output'],
-        dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
-    )
+    try:
+        torch.onnx.export(
+            best_model, 
+            dummy_input, 
+            export_path,
+            export_params=True,
+            opset_version=18,
+            do_constant_folding=True,
+            input_names=['input'],
+            output_names=['output'],
+            dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+            dynamo=False
+        )
+    except TypeError:
+        torch.onnx.export(
+            best_model, 
+            dummy_input, 
+            export_path,
+            export_params=True,
+            opset_version=18,
+            do_constant_folding=True,
+            input_names=['input'],
+            output_names=['output'],
+            dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}
+        )
     logger.info(f"ONNX Model exported to {export_path}")
 
 if __name__ == "__main__":

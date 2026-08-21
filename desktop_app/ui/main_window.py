@@ -249,7 +249,6 @@ class IsharaMainWindow(QMainWindow):
             self.network_worker.stop()
             
         self.status_badge.setText("🟡 Reconnecting...")
-        self.status_badge.setStyleSheet("color: yellow;")
         self.network_worker = NetworkWorker(self.server_url, self.room_id, self.mode.lower())
         self.network_worker.connection_status.connect(self._on_connection_status)
         self.network_worker.message_received.connect(self._on_network_message)
@@ -328,27 +327,27 @@ class IsharaMainWindow(QMainWindow):
     def _on_connection_status(self, connected: bool, message: str):
         if connected:
             self.status_badge.setText(f"🟢 Connected: {self.room_id}")
-            self.status_badge.setStyleSheet(f"color: {ACCENT_GREEN};")
         else:
             self.status_badge.setText("🔴 Disconnected")
-            self.status_badge.setStyleSheet(f"color: {ACCENT_RED};")
             
         logger.info("Network Status: %s", message)
 
     @pyqtSlot(str)
     def _on_network_connected(self):
-        self.status_badge.set_status("Online", "#10B981")
-        self.connect_btn.setText("Disconnect")
+        self.status_badge.set_status("Online", True)
+        if hasattr(self, 'connect_btn'):
+            self.connect_btn.setText("Disconnect")
         
     def _on_network_disconnected(self):
-        self.status_badge.set_status("Offline", "#F43F5E")
-        self.connect_btn.setText("Connect")
+        self.status_badge.set_status("Offline", False)
+        if hasattr(self, 'connect_btn'):
+            self.connect_btn.setText("Connect")
 
     @pyqtSlot(str)
     def _on_camera_error(self, message: str):
-        self.status_badge.setText(f"⚠️ Cam Error")
-        self.status_badge.setStyleSheet("color: yellow;")
-        self.camera_label.setText(message)
+        self.status_badge.setText("⚠️ Cam Error")
+        if hasattr(self, 'camera_feed'):
+            self.camera_feed.setText(message)
         logger.error("Camera Error: %s", message)
 
     def _change_camera(self, index: int):
@@ -357,7 +356,8 @@ class IsharaMainWindow(QMainWindow):
             return
             
         self.camera_worker.stop()
-        self.camera_label.setText("Initializing Camera...")
+        if hasattr(self, 'camera_feed'):
+            self.camera_feed.setText("Initializing Camera...")
         self.camera_worker = CameraWorker(camera_id=index)
         self.camera_worker.frame_ready.connect(self._update_camera_feed)
         self.camera_worker.sign_detected.connect(self._on_sign_detected)

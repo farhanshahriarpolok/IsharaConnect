@@ -35,9 +35,29 @@ def test_circular_gauge(qapp):
     assert gauge.value == 0.0
 
 def test_pulsing_badge(qapp):
-    """Test PulsingStatusBadge component updating."""
+    """Test PulsingStatusBadge component updating via set_status and setText."""
     badge = PulsingStatusBadge()
     assert badge.label.text() == "Online"
+    assert badge.text() == "Online"
     
-    badge.set_status("Offline", ThemeColors.CORAL_ERROR)
-    assert badge.label.text() == "Offline"
+    # Test set_status with bool
+    badge.set_status("Online", True)
+    assert badge.text() == "Online"
+    assert badge.dot.pulsing is True
+
+    badge.set_status("Offline", False)
+    assert badge.text() == "Offline"
+    assert badge.dot.pulsing is False
+
+    # Test setText with various statuses
+    badge.setText("🟢 Connected: room_01")
+    assert "Connected" in badge.text()
+    assert badge.dot.pulsing is True
+
+    badge.setText("🔴 Disconnected")
+    assert "Disconnected" in badge.text()
+    assert badge.dot.pulsing is False
+
+    badge.setText("🟡 Reconnecting...")
+    assert "Reconnecting" in badge.text()
+    assert badge.dot.pulsing is True

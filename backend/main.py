@@ -2,7 +2,10 @@
 
 import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from backend.api.routes import router as api_router
 from backend.api.admin_routes import router as admin_router
@@ -28,6 +31,23 @@ app.add_middleware(
 
 app.include_router(api_router)
 app.include_router(admin_router)
+
+# Mount static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+os.makedirs(templates_dir, exist_ok=True)
+
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    index_path = os.path.join(templates_dir, "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>IsharaConnect Web Client Initializing... (Please create index.html)</h1>"
+
 
 
 @app.websocket("/ws/room/{room_id}/{client_type}")

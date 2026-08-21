@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  isharaconnect-api:
+    build: .
+    container_name: isharaconnect_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./dataset:/app/dataset
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

@@ -1,0 +1,39 @@
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Git
+.git/
+.gitignore
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI Metadata
+.ai/
+TASKS.md
+MEMORY.md
+RUNBOOK.md
+GEMINI.md
+AGENTS.md
+
+# Large Data & Checkpoints
+dataset/external/
+dataset/raw_landmarks/
+models/*.pt
+models/checkpoints/
+
+# Other
+.DS_Store

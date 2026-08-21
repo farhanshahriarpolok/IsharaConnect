@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 
 from core_engine.audio.tts_engine import TextToSpeechEngine
 from core_engine.nlp.advanced_grammar_engine import AdvancedBdSLGrammarEngine
-from backend.config import settings
+from backend.core.config import settings
 
 try:
     import redis.asyncio as redis

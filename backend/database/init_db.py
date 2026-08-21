@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.config import settings
+from backend.core.config import settings
 from backend.database.models import Base, User, Sign
 from backend.auth.security import get_password_hash
 

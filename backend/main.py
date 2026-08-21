@@ -20,7 +20,13 @@ from backend.api.routes import router as api_router
 from backend.api.admin_routes import router as admin_router
 from backend.routers.room_router import router as room_router
 from backend.websockets.room_manager import manager, ClientType
-from backend.config import settings
+from backend.core.config import settings
+
+# Mega Sprint 19 new routers
+from backend.api.v1.auth import router as auth_router
+from backend.api.v1.users import router as users_router
+from backend.api.v1.progress import router as progress_router
+from backend.api.v1.exams import router as exams_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -43,6 +49,12 @@ app.add_middleware(
 app.include_router(api_router)
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(room_router)
+
+# Include Mega Sprint 19 routers
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(progress_router, prefix="/api/v1/progress", tags=["Progress"])
+app.include_router(exams_router, prefix="/api/v1/exams", tags=["Exams"])
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")

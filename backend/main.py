@@ -7,6 +7,14 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import json
+import asyncio
+from pydantic import BaseModel
+from aiortc import RTCPeerConnection, RTCSessionDescription
+import numpy as np
+
+from backend.webrtc.track_processor import SignLanguageTrackProcessor
+from core_engine.inference.cslr_engine import IsharaInferenceEngine, SlidingWindowBuffer
 
 from backend.api.routes import router as api_router
 from backend.api.admin_routes import router as admin_router
@@ -41,6 +49,13 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+engine = IsharaInferenceEngine()
+pcs = set()
+
+class WebRTCOffer(BaseModel):
+    sdp: str
+    type: str
+
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 TEMPLATES_DIR.mkdir(exist_ok=True)
 
@@ -56,4 +71,80 @@ async def serve_root():
 async def health_check():
     """Ultra-fast root health endpoint for launcher and health probes."""
     return {"status": "healthy", "service": "IsharaConnect-Backend"}
+
+
+# ----------------- WebRTC Endpoint -----------------
+@app.post("/offer")
+async def webrtc_offer(offer_data: WebRTCOffer):
+    offer = RTCSessionDescription(sdp=offer_data.sdp, type=offer_data.type)
+    pc = RTCPeerConnection()
+    pcs.add(pc)
+
+    data_channel = None
+
+    @pc.on("datachannel")
+    def on_datachannel(channel):
+        nonlocal data_channel
+        data_channel = channel
+
+    @pc.on("track")
+    def on_track(track):
+        if track.kind == "video":
+            # ভিডিও ট্র্যাকে ইনফারেন্স পাইপলাইন যুক্ত করা
+            processor = SignLanguageTrackProcessor(track, data_channel, engine)
+            pc.addTrack(processor)
+
+    @pc.on("connectionstatechange")
+    async def on_connectionstatechange():
+        if pc.connectionState in ["failed", "closed"]:
+            await pc.close()
+            pcs.discard(pc)
+
+    await pc.setRemoteDescription(offer)
+    answer = await pc.createAnswer()
+    await pc.setLocalDescription(answer)
+
+    return {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
+
+
+# ----------------- WebSocket Landmark Endpoint (Low-Bandwidth Mode) -----------------
+@app.websocket("/ws/landmarks")
+async def websocket_landmark_stream(websocket: WebSocket):
+    """
+    ক্লায়েন্ট সাইড থেকে যদি MediaPipe ল্যান্ডমার্ক প্রসেস করে (JSON/Binary),
+    তবে এই এন্ডপয়েন্ট ব্যবহার করে সার্ভারের GPU কস্ট ৮০% কমানো যায়।
+    """
+    await websocket.accept()
+    buffer = SlidingWindowBuffer(window_size=32, stride=8)
+    last_gloss = ""
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            payload = json.loads(data)
+            
+            # ল্যান্ডমার্ক অ্যারে কনভার্সন (Shape: 75, 3)
+            landmarks = np.array(payload["landmarks"], dtype=np.float32)
+
+            if buffer.append(landmarks):
+                window = buffer.get_window()
+                gloss = await engine.predict_cslr_ctc(window)
+                
+                if gloss and gloss != last_gloss:
+                    last_gloss = gloss
+                    text = await engine.translate_gloss_to_text(gloss)
+                    await websocket.send_json({
+                        "status": "success",
+                        "gloss": gloss,
+                        "text": text
+                    })
+
+    except WebSocketDisconnect:
+        logger.info("WebSocket client disconnected.")
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    coros = [pc.close() for pc in pcs]
+    await asyncio.gather(*coros)
+    pcs.clear()
 

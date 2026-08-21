@@ -14,6 +14,8 @@ from desktop_app.controllers.camera_worker import CameraWorker
 from desktop_app.controllers.network_worker import NetworkWorker
 from desktop_app.ui.propose_sign_dialog import ProposeSignDialog
 from desktop_app.ui.learning_hub import LearningHubWidget
+from desktop_app.ui.academy_dashboard import AcademyDashboard
+from desktop_app.ui.scenario_simulator import ScenarioSimulator
 from core_engine.audio.audio_player import player_instance
 
 logger = logging.getLogger(__name__)
@@ -113,7 +115,7 @@ class IsharaMainWindow(QMainWindow):
         
         # Top-level navigation
         self.nav_mode = QComboBox()
-        self.nav_mode.addItems(["💬 Communication Mode", "🎓 Learning Hub"])
+        self.nav_mode.addItems(["💬 Communication Mode", "🎓 Learning Hub", "🏫 BdSL Academy", "🚑 Scenario Simulator"])
         self.nav_mode.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self.nav_mode.currentTextChanged.connect(self._change_app_mode)
         header_layout.addWidget(self.nav_mode)
@@ -132,10 +134,14 @@ class IsharaMainWindow(QMainWindow):
         self.signer_view = self._create_signer_view()
         self.speaker_view = self._create_speaker_view()
         self.learning_view = LearningHubWidget()
+        self.academy_view = AcademyDashboard()
+        self.scenario_view = ScenarioSimulator()
         
         self.stacked_widget.addWidget(self.signer_view)
         self.stacked_widget.addWidget(self.speaker_view)
         self.stacked_widget.addWidget(self.learning_view)
+        self.stacked_widget.addWidget(self.academy_view)
+        self.stacked_widget.addWidget(self.scenario_view)
         
         if self.mode.lower() == "signer":
             self.stacked_widget.setCurrentWidget(self.signer_view)
@@ -147,6 +153,8 @@ class IsharaMainWindow(QMainWindow):
         # Connect Learning Hub Signals
         self.learning_view.request_camera_start.connect(self._ensure_camera_running)
         self.learning_view.request_camera_stop.connect(self._stop_camera)
+        self.academy_view.request_back.connect(lambda: self.nav_mode.setCurrentIndex(0))
+        self.scenario_view.request_back.connect(lambda: self.nav_mode.setCurrentIndex(0))
 
     def _create_signer_view(self) -> QWidget:
         """Create the layout for Deaf/Mute users."""
@@ -288,9 +296,17 @@ class IsharaMainWindow(QMainWindow):
     def _change_app_mode(self, new_mode_str: str):
         """Switch between Communication Mode and Learning Hub."""
         is_learning = "Learning" in new_mode_str
+        is_academy = "Academy" in new_mode_str
+        is_scenario = "Scenario" in new_mode_str
         
-        if is_learning:
-            self.stacked_widget.setCurrentWidget(self.learning_view)
+        if is_learning or is_academy or is_scenario:
+            if is_learning:
+                self.stacked_widget.setCurrentWidget(self.learning_view)
+            elif is_academy:
+                self.stacked_widget.setCurrentWidget(self.academy_view)
+            elif is_scenario:
+                self.stacked_widget.setCurrentWidget(self.scenario_view)
+                
             self.status_badge.hide()
             self.room_input.hide()
             self.join_btn.hide()

@@ -642,20 +642,42 @@ class AcademyDashboard(QWidget):
             return
 
         ret, frame = self.cap.read()
-        if not ret:
+        if not ret or frame is None:
             return
 
         frame = cv2.flip(frame, 1)
 
-        # Extract features
-        features = self.spatial_engine.extract_spatial_features(frame)
-        raw_lm = features["raw_landmarks"]
-        spatial_vec = features["spatial_vector"]
+        # Extract features defensively
+        try:
+            features = self.spatial_engine.extract_spatial_features(frame)
+        except Exception as e:
+            logger.debug(f"Spatial feature extraction error: {e}")
+            features = None
+
+        if not features or not isinstance(features, dict):
+            return
+
+        raw_lm = features.get("raw_landmarks")
+        has_left = features.get("has_left", False)
+        has_right = features.get("has_right", False)
+
+        spatial_vec = None
+        for k in ("spatial_vector", "spatial_features", "landmarks_151d", "features"):
+            val = features.get(k)
+            if val is not None:
+                spatial_vec = val
+                break
+
+        if spatial_vec is None and "normalized_landmarks" in features and "touch_matrix" in features:
+            norm_lm = features["normalized_landmarks"].flatten()
+            touch = np.nan_to_num(features["touch_matrix"], nan=0.0, posinf=1.0, neginf=0.0).flatten()
+            spatial_vec = np.concatenate([norm_lm, touch]).astype(np.float32)
 
         # Append to rolling temporal buffer for DTW
-        self.temporal_frame_buffer.append(spatial_vec)
-        if len(self.temporal_frame_buffer) > 30:
-            self.temporal_frame_buffer.pop(0)
+        if spatial_vec is not None:
+            self.temporal_frame_buffer.append(spatial_vec)
+            if len(self.temporal_frame_buffer) > 30:
+                self.temporal_frame_buffer.pop(0)
 
         # Landmarks for ghost alignment
         live_landmarks = []
@@ -685,8 +707,8 @@ class AcademyDashboard(QWidget):
         self.camera_feed.setPixmap(pixmap)
 
         # Geometric Checklist Evaluation
-        left_lm = features["raw_landmarks"] if features["has_left"] else None
-        right_lm = features["raw_landmarks"] if features["has_right"] else None
+        left_lm = raw_lm if has_left else None
+        right_lm = raw_lm if has_right else None
         _, _, finger_status = self.rule_engine.evaluate_rules(left_lm, right_lm)
         checklist = finger_status.get("checklist", [])
 
@@ -700,7 +722,7 @@ class AcademyDashboard(QWidget):
 
         # Update Accuracy Progress Bar & Circular Gauge
         self.progress_bar.setValue(int(min(100.0, max(0.0, current_score))))
-        self.match_gauge.set_value(current_score if (features["has_left"] or features["has_right"]) else 0)
+        self.match_gauge.set_value(current_score if (has_left or has_right) else 0)
 
         # Checklist HTML formatting
         checklist_html = ""

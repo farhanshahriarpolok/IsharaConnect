@@ -146,3 +146,20 @@ def test_academy_dashboard_process_prediction(qapp):
     dash.process_prediction(pred_data)
     assert dash.progress_bar.value() == 88
     assert dash.match_gauge.value == 88.0
+
+
+def test_academy_dashboard_update_practice_frame_resilience(qapp):
+    """Verify _update_practice_frame runs smoothly without KeyError on empty/mock frames."""
+    import numpy as np
+
+    dash = AcademyDashboard()
+    mock_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    mock_cap = MagicMock()
+    mock_cap.isOpened.return_value = True
+    mock_cap.read.return_value = (True, mock_frame)
+
+    dash.cap = mock_cap
+    # Run practice frame update directly
+    dash._update_practice_frame()
+    assert dash.camera_feed.pixmap() is not None

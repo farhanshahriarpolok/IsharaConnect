@@ -123,6 +123,10 @@ class SpatialHandEngine:
             orientation["left"] = calculate_orientation(0)
         if has_right:
             orientation["right"] = calculate_orientation(21)
+
+        # 4. 151D flattened feature vector (126 coordinates + 25 touch distances)
+        touch_clean = np.where(np.isinf(touch_matrix), 1.0, touch_matrix).flatten()
+        spatial_vector = np.concatenate([normalized_landmarks.flatten(), touch_clean]).astype(np.float32)
             
         return {
             "has_left": has_left,
@@ -130,5 +134,6 @@ class SpatialHandEngine:
             "raw_landmarks": raw_landmarks,
             "normalized_landmarks": normalized_landmarks,
             "touch_matrix": touch_matrix,
-            "orientation": orientation
+            "orientation": orientation,
+            "spatial_vector": spatial_vector
         }

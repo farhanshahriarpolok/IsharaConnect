@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 block_cipher = None
-project_root = Path(__file__).resolve().parent
+project_root = Path(SPECPATH).resolve() if 'SPECPATH' in globals() else Path('.').resolve()
 
 # Assets and Data Trees
 added_data = [

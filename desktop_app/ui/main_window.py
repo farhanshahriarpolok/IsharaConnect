@@ -175,6 +175,28 @@ class IsharaMainWindow(QMainWindow):
         upper_comm.addLayout(side_layout)
         
         comm_layout.addLayout(upper_comm)
+
+        # Interactive Camera & Prediction Controls Toolbar
+        cam_toolbar = QHBoxLayout()
+        self.sensitivity_combo = QComboBox()
+        self.sensitivity_combo.addItems(["⚡ Normal Sensitivity", "🚀 High Sensitivity", "🎯 Strict Mode"])
+        self.sensitivity_combo.currentIndexChanged.connect(self._on_sensitivity_changed)
+        
+        self.mirror_btn = QPushButton("🪞 Flip Mirror")
+        self.mirror_btn.clicked.connect(self._toggle_mirror_mode)
+        
+        self.clear_ticker_btn = QPushButton("🧹 Clear HUD")
+        self.clear_ticker_btn.clicked.connect(self._clear_hud)
+        
+        self.revoice_btn = QPushButton("🔊 Re-Voice Sign")
+        self.revoice_btn.clicked.connect(self._revoice_current_sign)
+        
+        cam_toolbar.addWidget(self.sensitivity_combo)
+        cam_toolbar.addWidget(self.mirror_btn)
+        cam_toolbar.addWidget(self.clear_ticker_btn)
+        cam_toolbar.addWidget(self.revoice_btn)
+        cam_toolbar.addStretch()
+        comm_layout.addLayout(cam_toolbar)
         
         # Lower area: Sentence Ticker HUD
         self.sentence_ticker = SentenceTickerWidget()
@@ -501,6 +523,30 @@ class IsharaMainWindow(QMainWindow):
             self.camera_worker.fps_updated.connect(self._update_fps)
             self.camera_worker.error_occurred.connect(self._on_camera_error)
             self.camera_worker.start()
+
+    @pyqtSlot(int)
+    def _on_sensitivity_changed(self, index: int):
+        levels = ["normal", "high", "strict"]
+        selected = levels[index] if index < len(levels) else "normal"
+        if self.camera_worker:
+            self.camera_worker.set_sensitivity(selected)
+        logger.info("Inference sensitivity set to: %s", selected)
+
+    @pyqtSlot()
+    def _toggle_mirror_mode(self):
+        if self.camera_worker:
+            new_mode = not self.camera_worker.mirror_mode
+            self.camera_worker.set_mirror_mode(new_mode)
+            self.mirror_btn.setText("🪞 Unflip Mirror" if not new_mode else "🪞 Flip Mirror")
+
+    @pyqtSlot()
+    def _clear_hud(self):
+        if hasattr(self, 'sentence_ticker'):
+            self.sentence_ticker.clear_ticker()
+
+    @pyqtSlot()
+    def _revoice_current_sign(self):
+        player_instance.play_chime("success")
 
     def closeEvent(self, event):
         """Handle window close gracefully."""

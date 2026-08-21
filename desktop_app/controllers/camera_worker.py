@@ -12,7 +12,9 @@ from PyQt6.QtGui import QImage
 from core_engine.vision.hand_detector import HandDetector
 from core_engine.preprocessing.normalizer import LandmarkNormalizer
 from core_engine.inference.predictor import RealTimePredictor
+from core_engine.inference.ensemble_predictor import EnsemblePredictor
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
+from desktop_app.ui.components.camera_hud_overlay import CameraHUDOverlay
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +33,25 @@ class CameraWorker(QThread):
         super().__init__()
         self.camera_id = camera_id
         self._is_running = True
+        self.mirror_mode = True
+        self.sensitivity = "normal"
         
         self.detector: Optional[HandDetector] = None
         self.spatial_engine: Optional[SpatialHandEngine] = None
         self.predictor: Optional[RealTimePredictor] = None
+        self.ensemble_predictor: Optional[EnsemblePredictor] = None
+        self.hud_overlay = CameraHUDOverlay()
+        self.last_prediction: Optional[dict] = None
+
+    def set_mirror_mode(self, enabled: bool):
+        """Toggle camera horizontal flip (mirror mode)."""
+        self.mirror_mode = enabled
+
+    def set_sensitivity(self, level: str):
+        """Set inference sensitivity level: 'high', 'normal', or 'strict'."""
+        self.sensitivity = level
+        if self.ensemble_predictor:
+            self.ensemble_predictor.set_sensitivity(level)
 
     def _open_camera(self) -> Optional[cv2.VideoCapture]:
         """Probes multiple indices and backends to find an active camera."""
@@ -62,11 +79,15 @@ class CameraWorker(QThread):
     def run(self):
         """Main loop for camera processing."""
         try:
-            logger.info("Initializing MediaPipe and ONNX engines...")
+            logger.info("Initializing MediaPipe and Ensemble inference engines...")
             # Initialize ML engines inside the thread to avoid context issues
             self.detector = HandDetector(max_num_hands=2)
             self.spatial_engine = SpatialHandEngine()
             self.predictor = RealTimePredictor()
+            self.ensemble_predictor = EnsemblePredictor(
+                neural_predictor=self.predictor,
+                sensitivity=self.sensitivity
+            )
             logger.info("ML engines initialized successfully.")
         except Exception as e:
             logger.error(f"Failed to initialize ML engines: {e}")
@@ -109,10 +130,11 @@ class CameraWorker(QThread):
                     first_frame_read = True
 
                 failed_frames = 0
-                frame = cv2.flip(frame, 1)  # Mirror view
+                if self.mirror_mode:
+                    frame = cv2.flip(frame, 1)  # Mirror view
                 
                 # 1. Vision Processing
-                annotated_frame = self.detector.find_hands(frame, draw=True)
+                self.detector.find_hands(frame, draw=False)
                 extraction = self.detector.extract_landmarks(frame.shape)
                 
                 # 2. Extract Trajectory Points
@@ -131,22 +153,28 @@ class CameraWorker(QThread):
                     "right_index": right_idx
                 })
 
-                # Check for two hands
+                # Feature Extraction
+                feature_vector = None
                 if extraction["raw_left"] is not None and extraction["raw_right"] is not None:
                     # Dual-hand: get 151-D vector
                     spatial_features = self.spatial_engine.extract_spatial_features(frame)
                     normalized_landmarks_flat = spatial_features["normalized_landmarks"].flatten()
                     touch_matrix_flat = spatial_features["touch_matrix"].flatten()
                     feature_vector = np.concatenate([normalized_landmarks_flat, touch_matrix_flat])
-                else:
+                elif extraction["raw_left"] is not None or extraction["raw_right"] is not None:
                     # Normalization
                     feature_vector = LandmarkNormalizer.process_frame(
                         extraction["raw_left"], extraction["raw_right"]
                     )
                 
-                # 3. Inference
-                prediction = self.predictor.process_frame(feature_vector)
+                # 3. Hybrid Ensemble Inference
+                prediction = self.ensemble_predictor.predict(
+                    feature_vector=feature_vector,
+                    left_landmarks=extraction["raw_left"],
+                    right_landmarks=extraction["raw_right"]
+                )
                 if prediction:
+                    self.last_prediction = prediction
                     self.sign_detected.emit(prediction)
 
                 # 4. FPS Calculation
@@ -155,8 +183,17 @@ class CameraWorker(QThread):
                 prev_time = curr_time
                 self.fps_updated.emit(fps)
 
+                # 5. Draw Cybernetic Neon HUD
+                hud_frame = self.hud_overlay.draw_hud(
+                    frame=frame,
+                    left_landmarks=extraction["raw_left"],
+                    right_landmarks=extraction["raw_right"],
+                    prediction_payload=self.last_prediction,
+                    fps=fps
+                )
+
                 # Convert frame to QImage
-                rgb_image = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                rgb_image = cv2.cvtColor(hud_frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = rgb_image.shape
                 bytes_per_line = ch * w
                 q_img = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)

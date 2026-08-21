@@ -16,6 +16,8 @@ from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryV
 
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
+from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
+from core_engine.audio.audio_player import player_instance
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 import random
 
@@ -39,6 +41,7 @@ class AcademyDashboard(QWidget):
         super().__init__()
         self.spatial_engine = SpatialHandEngine()
         self.dtw_matcher = DTWMotionMatcher()
+        self.rule_engine = BdSLGeometricRuleEngine()
         self.ghost_painter = GhostOverlayPainter()
         
         # Temporal Frame Buffer for DTW Dynamic Sign Evaluation
@@ -397,6 +400,12 @@ class AcademyDashboard(QWidget):
         pixmap = QPixmap.fromImage(final_img).scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio)
         self.camera_feed.setPixmap(pixmap)
         
+        # Geometric Checklist Evaluation
+        left_lm = features["raw_landmarks"] if features["has_left"] else None
+        right_lm = features["raw_landmarks"] if features["has_right"] else None
+        _, _, finger_status = self.rule_engine.evaluate_rules(left_lm, right_lm)
+        checklist = finger_status.get("checklist", [])
+
         # Score calculation: Dynamic DTW or Static Ghost Alignment
         if self.is_dynamic_sign and len(self.temporal_frame_buffer) >= 10:
             user_seq = np.array(self.temporal_frame_buffer, dtype=np.float32)
@@ -405,6 +414,16 @@ class AcademyDashboard(QWidget):
         else:
             current_score = float(self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks))
 
+        # Checklist HTML formatting
+        checklist_html = ""
+        if checklist:
+            items = []
+            for itm in checklist:
+                col = "#10B981" if itm["matched"] else "#94A3B8"
+                sym = "✓" if itm["matched"] else "○"
+                items.append(f"<span style='color:{col};'>[{sym}] {itm['item_bn']}</span>")
+            checklist_html = "<br>" + " &nbsp;|&nbsp; ".join(items)
+
         # Quiz Logic
         if self.quiz_active or self.exam_active:
             if self.countdown_ticks > 0:
@@ -412,14 +431,15 @@ class AcademyDashboard(QWidget):
                 secs = self.countdown_ticks // 30
                 sign_type = "DTW Motion" if self.is_dynamic_sign else "Static Pose"
                 if self.exam_active:
-                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index+1}/10 - {sign_type}]:</b> Sign in {secs}s...")
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index+1}/10 - {sign_type}]:</b> Sign in {secs}s...{checklist_html}")
                 else:
-                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz ({sign_type}):</b> Sign in {secs}s...")
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz ({sign_type}):</b> Sign in {secs}s...{checklist_html}")
                 
                 self.match_gauge.set_value(current_score)
                 
                 if current_score > 75.0:
-                    self.posture_hud.setHtml(f"<b style='color:#10B981;'>Excellent! Motion Match: {current_score:.1f}%</b>")
+                    player_instance.play_chime("notify")
+                    self.posture_hud.setHtml(f"<b style='color:#10B981;'>Excellent! Match: {current_score:.1f}%</b>{checklist_html}")
                     self.xp_score += 50
                     self.streak += 1
                     if self.exam_active:
@@ -437,7 +457,7 @@ class AcademyDashboard(QWidget):
                     else:
                         self.quiz_active = False # End quiz early on success
             else:
-                self.posture_hud.setHtml(f"<b style='color:#F43F5E;'>Time's Up!</b>")
+                self.posture_hud.setHtml(f"<b style='color:#F43F5E;'>Time's Up!</b>{checklist_html}")
                 self.streak = 0
                 if self.exam_active:
                     self.current_exam_index += 1
@@ -458,8 +478,9 @@ class AcademyDashboard(QWidget):
             
         else:
             self.match_gauge.set_value(current_score if (features["has_left"] or features["has_right"]) else 0)
+            if checklist_html:
+                self.posture_hud.setHtml(f"<b style='color:#06B6D4;'>AI Posture Checklist:</b>{checklist_html}")
         
     def closeEvent(self, event):
         self._stop_practice()
-        super().closeEvent(event)
         super().closeEvent(event)

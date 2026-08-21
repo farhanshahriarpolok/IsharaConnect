@@ -24,6 +24,7 @@ from desktop_app.ui.theme import ThemeStyles
 from desktop_app.ui.components.badges import PulsingStatusBadge
 from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
+from desktop_app.ui.components.gesture_avatar import GestureAvatarWidget
 
 class IsharaMainWindow(QMainWindow):
     """Main Application Window."""
@@ -161,22 +162,27 @@ class IsharaMainWindow(QMainWindow):
         
         upper_comm.addWidget(cam_container)
         
-        # Speaker View (Chat/History)
-        chat_layout = QVBoxLayout()
+        # Speaker View & Visual Avatar
+        side_layout = QVBoxLayout()
+        self.gesture_avatar = GestureAvatarWidget()
+        side_layout.addWidget(self.gesture_avatar)
+        
         self.chat_history = QTextBrowser()
         self.chat_history.setObjectName("GlassCard")
-        chat_layout.addWidget(self.chat_history)
+        self.chat_history.setMaximumHeight(160)
+        side_layout.addWidget(self.chat_history)
         
         reply_layout = QHBoxLayout()
         self.text_input = QLineEdit()
-        self.text_input.setPlaceholderText("Type or speak reply...")
+        self.text_input.setPlaceholderText("Type speech to synthesize BdSL gestures...")
+        self.text_input.returnPressed.connect(self._on_send_text)
         self.send_btn = QPushButton("Send")
         self.send_btn.clicked.connect(self._on_send_text)
         
         reply_layout.addWidget(self.text_input)
         reply_layout.addWidget(self.send_btn)
-        chat_layout.addLayout(reply_layout)
-        upper_comm.addLayout(chat_layout)
+        side_layout.addLayout(reply_layout)
+        upper_comm.addLayout(side_layout)
         
         comm_layout.addLayout(upper_comm)
         
@@ -438,7 +444,23 @@ class IsharaMainWindow(QMainWindow):
         elif event_type == "SPEECH_TEXT" and self.mode == "signer":
             player_instance.play_chime("notify")
             transcript = payload.get("transcript", "")
-            self.subtitle_lbl.setText(transcript)
+            if hasattr(self, 'subtitle_lbl'):
+                self.subtitle_lbl.setText(transcript)
+            if hasattr(self, 'gesture_avatar'):
+                self.gesture_avatar.synthesize_and_play(transcript)
+            if hasattr(self, 'chat_history'):
+                self.chat_history.append(f"<span style='color:#06B6D4'><b>Speaker:</b> {transcript}</span>")
+            
+    def _on_send_text(self):
+        """Send typed text, play visual gesture avatar, and transmit to network."""
+        text = self.text_input.text().strip()
+        if text:
+            if hasattr(self, 'gesture_avatar'):
+                self.gesture_avatar.synthesize_and_play(text)
+            if self.network_worker:
+                self.network_worker.send_speech_event(text)
+            self.chat_history.append(f"<span style='color:#10B981'><b>You:</b> {text}</span>")
+            self.text_input.clear()
             
     def _on_play_voice_clicked(self, url):
         """Handle inline play voice links."""

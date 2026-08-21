@@ -15,6 +15,7 @@ from desktop_app.ui.components.circular_gauge import CircularAccuracyGauge
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
+from core_engine.vision.dtw_matcher import DTWMotionMatcher
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 import random
 
@@ -37,7 +38,13 @@ class AcademyDashboard(QWidget):
     def __init__(self):
         super().__init__()
         self.spatial_engine = SpatialHandEngine()
+        self.dtw_matcher = DTWMotionMatcher()
         self.ghost_painter = GhostOverlayPainter()
+        
+        # Temporal Frame Buffer for DTW Dynamic Sign Evaluation
+        self.temporal_frame_buffer = []
+        self.is_dynamic_sign = False
+        self.current_sign_name = "dhonnobad"
         
         # Interactive Quiz State
         self.quiz_active = False
@@ -96,6 +103,7 @@ class AcademyDashboard(QWidget):
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self._build_curriculum()
+        self.tree.itemClicked.connect(self._on_curriculum_selected)
         curriculum_layout.addWidget(self.tree)
         
         self.exam_btn = QPushButton("🎓 Take Certification Exam")
@@ -252,8 +260,28 @@ class AcademyDashboard(QWidget):
         
         self.tree.expandAll()
         
+    def _on_curriculum_selected(self, item: QTreeWidgetItem, column: int):
+        """Handle user selecting a curriculum node."""
+        text = item.text(0)
+        self.current_sign_name = text
+        self.sign_title.setText(f"Sign: {text}")
+        
+        dynamic_keywords = [
+            "greetings", "sov", "structure", "questions", "news",
+            "speech", "dhonnobad", "kemon", "sahajjo", "dynamic",
+            "level 2", "level 3", "level 4"
+        ]
+        self.is_dynamic_sign = any(k in text.lower() for k in dynamic_keywords)
+        if self.is_dynamic_sign:
+            self.target_overlay.setText(f"[Dynamic Motion: {text}]")
+            self.anatomy_viewer.setText(f"[Dynamic Gesture Trajectory: {text}]\nFollow trajectory rhythm with hand movements.")
+        else:
+            self.target_overlay.setText(f"[Target Overlay: {text}]")
+            self.anatomy_viewer.setText(f"[Static Sign Posture: {text}]\nAlign hand with ghost overlay.")
+
     def _start_practice(self):
         self.content_stack.setCurrentWidget(self.practice_page)
+        self.temporal_frame_buffer.clear()
         self.cap = cv2.VideoCapture(0)
         self.timer.start(33) # ~30fps
         
@@ -262,11 +290,13 @@ class AcademyDashboard(QWidget):
         self.exam_active = False
         self.countdown_ticks = 150 # 5 seconds at 30fps
         
-        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting!</b> Get ready to sign...")
-        self.target_overlay.setText("Quiz Active")
+        mode_hint = "Dynamic Gesture" if self.is_dynamic_sign else "Static Posture"
+        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz Starting ({mode_hint})!</b> Get ready to sign...")
+        self.target_overlay.setText(f"Practice: {self.current_sign_name}")
         
     def _start_exam(self):
         self.content_stack.setCurrentWidget(self.practice_page)
+        self.temporal_frame_buffer.clear()
         self.cap = cv2.VideoCapture(0)
         self.timer.start(33)
         
@@ -278,6 +308,9 @@ class AcademyDashboard(QWidget):
         self.quiz_active = False
         self.exam_active = True
         self.countdown_ticks = 150
+        self.current_sign_name = self.exam_signs[0]
+        dynamic_keywords = ["greetings", "sov", "structure", "questions", "news", "speech", "dhonnobad", "kemon", "sahajjo"]
+        self.is_dynamic_sign = any(k in self.current_sign_name.lower() for k in dynamic_keywords)
         
         self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam Started!</b> Sign 1/10: {self.exam_signs[0]}")
         self.target_overlay.setText(f"Exam: {self.exam_signs[0]}")
@@ -305,13 +338,13 @@ class AcademyDashboard(QWidget):
         
     def _stop_practice(self):
         self.timer.stop()
+        self.temporal_frame_buffer.clear()
         if self.cap:
             self.cap.release()
             self.cap = None
         self.content_stack.setCurrentWidget(self.anatomy_page)
         if hasattr(self, 'match_gauge'):
             self.match_gauge.set_value(0)
-        
         
     def _update_practice_frame(self):
         if not self.cap:
@@ -326,6 +359,14 @@ class AcademyDashboard(QWidget):
         # Extract features
         features = self.spatial_engine.extract_spatial_features(frame)
         
+        # Construct 151D spatial vector for dynamic DTW matching
+        norm_lm = features["normalized_landmarks"].flatten().astype(np.float32)
+        touch_m = np.nan_to_num(features["touch_matrix"], nan=10.0, posinf=10.0, neginf=0.0).flatten().astype(np.float32)
+        spatial_151 = np.concatenate([norm_lm, touch_m])
+        self.temporal_frame_buffer.append(spatial_151)
+        if len(self.temporal_frame_buffer) > 30:
+            self.temporal_frame_buffer.pop(0)
+
         # Process Live Landmarks
         live_landmarks = []
         left_wrist = None
@@ -356,21 +397,29 @@ class AcademyDashboard(QWidget):
         pixmap = QPixmap.fromImage(final_img).scaled(400, 300, Qt.AspectRatioMode.KeepAspectRatio)
         self.camera_feed.setPixmap(pixmap)
         
+        # Score calculation: Dynamic DTW or Static Ghost Alignment
+        if self.is_dynamic_sign and len(self.temporal_frame_buffer) >= 10:
+            user_seq = np.array(self.temporal_frame_buffer, dtype=np.float32)
+            dtw_eval = self.dtw_matcher.evaluate_gesture_accuracy(user_seq, self.current_sign_name)
+            current_score = float(dtw_eval["score"])
+        else:
+            current_score = float(self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks))
+
         # Quiz Logic
         if self.quiz_active or self.exam_active:
             if self.countdown_ticks > 0:
                 self.countdown_ticks -= 1
                 secs = self.countdown_ticks // 30
+                sign_type = "DTW Motion" if self.is_dynamic_sign else "Static Pose"
                 if self.exam_active:
-                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index+1}/10]:</b> Show sign in {secs}s...")
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Exam [{self.current_exam_index+1}/10 - {sign_type}]:</b> Sign in {secs}s...")
                 else:
-                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz:</b> Show sign in {secs}s...")
+                    self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz ({sign_type}):</b> Sign in {secs}s...")
                 
-                score = self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks)
-                self.match_gauge.set_value(score)
+                self.match_gauge.set_value(current_score)
                 
-                if score > 80.0:
-                    self.posture_hud.setHtml(f"<b style='color:#10B981;'>Excellent! Perfect Match.</b>")
+                if current_score > 75.0:
+                    self.posture_hud.setHtml(f"<b style='color:#10B981;'>Excellent! Motion Match: {current_score:.1f}%</b>")
                     self.xp_score += 50
                     self.streak += 1
                     if self.exam_active:
@@ -381,6 +430,9 @@ class AcademyDashboard(QWidget):
                             return
                         else:
                             self.countdown_ticks = 150
+                            self.current_sign_name = self.exam_signs[self.current_exam_index]
+                            dynamic_kw = ["greetings", "sov", "structure", "questions", "news", "speech", "dhonnobad", "kemon", "sahajjo"]
+                            self.is_dynamic_sign = any(k in self.current_sign_name.lower() for k in dynamic_kw)
                             self.target_overlay.setText(f"Exam: {self.exam_signs[self.current_exam_index]}")
                     else:
                         self.quiz_active = False # End quiz early on success
@@ -394,6 +446,9 @@ class AcademyDashboard(QWidget):
                         return
                     else:
                         self.countdown_ticks = 150
+                        self.current_sign_name = self.exam_signs[self.current_exam_index]
+                        dynamic_kw = ["greetings", "sov", "structure", "questions", "news", "speech", "dhonnobad", "kemon", "sahajjo"]
+                        self.is_dynamic_sign = any(k in self.current_sign_name.lower() for k in dynamic_kw)
                         self.target_overlay.setText(f"Exam: {self.exam_signs[self.current_exam_index]}")
                 else:
                     self.quiz_active = False
@@ -402,8 +457,9 @@ class AcademyDashboard(QWidget):
             self.streak_label.setText(f"Streak: {self.streak} 🔥")
             
         else:
-            self.match_gauge.set_value(0)
+            self.match_gauge.set_value(current_score if (features["has_left"] or features["has_right"]) else 0)
         
     def closeEvent(self, event):
         self._stop_practice()
+        super().closeEvent(event)
         super().closeEvent(event)

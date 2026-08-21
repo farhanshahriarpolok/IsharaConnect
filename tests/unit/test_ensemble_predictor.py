@@ -49,13 +49,13 @@ def test_ensemble_sensitivity_modes():
     predictor = EnsemblePredictor()
 
     predictor.set_sensitivity("high")
-    assert predictor.geometric_threshold == 0.72
+    assert predictor.geometric_threshold == 0.60
 
     predictor.set_sensitivity("strict")
-    assert predictor.geometric_threshold == 0.88
+    assert predictor.geometric_threshold == 0.80
 
     predictor.set_sensitivity("normal")
-    assert predictor.geometric_threshold == 0.82
+    assert predictor.geometric_threshold == 0.70
 
 
 def test_ensemble_dtw_integration():

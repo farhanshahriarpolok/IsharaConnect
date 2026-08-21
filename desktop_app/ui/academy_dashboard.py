@@ -312,66 +312,81 @@ class AcademyDashboard(QWidget):
         # =========================================================================
         # 3. RIGHT PANEL (35% width): Target Sign Reference Guide (SVG Card & Steps)
         # =========================================================================
+        right_scroll = QScrollArea()
+        right_scroll.setObjectName("RightScrollArea")
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        right_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+            "QScrollBar:vertical { width: 6px; background: #11111B; border-radius: 3px; }"
+            "QScrollBar::handle:vertical { background: #313244; border-radius: 3px; }"
+        )
+
         right_panel = QFrame()
         right_panel.setObjectName("GlassCard")
         right_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 12px; border: 1px solid rgba(6, 182, 212, 0.25);")
-        right_panel.setMinimumWidth(320)
-        right_panel.setMinimumHeight(450)
+        right_panel.setMinimumWidth(300)
         right_layout = QVBoxLayout(right_panel)
-        right_layout.setSpacing(8)
+        right_layout.setSpacing(10)
+        right_layout.setContentsMargins(10, 10, 10, 10)
 
+        # Row 1: Header
         right_header = QLabel("📖 ইশারা নির্দেশিকা (Sign Guide)")
-        right_header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        right_header.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
         right_header.setStyleSheet(f"color: {CYAN_ACCENT}; padding: 2px;")
         right_header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(right_header)
 
-        # Large Bengali Sign Glyph
+        # Row 2: Bengali character (34px) + English subtitle (16px)
         self.ref_sign_bn = QLabel("ধন্যবাদ")
-        self.ref_sign_bn.setFont(QFont("SolaimanLipi", 38, QFont.Weight.Black))
+        self.ref_sign_bn.setFont(QFont("SolaimanLipi", 34, QFont.Weight.Black))
         self.ref_sign_bn.setStyleSheet("color: #F8FAFC; font-weight: 900; padding: 0px;")
         self.ref_sign_bn.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_sign_bn)
 
-        # English Label & Phonetic Guide
         self.ref_sign_en = QLabel("Thank you")
-        self.ref_sign_en.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self.ref_sign_en.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
         self.ref_sign_en.setStyleSheet("color: #38BDF8; font-weight: bold;")
         self.ref_sign_en.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_sign_en)
 
-        self.ref_phonetic = QLabel("🔊 উচ্চারণ: [dhon-no-baad]")
-        self.ref_phonetic.setStyleSheet("color: #10B981; background-color: rgba(16, 185, 129, 0.12); border-radius: 6px; padding: 4px 10px; font-weight: 600; font-size: 13px;")
-        self.ref_phonetic.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        right_layout.addWidget(self.ref_phonetic)
+        # Row 3: Horizontal Layout for Pronunciation Badge + Interactive Listen Button
+        pronounce_row = QHBoxLayout()
+        pronounce_row.setSpacing(8)
 
-        # Category Badge
+        self.ref_phonetic = QLabel("🔊 উচ্চারণ: [dhon-no-baad]")
+        self.ref_phonetic.setStyleSheet("color: #10B981; background-color: rgba(16, 185, 129, 0.12); border-radius: 6px; padding: 6px 10px; font-weight: 600; font-size: 13px;")
+        self.ref_phonetic.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        pronounce_row.addWidget(self.ref_phonetic, stretch=3)
+
+        self.listen_btn = QPushButton("🔊 শুনুন")
+        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 6px;")
+        self.listen_btn.clicked.connect(self._on_listen_pronunciation)
+        pronounce_row.addWidget(self.listen_btn, stretch=2)
+
+        right_layout.addLayout(pronounce_row)
+
+        # Row 4: Category & Handedness Badge
         self.ref_badge = QLabel("Type: Dynamic | Single Hand")
-        self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: #CBD5E1; border-radius: 8px; padding: 3px 8px; font-size: 12px;")
+        self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: #CBD5E1; border-radius: 6px; padding: 4px 8px; font-size: 11.5px;")
         self.ref_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right_layout.addWidget(self.ref_badge)
 
-        # SVG / Geometric Visual Illustration Card
+        # Middle: High-Fidelity Dedicated SVG Visual Card Viewer
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.sign_card_viewer.setMinimumSize(280, 250)
+        self.sign_card_viewer.setFixedSize(280, 220)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
         right_layout.addWidget(self.sign_card_viewer, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # Interactive Pronunciation Button
-        self.listen_btn = QPushButton("🔊 উচ্চারণ শুনুন (Pronounce)")
-        self.listen_btn.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {CYAN_ACCENT}; font-weight: bold; font-size: 13px; padding: 8px; border-radius: 8px;")
-        self.listen_btn.clicked.connect(self._on_listen_pronunciation)
-        right_layout.addWidget(self.listen_btn)
-
-        # Anatomical Step-by-Step Instruction Guide (Enlarged Typography)
+        # Bottom: Anatomical Step-by-Step Instruction Guide
         self.ref_instructions = QTextEdit()
         self.ref_instructions.setReadOnly(True)
-        self.ref_instructions.setMinimumHeight(140)
-        self.ref_instructions.setMaximumHeight(200)
-        self.ref_instructions.setStyleSheet("background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 6px; font-size: 13px; color: #E2E8F0;")
+        self.ref_instructions.setMinimumHeight(150)
+        self.ref_instructions.setStyleSheet("background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px; font-size: 13px; color: #E2E8F0;")
         right_layout.addWidget(self.ref_instructions)
 
-        splitter.addWidget(right_panel)
+        right_scroll.setWidget(right_panel)
+        splitter.addWidget(right_scroll)
 
         # Explicit Splitter Stretch Factors: Left 20%, Center 45%, Right 35%
         splitter.setSizes([220, 480, 360])

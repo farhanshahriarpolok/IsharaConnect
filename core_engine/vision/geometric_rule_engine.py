@@ -27,12 +27,39 @@ class BdSLGeometricRuleEngine:
             "ring": [13, 14, 15, 16],
             "pinky": [17, 18, 19, 20],
         }
+        # Temporal Exponential Moving Average (EMA) buffers
+        self.prev_left: Optional[np.ndarray] = None
+        self.prev_right: Optional[np.ndarray] = None
+        self.ema_alpha: float = 0.75  # 75% current frame, 25% history
 
     @staticmethod
     def _dist(p1: np.ndarray, p2: np.ndarray) -> float:
         return float(np.linalg.norm(p1 - p2))
 
-    def analyze_hand(self, landmarks: Optional[np.ndarray]) -> Dict[str, Any]:
+    def smooth_landmarks(self, landmarks: Optional[np.ndarray], is_left: bool = False) -> Optional[np.ndarray]:
+        """Applies Exponential Moving Average smoothing to stabilize raw vision landmarks."""
+        if landmarks is None or len(landmarks) < 21:
+            if is_left:
+                self.prev_left = None
+            else:
+                self.prev_right = None
+            return landmarks
+
+        lm = np.asarray(landmarks, dtype=np.float32)
+        prev = self.prev_left if is_left else self.prev_right
+        if prev is None or prev.shape != lm.shape:
+            smoothed = lm.copy()
+        else:
+            smoothed = self.ema_alpha * lm + (1.0 - self.ema_alpha) * prev
+
+        if is_left:
+            self.prev_left = smoothed.copy()
+        else:
+            self.prev_right = smoothed.copy()
+
+        return smoothed
+
+    def analyze_hand(self, landmarks: Optional[np.ndarray], is_left: bool = False) -> Dict[str, Any]:
         """Analyzes a single hand (21x3 landmarks) and extracts discrete geometric states."""
         if landmarks is None or len(landmarks) < 21 or not np.any(landmarks):
             return {
@@ -50,10 +77,13 @@ class BdSLGeometricRuleEngine:
                 "touch_index_middle": False,
             }
 
-        lm = np.asarray(landmarks, dtype=np.float32)
+        lm = self.smooth_landmarks(np.asarray(landmarks, dtype=np.float32), is_left=is_left)
         wrist = lm[0]
 
-        # 1. Evaluate finger extension state
+        # Bounding box & Palm scale normalization (Wrist to Middle MCP)
+        palm_scale = max(0.04, float(np.linalg.norm(lm[9] - lm[0])))
+
+        # 1. Evaluate finger extension state (Relaxed by +15% for multi-angle tolerance)
         states = {}
         extended_count = 0
 
@@ -68,11 +98,11 @@ class BdSLGeometricRuleEngine:
             dist_pip_wrist = self._dist(pip, wrist)
             dist_mcp_wrist = self._dist(mcp, wrist)
 
-            # Upward check in normalized image coordinate space (y is smaller when higher)
-            is_pointing_up = tip[1] < pip[1] < mcp[1] or dist_tip_wrist > (dist_pip_wrist * 1.25)
-            is_curled = dist_tip_wrist < (dist_mcp_wrist * 1.15) or (tip[1] > pip[1] and dist_tip_wrist < dist_pip_wrist)
+            # Relaxed upward & extension thresholds (+15% tolerance)
+            is_pointing_up = tip[1] < (pip[1] + 0.04 * palm_scale) or dist_tip_wrist > (dist_pip_wrist * 1.10)
+            is_curled = dist_tip_wrist < (dist_mcp_wrist * 1.25) or (tip[1] > pip[1] and dist_tip_wrist < dist_pip_wrist)
 
-            if is_pointing_up and dist_tip_wrist > dist_pip_wrist:
+            if is_pointing_up and dist_tip_wrist > (dist_pip_wrist * 0.98):
                 states[finger] = "EXTENDED"
                 extended_count += 1
             elif is_curled:
@@ -80,7 +110,7 @@ class BdSLGeometricRuleEngine:
             else:
                 states[finger] = "HALF_CURL"
 
-        # Thumb extension check
+        # Thumb extension check (Adaptive normalized thresholds)
         thumb_tip = lm[4]
         thumb_ip = lm[3]
         thumb_mcp = lm[2]
@@ -89,22 +119,21 @@ class BdSLGeometricRuleEngine:
         pinky_mcp = lm[17]
 
         dist_thumb_wrist = self._dist(thumb_tip, wrist)
-        dist_thumb_index_mcp = self._dist(thumb_tip, index_mcp)
-        dist_thumb_pinky_mcp = self._dist(thumb_tip, pinky_mcp)
+        dist_thumb_index_mcp = self._dist(thumb_tip, index_mcp) / palm_scale
         dist_thumb_mcp_wrist = self._dist(thumb_mcp, wrist)
 
-        if dist_thumb_index_mcp > 0.15 and dist_thumb_wrist > dist_thumb_mcp_wrist:
+        if dist_thumb_index_mcp > 0.70 and dist_thumb_wrist > dist_thumb_mcp_wrist:
             states["thumb"] = "EXTENDED"
             extended_count += 1
-        elif dist_thumb_index_mcp < 0.10:
+        elif dist_thumb_index_mcp < 0.45:
             states["thumb"] = "CURL"
         else:
             states["thumb"] = "HALF_CURL"
 
-        # 2. Pairwise Touch Points
-        touch_thumb_index = self._dist(lm[4], lm[8]) < 0.07
-        touch_thumb_middle = self._dist(lm[4], lm[12]) < 0.07
-        touch_index_middle = self._dist(lm[8], lm[12]) < 0.06
+        # 2. Pairwise Touch Points (Scale-invariant)
+        touch_thumb_index = self._dist(lm[4], lm[8]) < (0.42 * palm_scale)
+        touch_thumb_middle = self._dist(lm[4], lm[12]) < (0.42 * palm_scale)
+        touch_index_middle = self._dist(lm[8], lm[12]) < (0.36 * palm_scale)
 
         is_fist = (
             states["index"] == "CURL"
@@ -142,8 +171,8 @@ class BdSLGeometricRuleEngine:
                 - confidence (float): Heuristic match confidence (0.0 to 1.0)
                 - finger_status (Dict[str, Any]): Detailed posture status & checklist
         """
-        left_res = self.analyze_hand(landmarks_left)
-        right_res = self.analyze_hand(landmarks_right)
+        left_res = self.analyze_hand(landmarks_left, is_left=True)
+        right_res = self.analyze_hand(landmarks_right, is_left=False)
 
         # Determine dominant active hand (favoring right hand or whichever is present)
         active_hand = right_res if right_res["present"] else left_res

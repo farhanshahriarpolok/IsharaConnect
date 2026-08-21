@@ -153,7 +153,7 @@ class EnsemblePredictor:
     def __init__(
         self,
         neural_predictor: Optional[RealTimePredictor] = None,
-        geometric_threshold: float = 0.82,
+        geometric_threshold: float = 0.70,
         sensitivity: str = "normal"
     ):
         self.geometric_engine = BdSLGeometricRuleEngine()
@@ -172,20 +172,20 @@ class EnsemblePredictor:
 
     def _apply_sensitivity(self, level: str):
         if level == "high":
-            self.geometric_threshold = 0.72
-            self.neural_confidence_threshold = 0.60
+            self.geometric_threshold = 0.60
+            self.neural_confidence_threshold = 0.50
             self.latch.confirmation_frames = 2
-            self.latch.drop_threshold = 0.35
+            self.latch.drop_threshold = 0.30
         elif level == "strict":
-            self.geometric_threshold = 0.88
-            self.neural_confidence_threshold = 0.80
-            self.latch.confirmation_frames = 4
+            self.geometric_threshold = 0.80
+            self.neural_confidence_threshold = 0.75
+            self.latch.confirmation_frames = 3
             self.latch.drop_threshold = 0.45
         else:  # normal
-            self.geometric_threshold = 0.82
-            self.neural_confidence_threshold = 0.70
-            self.latch.confirmation_frames = 3
-            self.latch.drop_threshold = 0.40
+            self.geometric_threshold = 0.70
+            self.neural_confidence_threshold = 0.65
+            self.latch.confirmation_frames = 2
+            self.latch.drop_threshold = 0.35
 
     def predict_raw(
         self,

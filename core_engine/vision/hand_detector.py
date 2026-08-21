@@ -11,20 +11,6 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-try:
-    from mediapipe.python.solutions import hands as mp_hands
-    from mediapipe.python.solutions import drawing_utils as mp_drawing
-    from mediapipe.python.solutions import drawing_styles as mp_drawing_styles
-except (ImportError, AttributeError):
-    try:
-        import mediapipe.solutions.hands as mp_hands
-        import mediapipe.solutions.drawing_utils as mp_drawing
-        import mediapipe.solutions.drawing_styles as mp_drawing_styles
-    except (ImportError, AttributeError):
-        mp_hands = None
-        mp_drawing = None
-        mp_drawing_styles = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,20 +25,17 @@ class HandDetector:
         min_tracking_confidence: float = 0.5,
     ) -> None:
         """Initialize the MediaPipe Hands detector."""
-        self.mp_hands = mp_hands
-        self.mp_drawing = mp_drawing
-        self.mp_drawing_styles = mp_drawing_styles
+        self.mp_hands = mp.solutions.hands
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_drawing_styles = mp.solutions.drawing_styles
         
-        self.hands = None
-        if self.mp_hands:
-            self.hands = self.mp_hands.Hands(
-                static_image_mode=static_image_mode,
-                max_num_hands=max_num_hands,
-                min_detection_confidence=min_detection_confidence,
-                min_tracking_confidence=min_tracking_confidence,
-            )
-        else:
-            logger.warning("MediaPipe solutions are unavailable. HandDetector will run in passthrough mode.")
+        self.hands = self.mp_hands.Hands(
+            static_image_mode=static_image_mode,
+            max_num_hands=max_num_hands,
+            min_detection_confidence=min_detection_confidence,
+            min_tracking_confidence=min_tracking_confidence,
+        )
+        self.is_passthrough = False
 
         # Cache last results for potential smoothing or external queries
         self.last_results = None
@@ -67,9 +50,6 @@ class HandDetector:
         Returns:
             Annotated image (if draw is True) or original image (if False).
         """
-        if not self.hands:
-            return image.copy()
-            
         # MediaPipe expects RGB
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
@@ -117,10 +97,12 @@ class HandDetector:
 
         if not self.last_results or not self.last_results.multi_hand_landmarks:
             return {
+                "landmarks": np.zeros((126,), dtype=np.float32),
                 "handedness": handedness_list,
                 "hands_detected": 0,
                 "raw_left": raw_left,
                 "raw_right": raw_right,
+                "is_passthrough": self.is_passthrough
             }
 
         for idx, hand_handedness in enumerate(self.last_results.multi_handedness):
@@ -141,14 +123,19 @@ class HandDetector:
             else:
                 raw_right = coords
 
+        left_flat = raw_left.flatten() if raw_left is not None else np.zeros((63,), dtype=np.float32)
+        right_flat = raw_right.flatten() if raw_right is not None else np.zeros((63,), dtype=np.float32)
+        landmarks_flat = np.concatenate([left_flat, right_flat])
+
         return {
+            "landmarks": landmarks_flat,
             "handedness": handedness_list,
             "hands_detected": len(handedness_list),
             "raw_left": raw_left,
             "raw_right": raw_right,
+            "is_passthrough": self.is_passthrough
         }
 
     def close(self) -> None:
         """Release MediaPipe resources."""
-        if self.hands:
-            self.hands.close()
+        self.hands.close()

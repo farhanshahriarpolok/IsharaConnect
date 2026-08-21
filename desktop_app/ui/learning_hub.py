@@ -1,6 +1,6 @@
 import logging
 from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QImage, QPixmap, QFont
+from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPainter, QBrush, QPen
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QPushButton, QFrame, QProgressBar, QListWidget, QListWidgetItem, QSplitter

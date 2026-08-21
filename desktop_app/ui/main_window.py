@@ -2,7 +2,7 @@
 
 import logging
 from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QImage, QPixmap, QFont, QColor
+from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPainter, QBrush, QPen
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLabel, QPushButton, QLineEdit, QComboBox, 

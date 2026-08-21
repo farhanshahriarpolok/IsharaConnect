@@ -2,8 +2,9 @@
 
 import logging
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
@@ -38,16 +39,15 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(static_dir, exist_ok=True)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-os.makedirs(templates_dir, exist_ok=True)
+TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+TEMPLATES_DIR.mkdir(exist_ok=True)
 
 @app.get("/", response_class=HTMLResponse)
-async def get_index():
-    index_path = os.path.join(templates_dir, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>IsharaConnect Web Client Initializing... (Please create index.html)</h1>"
+async def serve_root():
+    index_path = TEMPLATES_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+    return HTMLResponse("<h1>IsharaConnect Backend Running</h1>")
 
 
 

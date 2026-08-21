@@ -5,3 +5,5 @@ class InferenceConfig(BaseModel):
     confidence_threshold: float = 0.85
     agreement_window: int = 10
     cooldown_seconds: float = 1.0
+    allow_ood_rejection: bool = True
+    entropy_threshold: float = 0.65

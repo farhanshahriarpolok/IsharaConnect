@@ -9,7 +9,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GroupKFold
+from sklearn.metrics import f1_score
 import math
 import sys
 
@@ -42,8 +43,10 @@ def generate_synthetic_baseline(num_classes: int, samples_per_class: int = 50, s
                 
             X.append(smoothed_traj)
             y.append(c)
+            # Synthetic signers (modulo 5 groups)
+            groups.append(len(X) % 5)
             
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64), np.array(groups, dtype=np.int64)
 
 
 def load_dataset(dataset_dir: str, num_classes: int):
@@ -51,6 +54,7 @@ def load_dataset(dataset_dir: str, num_classes: int):
     dataset_path = Path(dataset_dir)
     X = []
     y = []
+    groups = []
     
     # Check if there are real .npy files
     npy_files = list(dataset_path.glob("**/*.npy"))
@@ -60,14 +64,21 @@ def load_dataset(dataset_dir: str, num_classes: int):
         
     logger.info("Found %d real .npy sequences in %s", len(npy_files), dataset_dir)
     
-    for f in npy_files:
         try:
             # f.parent.name should be the class ID
             label = int(f.parent.name)
             seq = np.load(f)
+            
+            # Parse signer_id from filename: <signer_id>_<slug>_<timestamp>.npy
+            parts = f.stem.split("_")
+            signer_id = 0
+            if len(parts) >= 3 and parts[0].isdigit():
+                signer_id = int(parts[0])
+            
             # seq shape should be (30, 128) or similar
             X.append(seq)
             y.append(label)
+            groups.append(signer_id)
         except Exception as e:
             logger.warning("Failed to load %s: %s", f, e)
             
@@ -75,7 +86,7 @@ def load_dataset(dataset_dir: str, num_classes: int):
         logger.warning("No valid sequences loaded. Falling back to synthetic.")
         return generate_synthetic_baseline(num_classes)
         
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64), np.array(groups, dtype=np.int64)
 
 
 def main() -> None:
@@ -98,7 +109,7 @@ def main() -> None:
         labels_data = json.load(f)
     num_classes = len(labels_data.get("signs", []))
     
-    X, y = load_dataset(args.dataset_dir, num_classes)
+    X, y, groups = load_dataset(args.dataset_dir, num_classes)
     
     # Ensure input matches 128 dimensions expected by model
     if X.shape[-1] != 128:
@@ -108,84 +119,79 @@ def main() -> None:
             X_padded[:, :, 126:] = 1.0 # Set presence flags
         X = X_padded
 
-    classes, counts = np.unique(y, return_counts=True)
-    if any(c < 2 for c in counts):
-        logger.warning("Some classes have fewer than 2 samples. Disabling stratified split.")
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-    else:
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
-    
-    train_dataset = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-    val_dataset = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
-    
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
-    
-    model = BdSLSequenceClassifier(input_dim=128, num_classes=num_classes)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
     
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    unique_groups = np.unique(groups)
+    if len(unique_groups) < 5:
+        logger.warning("Fewer than 5 signers found. Falling back to synthetic group assignment for GroupKFold.")
+        groups = np.arange(len(y)) % 5
+        
+    gkf = GroupKFold(n_splits=5)
     
-    best_val_loss = float('inf')
+    best_macro_f1 = -1.0
     best_model_path = Path(args.output_dir) / "bdsl_model_best.pth"
     
-    for epoch in range(args.epochs):
-        model.train()
-        train_loss = 0.0
-        for batch_X, batch_y in train_loader:
-            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
-            
-            optimizer.zero_grad()
-            outputs = model(batch_X)
-            loss = criterion(outputs, batch_y)
-            loss.backward()
-            optimizer.step()
-            
-            train_loss += loss.item() * batch_X.size(0)
-            
-        scheduler.step()
-        train_loss /= len(train_loader.dataset)
+    for fold, (train_idx, val_idx) in enumerate(gkf.split(X, y, groups)):
+        logger.info(f"--- Starting Fold {fold+1} ---")
         
-        model.eval()
-        val_loss = 0.0
-        correct = 0
-        class_correct = {i: 0 for i in range(num_classes)}
-        class_total = {i: 0 for i in range(num_classes)}
+        X_train, y_train = X[train_idx], y[train_idx]
+        X_val, y_val = X[val_idx], y[val_idx]
         
-        with torch.no_grad():
-            for batch_X, batch_y in val_loader:
+        train_dataset = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+        val_dataset = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+        
+        train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False)
+        
+        model = BdSLSequenceClassifier(input_dim=128, num_classes=num_classes).to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+        
+        fold_best_val_loss = float('inf')
+        
+        for epoch in range(args.epochs):
+            model.train()
+            for batch_X, batch_y in train_loader:
                 batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+                optimizer.zero_grad()
                 outputs = model(batch_X)
                 loss = criterion(outputs, batch_y)
-                val_loss += loss.item() * batch_X.size(0)
+                loss.backward()
+                optimizer.step()
                 
-                _, preds = torch.max(outputs, 1)
-                correct += torch.sum(preds == batch_y).item()
-                
-                for p, t in zip(preds, batch_y):
-                    class_correct[t.item()] += (p == t).item()
-                    class_total[t.item()] += 1
-                
-        val_loss /= len(val_loader.dataset)
-        val_acc = correct / len(val_loader.dataset)
-        
-        if epoch % 5 == 0 or epoch == args.epochs - 1:
-            logger.info(f"Epoch {epoch+1}/{args.epochs} - Train Loss: {train_loss:.4f} - Val Loss: {val_loss:.4f} - Val Acc: {val_acc:.4f}")
-            # Print class-wise accuracy for last epoch
+            scheduler.step()
+            
+            # Validation
+            model.eval()
+            val_loss = 0.0
+            all_preds = []
+            all_targets = []
+            
+            with torch.no_grad():
+                for batch_X, batch_y in val_loader:
+                    batch_X, batch_y = batch_X.to(device), batch_y.to(device)
+                    outputs = model(batch_X)
+                    loss = criterion(outputs, batch_y)
+                    val_loss += loss.item() * batch_X.size(0)
+                    
+                    _, preds = torch.max(outputs, 1)
+                    all_preds.extend(preds.cpu().numpy())
+                    all_targets.extend(batch_y.cpu().numpy())
+                    
+            val_loss /= len(val_loader.dataset)
+            macro_f1 = f1_score(all_targets, all_preds, average='macro')
+            
             if epoch == args.epochs - 1:
-                logger.info("Class-wise Accuracy:")
-                for i in range(num_classes):
-                    if class_total[i] > 0:
-                        logger.info(f"  Class {i} ({labels_data['signs'][i]['slug'] if i < len(labels_data['signs']) else 'unknown'}): {class_correct[i]/class_total[i]:.2f}")
+                logger.info(f"Fold {fold+1} Epoch {epoch+1} - Val Loss: {val_loss:.4f}, Macro F1: {macro_f1:.4f}")
             
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            torch.save(model.state_dict(), best_model_path)
-            
-    logger.info("Training complete. Best model saved to %s", best_model_path)
+            # Save if this is the best globally
+            if macro_f1 > best_macro_f1:
+                best_macro_f1 = macro_f1
+                torch.save(model.state_dict(), best_model_path)
+                logger.info(f"New Global Best Model saved (Fold {fold+1}, Macro F1: {macro_f1:.4f})")
+                
+    logger.info("Training complete. Best model Macro F1: %.4f saved to %s", best_macro_f1, best_model_path)
 
 
 if __name__ == "__main__":

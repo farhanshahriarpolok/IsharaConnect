@@ -39,6 +39,8 @@ class RealTimePredictor:
         self.confidence_threshold = config.confidence_threshold
         self.debounce_cooldown_sec = config.cooldown_seconds
         self.agreement_window = config.agreement_window
+        self.allow_ood_rejection = config.allow_ood_rejection
+        self.entropy_threshold = config.entropy_threshold
         self.agreement_threshold = agreement_threshold
 
         # Load labels
@@ -124,10 +126,23 @@ class RealTimePredictor:
         pred_class_id = int(np.argmax(probs))
         confidence = float(probs[pred_class_id])
         
-        # Store prediction in buffer
-        if confidence >= self.confidence_threshold:
+        # OOD Rejection (Unknown Sign)
+        is_unknown = False
+        if self.allow_ood_rejection:
+            # Normalized Predictive Entropy
+            K = len(probs)
+            entropy = -np.sum(probs * np.log(probs + 1e-9)) / np.log(K) if K > 1 else 0.0
+            
+            if confidence < self.confidence_threshold or entropy > self.entropy_threshold:
+                is_unknown = True
+                
+        if is_unknown:
+            pred_class_id = -1
+            self.prediction_buffer.append(-1)
+        elif confidence >= self.confidence_threshold:
             self.prediction_buffer.append(pred_class_id)
         else:
+            pred_class_id = -1
             self.prediction_buffer.append(-1) # -1 represents no confident prediction
             
         # Check temporal agreement
@@ -137,7 +152,26 @@ class RealTimePredictor:
             
             is_stable = agreement_ratio >= self.agreement_threshold
             
-            if is_stable and pred_class_id != -1:
+            # Emit Unknown if -1 is stable
+            if is_stable and pred_class_id == -1:
+                # Debounce logic for unknown
+                current_time = time.time()
+                is_debounced = False
+                if self.last_emitted_id == -1:
+                    if (current_time - self.last_emitted_time) < self.debounce_cooldown_sec:
+                        is_debounced = True
+                if not is_debounced:
+                    self.last_emitted_id = -1
+                    self.last_emitted_time = current_time
+                    return {
+                        "sign_id": -1,
+                        "label_bn": "অজ্ঞাত ইশারা",
+                        "label_en": "Unknown Sign",
+                        "confidence": confidence,
+                        "is_stable": True
+                    }
+                    
+            elif is_stable and pred_class_id != -1:
                 current_time = time.time()
                 
                 # Debounce logic

@@ -20,44 +20,9 @@ from core_engine.audio.audio_player import player_instance
 
 logger = logging.getLogger(__name__)
 
-# Modern Dark Palette
-BG_COLOR = "#1E1E2E"
-PANEL_COLOR = "#2A2B3D"
-TEXT_COLOR = "#CDD6F4"
-ACCENT_BLUE = "#89B4FA"
-ACCENT_GREEN = "#A6E3A1"
-ACCENT_RED = "#F38BA8"
-BORDER_RADIUS = "8px"
-
-STYLESHEET = f"""
-    QMainWindow {{ background-color: {BG_COLOR}; }}
-    QLabel {{ color: {TEXT_COLOR}; font-family: 'Segoe UI', Arial; }}
-    QFrame {{ background-color: {PANEL_COLOR}; border-radius: {BORDER_RADIUS}; }}
-    QPushButton {{ 
-        background-color: {ACCENT_BLUE}; 
-        color: #11111B; 
-        font-weight: bold; 
-        border-radius: {BORDER_RADIUS}; 
-        padding: 8px 16px; 
-    }}
-    QPushButton:hover {{ background-color: #74C7EC; }}
-    QPushButton:disabled {{ background-color: #45475A; color: #6C7086; }}
-    QLineEdit, QComboBox, QTextEdit {{ 
-        background-color: #181825; 
-        color: {TEXT_COLOR}; 
-        border: 1px solid #313244; 
-        border-radius: 4px; 
-        padding: 6px; 
-    }}
-    QProgressBar {{ 
-        border: 1px solid #313244; 
-        border-radius: 4px; 
-        text-align: center; 
-        color: white; 
-    }}
-    QProgressBar::chunk {{ background-color: {ACCENT_GREEN}; width: 10px; }}
-"""
-
+from desktop_app.ui.theme import ThemeStyles
+from desktop_app.ui.components.badges import PulsingStatusBadge
+from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
 
 class IsharaMainWindow(QMainWindow):
     """Main Application Window."""
@@ -79,7 +44,7 @@ class IsharaMainWindow(QMainWindow):
         """Initialize the modern UI layout."""
         self.setWindowTitle(f"IsharaConnect (ইশারা কানেক্ট) - {self.mode.title()} Mode")
         self.setMinimumSize(1000, 700)
-        self.setStyleSheet(STYLESHEET)
+        self.setStyleSheet(ThemeStyles.get_global_stylesheet())
         
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -91,10 +56,9 @@ class IsharaMainWindow(QMainWindow):
         header_layout = QHBoxLayout()
         title_label = QLabel("IsharaConnect")
         title_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        title_label.setStyleSheet(f"color: {ACCENT_BLUE};")
+        title_label.setStyleSheet("color: #06B6D4;")
         
-        self.status_badge = QLabel("🔴 Offline")
-        self.status_badge.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self.status_badge = PulsingStatusBadge("Offline", "#F43F5E")
         
         self.room_input = QLineEdit(self.room_id)
         self.room_input.setPlaceholderText("Room ID")
@@ -176,44 +140,42 @@ class IsharaMainWindow(QMainWindow):
         status_panel.setFixedWidth(250)
         status_layout = QVBoxLayout(status_panel)
         
-        status_layout.addWidget(QLabel("Camera Device:"))
-        self.cam_selector = QComboBox()
-        self.cam_selector.addItems(["Auto (0)", "Camera 1", "Camera 2", "Camera 3"])
-        self.cam_selector.currentIndexChanged.connect(self._change_camera)
-        status_layout.addWidget(self.cam_selector)
+        self.comm_view = QWidget()
+        comm_layout = QVBoxLayout(self.comm_view)
         
-        status_layout.addWidget(QLabel("Current Sign (Local):"))
-        self.local_sign_lbl = QLabel("---")
-        self.local_sign_lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-        self.local_sign_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.local_sign_lbl.setStyleSheet(f"color: {ACCENT_GREEN};")
-        status_layout.addWidget(self.local_sign_lbl)
+        # Upper area: Camera and Chat
+        upper_comm = QHBoxLayout()
         
-        self.conf_bar = QProgressBar()
-        self.conf_bar.setRange(0, 100)
-        status_layout.addWidget(self.conf_bar)
+        # Signer View (Camera)
+        self.camera_feed = QLabel("Initializing Camera Engine...")
+        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.camera_feed.setFixedSize(640, 480)
+        self.camera_feed.setObjectName("GlassCard")
+        upper_comm.addWidget(self.camera_feed)
         
-        status_layout.addStretch()
-        self.fps_lbl = QLabel("FPS: 0")
-        status_layout.addWidget(self.fps_lbl)
+        # Speaker View (Chat/History)
+        chat_layout = QVBoxLayout()
+        self.chat_history = QTextBrowser()
+        self.chat_history.setObjectName("GlassCard")
+        chat_layout.addWidget(self.chat_history)
         
-        top_layout.addWidget(self.camera_label, stretch=1)
-        top_layout.addWidget(status_panel)
+        reply_layout = QHBoxLayout()
+        self.text_input = QLineEdit()
+        self.text_input.setPlaceholderText("Type or speak reply...")
+        self.send_btn = QPushButton("Send")
+        self.send_btn.clicked.connect(self._on_send_text)
         
-        # Bottom: High-contrast Subtitle Banner (What Speaker said)
-        banner_frame = QFrame()
-        banner_frame.setFixedHeight(120)
-        banner_frame.setStyleSheet(f"background-color: #11111B; border: 2px solid {ACCENT_BLUE}; border-radius: {BORDER_RADIUS};")
-        banner_layout = QVBoxLayout(banner_frame)
-        self.subtitle_lbl = QLabel("Awaiting speech...")
-        self.subtitle_lbl.setFont(QFont("Segoe UI", 28, QFont.Weight.Bold))
-        self.subtitle_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.subtitle_lbl.setWordWrap(True)
-        banner_layout.addWidget(self.subtitle_lbl)
+        reply_layout.addWidget(self.text_input)
+        reply_layout.addWidget(self.send_btn)
+        chat_layout.addLayout(reply_layout)
+        upper_comm.addLayout(chat_layout)
         
-        layout.addLayout(top_layout)
-        layout.addWidget(banner_frame)
-        return widget
+        comm_layout.addLayout(upper_comm)
+        
+        # Lower area: Sentence Ticker HUD
+        self.sentence_ticker = SentenceTickerWidget()
+        comm_layout.addWidget(self.sentence_ticker)
+        return self.comm_view
 
     def _create_speaker_view(self) -> QWidget:
         """Create the layout for Hearing users."""
@@ -373,6 +335,15 @@ class IsharaMainWindow(QMainWindow):
         logger.info("Network Status: %s", message)
 
     @pyqtSlot(str)
+    def _on_network_connected(self):
+        self.status_badge.set_status("Online", "#10B981")
+        self.connect_btn.setText("Disconnect")
+        
+    def _on_network_disconnected(self):
+        self.status_badge.set_status("Offline", "#F43F5E")
+        self.connect_btn.setText("Connect")
+
+    @pyqtSlot(str)
     def _on_camera_error(self, message: str):
         self.status_badge.setText(f"⚠️ Cam Error")
         self.status_badge.setStyleSheet("color: yellow;")
@@ -400,9 +371,9 @@ class IsharaMainWindow(QMainWindow):
         # Route to the appropriate view
         if self.stacked_widget.currentWidget() == self.learning_view:
             self.learning_view.update_camera_feed(image)
-        elif hasattr(self, 'camera_label'):
-            scaled = pixmap.scaled(self.camera_label.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            self.camera_label.setPixmap(scaled)
+        elif hasattr(self, 'camera_feed'):
+            scaled = pixmap.scaled(self.camera_feed.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            self.camera_feed.setPixmap(scaled)
 
     @pyqtSlot(float)
     def _update_fps(self, fps: float):
@@ -414,12 +385,9 @@ class IsharaMainWindow(QMainWindow):
             self.learning_view.process_prediction(data)
             return
 
-        # Update local UI for Communication Mode
-        label = data.get("label_bn", "")
-        conf = data.get("confidence", 0.0)
-        
-        self.local_sign_lbl.setText(label)
-        self.conf_bar.setValue(int(conf * 100))
+        # Update Sentence Ticker
+        if hasattr(self, 'sentence_ticker'):
+            self.sentence_ticker.update_ticker(data)
         
         # Send to backend
         if self.network_worker and data.get("is_stable"):

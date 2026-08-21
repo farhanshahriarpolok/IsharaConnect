@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IsharaConnect Web Client</title>
+    
+    <!-- PWA Setup -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#0F172A">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- MediaPipe Hands -->
@@ -12,20 +17,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
-        body { background-color: #1E1E2E; color: #CDD6F4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .panel { background-color: #2A2B3D; border-radius: 8px; }
-        .btn-blue { background-color: #89B4FA; color: #11111B; font-weight: bold; border-radius: 8px; padding: 8px 16px; }
-        .btn-blue:hover { background-color: #74C7EC; }
-        .input-dark { background-color: #181825; color: #CDD6F4; border: 1px solid #313244; border-radius: 4px; padding: 6px; }
+        body { background-color: #0F172A; color: #F8FAFC; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .panel { background-color: #1E293B; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+        .btn-blue { background-color: #06B6D4; color: #0F172A; font-weight: bold; border-radius: 8px; padding: 8px 16px; border: none; }
+        .btn-blue:hover { background-color: #22D3EE; }
+        .input-dark { background-color: #0F172A; color: #F8FAFC; border: 1px solid #334155; border-radius: 6px; padding: 8px; }
+        .input-dark:focus { border: 1px solid #06B6D4; outline: none; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col p-4">
     <!-- Navbar -->
-    <div class="flex items-center justify-between mb-4">
-        <h1 class="text-2xl font-bold text-[#89B4FA]">IsharaConnect Web</h1>
-        <div class="flex items-center space-x-4">
-            <span id="status-badge" class="font-bold text-[#F38BA8]">🔴 Offline</span>
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h1 class="text-2xl font-bold text-[#06B6D4]">IsharaConnect Web</h1>
+        <div class="flex items-center space-x-2 flex-wrap">
+            <span id="status-badge" class="font-bold text-[#F43F5E]">🔴 Offline</span>
             <input type="text" id="room-id" value="default-room" class="input-dark w-32" placeholder="Room ID">
             <button id="connect-btn" class="btn-blue">Connect</button>
             <select id="role-select" class="input-dark">
@@ -98,6 +104,16 @@
     </div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
+    
         const wsUrlBase = `ws://${window.location.host}/ws/room/`;
         let ws = null;
         let activeRole = 'signer';

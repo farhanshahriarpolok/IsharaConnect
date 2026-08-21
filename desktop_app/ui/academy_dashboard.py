@@ -2,15 +2,17 @@ import logging
 import cv2
 import numpy as np
 from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer
-from PyQt6.QtGui import QImage, QPixmap, QFont, QColor, QPainter, QBrush, QPen
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QPushButton, QFrame, QProgressBar, QTreeWidget, QTreeWidgetItem, QSplitter,
     QStackedWidget, QTextEdit, QMessageBox
 )
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtCore import QUrl
+from PyQt6.QtGui import QDesktopServices, QPixmap, QImage, QFont
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QTimer, Qt
 from desktop_app.controllers.certificate_generator import CertificateGenerator
+from desktop_app.ui.theme import ThemeStyles
+from desktop_app.ui.components.circular_gauge import CircularAccuracyGauge
+from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
 from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
@@ -56,60 +58,7 @@ class AcademyDashboard(QWidget):
         self._init_ui()
         
     def _init_ui(self):
-        self.setStyleSheet(f"""
-            QWidget {{
-                background-color: {BG_COLOR};
-                color: {TEXT_COLOR};
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }}
-            QTreeWidget {{
-                background-color: {PANEL_COLOR};
-                border: 1px solid {SURFACE_COLOR};
-                border-radius: 8px;
-                padding: 5px;
-            }}
-            QTreeWidget::item:selected {{
-                background-color: {ACCENT_COLOR};
-                color: #11111B;
-                border-radius: 4px;
-            }}
-            QPushButton {{
-                background-color: {SURFACE_COLOR};
-                color: {TEXT_COLOR};
-                border: 1px solid {ACCENT_COLOR};
-                border-radius: 6px;
-                padding: 8px 16px;
-                font-weight: bold;
-            }}
-            QPushButton:hover {{
-                background-color: {ACCENT_COLOR};
-                color: #11111B;
-            }}
-            QPushButton#ActionBtn {{
-                background-color: {ACCENT_COLOR};
-                color: #11111B;
-            }}
-            QPushButton#ActionBtn:hover {{
-                background-color: #74c7ec;
-            }}
-            QLabel#Header {{
-                font-size: 24px;
-                font-weight: bold;
-                color: {ACCENT_COLOR};
-            }}
-            QLabel#SubHeader {{
-                font-size: 18px;
-                font-weight: bold;
-                color: {SUCCESS_COLOR};
-            }}
-            QTextEdit {{
-                background-color: {PANEL_COLOR};
-                border: 1px solid {SURFACE_COLOR};
-                border-radius: 8px;
-                color: {TEXT_COLOR};
-                font-size: 14px;
-            }}
-        """)
+        self.setStyleSheet(ThemeStyles.get_global_stylesheet())
         
         main_layout = QVBoxLayout(self)
         
@@ -185,53 +134,50 @@ class AcademyDashboard(QWidget):
         practice_layout = QVBoxLayout(self.practice_page)
         
         arena_layout = QHBoxLayout()
-        self.camera_feed = QLabel("Initializing Camera...")
+        
+        # Wrap camera in a widget to overlay the trajectory viewer
+        cam_container = QWidget()
+        cam_container.setFixedSize(400, 300)
+        
+        self.camera_feed = QLabel(cam_container)
         self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.camera_feed.setStyleSheet(f"background-color: {PANEL_COLOR}; border: 2px solid {ACCENT_COLOR}; border-radius: 10px;")
+        self.camera_feed.setText("Initializing Camera...")
         self.camera_feed.setFixedSize(400, 300)
+        self.camera_feed.setObjectName("GlassCard")
+        
+        self.trajectory_viewer = MotionTrajectoryViewer(cam_container)
+        self.trajectory_viewer.setFixedSize(400, 300)
         
         self.target_overlay = QLabel("[Target Overlay]")
         self.target_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.target_overlay.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 10px;")
+        self.target_overlay.setObjectName("GlassCard")
         self.target_overlay.setFixedSize(400, 300)
         
-        arena_layout.addWidget(self.camera_feed)
+        arena_layout.addWidget(cam_container)
         arena_layout.addWidget(self.target_overlay)
         practice_layout.addLayout(arena_layout)
         
         self.posture_hud = QTextEdit()
         self.posture_hud.setReadOnly(True)
         self.posture_hud.setMaximumHeight(80)
-        self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>AI Posture Tutor:</b> Ready.")
+        self.posture_hud.setHtml(f"<b style='color:#06B6D4;'>AI Posture Tutor:</b> Ready.")
         practice_layout.addWidget(self.posture_hud)
         
         # Score HUD
         score_layout = QHBoxLayout()
         self.xp_label = QLabel("XP: 0")
-        self.xp_label.setStyleSheet(f"color: {ACCENT_COLOR}; font-weight: bold;")
+        self.xp_label.setStyleSheet("color: #06B6D4; font-weight: bold;")
         self.streak_label = QLabel("Streak: 0 🔥")
-        self.streak_label.setStyleSheet(f"color: {ERROR_COLOR}; font-weight: bold;")
+        self.streak_label.setStyleSheet("color: #F43F5E; font-weight: bold;")
         score_layout.addWidget(self.xp_label)
         score_layout.addWidget(self.streak_label)
         practice_layout.addLayout(score_layout)
         
-        self.match_progress = QProgressBar()
-        self.match_progress.setRange(0, 100)
-        self.match_progress.setValue(0)
-        self.match_progress.setStyleSheet(f"""
-            QProgressBar {{
-                border: 2px solid {SURFACE_COLOR};
-                border-radius: 5px;
-                text-align: center;
-                color: white;
-                font-weight: bold;
-            }}
-            QProgressBar::chunk {{
-                background-color: {SUCCESS_COLOR};
-                width: 20px;
-            }}
-        """)
-        practice_layout.addWidget(self.match_progress)
+        # Circular Accuracy Gauge
+        gauge_layout = QHBoxLayout()
+        self.match_gauge = CircularAccuracyGauge(radius=40, thickness=10)
+        gauge_layout.addWidget(self.match_gauge, alignment=Qt.AlignmentFlag.AlignCenter)
+        practice_layout.addLayout(gauge_layout)
         
         stop_btn = QPushButton("Stop Practice")
         stop_btn.clicked.connect(self._stop_practice)
@@ -329,7 +275,8 @@ class AcademyDashboard(QWidget):
             self.cap.release()
             self.cap = None
         self.content_stack.setCurrentWidget(self.anatomy_page)
-        self.match_progress.setValue(0)
+        if hasattr(self, 'match_gauge'):
+            self.match_gauge.set_value(0)
         
         
     def _update_practice_frame(self):
@@ -347,12 +294,22 @@ class AcademyDashboard(QWidget):
         
         # Process Live Landmarks
         live_landmarks = []
+        left_wrist = None
+        right_wrist = None
+        
         if features["has_left"] or features["has_right"]:
             for i in range(42):
                 if np.any(features["raw_landmarks"][i]):
                     x = float(features["raw_landmarks"][i][0] * frame.shape[1])
                     y = float(features["raw_landmarks"][i][1] * frame.shape[0])
                     live_landmarks.append((x, y))
+                    
+                    if i == 0:  # left wrist
+                        left_wrist = (x, y)
+                    elif i == 21: # right wrist
+                        right_wrist = (x, y)
+                        
+        self.trajectory_viewer.update_trajectory(left_wrist, right_wrist)
         
         # Ghost Overlay rendering
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -376,10 +333,10 @@ class AcademyDashboard(QWidget):
                     self.posture_hud.setHtml(f"<b style='color:{ACCENT_COLOR};'>Quiz:</b> Show sign in {secs}s...")
                 
                 score = self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks)
-                self.match_progress.setValue(int(score))
+                self.match_gauge.set_value(score)
                 
                 if score > 80.0:
-                    self.posture_hud.setHtml(f"<b style='color:{SUCCESS_COLOR};'>Excellent! Perfect Match.</b>")
+                    self.posture_hud.setHtml(f"<b style='color:#10B981;'>Excellent! Perfect Match.</b>")
                     self.xp_score += 50
                     self.streak += 1
                     if self.exam_active:
@@ -394,7 +351,7 @@ class AcademyDashboard(QWidget):
                     else:
                         self.quiz_active = False # End quiz early on success
             else:
-                self.posture_hud.setHtml(f"<b style='color:{ERROR_COLOR};'>Time's Up!</b>")
+                self.posture_hud.setHtml(f"<b style='color:#F43F5E;'>Time's Up!</b>")
                 self.streak = 0
                 if self.exam_active:
                     self.current_exam_index += 1
@@ -411,7 +368,7 @@ class AcademyDashboard(QWidget):
             self.streak_label.setText(f"Streak: {self.streak} 🔥")
             
         else:
-            self.match_progress.setValue(0)
+            self.match_gauge.set_value(0)
         
     def closeEvent(self, event):
         self._stop_practice()

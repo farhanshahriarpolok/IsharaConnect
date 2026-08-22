@@ -137,10 +137,14 @@ class Ishara3DFACSAvatar {
           this.frameQueue = [];
           this.totalFramesReceived = packet.total_frames;
           if (statusElem) {
-            statusElem.innerText = `স্ট্রিমিং: ${packet.total_frames} ফ্রেম @ ${packet.fps} FPS`;
+            const stepInfo = packet.total_steps > 1 ? ` [ধাপ ১/${packet.total_steps}]` : "";
+            statusElem.innerText = `স্ট্রিমিং: ${packet.total_frames} ফ্রেম @ ${packet.fps} FPS${stepInfo}`;
           }
         } else if (packet.status === "frame") {
           this.frameQueue.push(packet.data);
+          if (packet.data.stage_info && statusElem) {
+            statusElem.innerText = `ধাপ ${packet.data.stage_info.current}/${packet.data.stage_info.total}: ${packet.data.stage_info.sign_name}`;
+          }
         } else if (packet.status === "end_stream") {
           if (statusElem) {
             statusElem.innerText = "স্ট্রিমিং সম্পন্ন (Complete)";

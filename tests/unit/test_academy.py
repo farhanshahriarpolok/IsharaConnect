@@ -16,7 +16,7 @@ def qapp():
 def test_academy_dashboard_initialization(qapp):
     dashboard = AcademyDashboard()
     assert dashboard is not None
-    assert dashboard.tree.topLevelItemCount() == 4
+    assert dashboard.tree.topLevelItemCount() == 5
     
 def test_scenario_simulator_initialization(qapp):
     simulator = ScenarioSimulator()

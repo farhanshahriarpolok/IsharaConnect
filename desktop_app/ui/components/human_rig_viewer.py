@@ -122,6 +122,10 @@ class HumanRigViewer(QWidget):
         self.timer.setInterval(33)
         self.timer.timeout.connect(self._advance_frame)
 
+        self.is_compound = False
+        self.compound_glosses: List[str] = []
+        self.subsign_frame_ranges: List[Tuple[int, int, str]] = []
+
         self.setMinimumSize(280, 278)
         self.load_sign_motion(sign_slug, label_bn, label_en)
         self.timer.start()
@@ -132,6 +136,9 @@ class HumanRigViewer(QWidget):
         self, sign_slug: str, label_bn: str = "", label_en: str = ""
     ):
         """Loads 60-frame kinematic motion loop for the requested sign."""
+        self.is_compound = False
+        self.compound_glosses = []
+        self.subsign_frame_ranges = []
         self.sign_slug = sign_slug or "dhonnobad"
         if label_bn:
             self.label_bn = label_bn
@@ -142,6 +149,40 @@ class HumanRigViewer(QWidget):
         )
         self.current_frame_idx = 0
         self.trail_history.clear()
+        self.update()
+
+    def load_compound_sign(
+        self,
+        gloss_list: List[str],
+        label_bn: str = "",
+        label_en: str = ""
+    ):
+        """Loads multi-sign compound sequential kinematic motion with transition stages."""
+        if not gloss_list or len(gloss_list) <= 1:
+            slug = gloss_list[0] if gloss_list else "dhonnobad"
+            self.load_sign_motion(slug, label_bn, label_en)
+            return
+
+        self.is_compound = True
+        self.compound_glosses = gloss_list
+        if label_bn:
+            self.label_bn = label_bn
+        if label_en:
+            self.label_en = label_en
+
+        self.frames = self.interpolator.load_compound_motion(gloss_list)
+        self.current_frame_idx = 0
+        self.trail_history.clear()
+
+        # Build subsign frame ranges (each sign has 60 frames + 10 transition frames)
+        self.subsign_frame_ranges = []
+        offset = 0
+        for idx, g in enumerate(gloss_list):
+            start_f = offset
+            end_f = offset + 60
+            self.subsign_frame_ranges.append((start_f, end_f, g))
+            offset = end_f + 10  # 10 transition frames
+
         self.update()
 
     def play(self):
@@ -827,6 +868,27 @@ class HumanRigViewer(QWidget):
         painter.setPen(QColor("#10B981" if self.is_playing else "#F59E0B"))
         painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         painter.drawText(QRectF(w - 26, 8, 18, 20), Qt.AlignmentFlag.AlignCenter, icon)
+
+        # Multi-stage step indicator for compound signs
+        if self.is_compound and self.subsign_frame_ranges:
+            curr_f = self.current_frame_idx
+            active_step = 1
+            total_steps = len(self.subsign_frame_ranges)
+            active_name = self.compound_glosses[0] if self.compound_glosses else ""
+
+            for s_idx, (sf, ef, s_gloss) in enumerate(self.subsign_frame_ranges):
+                if sf <= curr_f <= ef + 10:
+                    active_step = s_idx + 1
+                    active_name = s_gloss
+                    break
+
+            step_badge_str = f"ধাপ {active_step}/{total_steps}: {active_name}"
+            painter.setBrush(QBrush(QColor(15, 23, 42, 220)))
+            painter.setPen(QPen(QColor(245, 158, 11, 200), 1.0))
+            painter.drawRoundedRect(QRectF(106, 8, 120, 20), 4, 4)
+            painter.setPen(QColor("#FBBF24"))
+            painter.setFont(QFont("SolaimanLipi", 8, QFont.Weight.Bold))
+            painter.drawText(QRectF(108, 8, 116, 20), Qt.AlignmentFlag.AlignCenter, step_badge_str)
 
         painter.setBrush(QBrush(QColor(9, 13, 22, 215)))
         painter.setPen(QPen(QColor(56, 189, 248, 95), 1.0))

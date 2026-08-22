@@ -17,7 +17,7 @@ import numpy as np
 from PyQt6.QtCore import Qt, QTimer, QUrl, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QDesktopServices, QFont, QImage, QPixmap
 from PyQt6.QtWidgets import (
-    QFrame, QHBoxLayout, QLabel, QMessageBox, QProgressBar,
+    QFrame, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QProgressBar,
     QPushButton, QScrollArea, QSplitter, QStackedWidget, QTextEdit,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 )
@@ -29,6 +29,8 @@ except ImportError:
     SVG_WIDGET_AVAILABLE = False
 
 from core_engine.audio.audio_player import player_instance
+from core_engine.nlp.master_lexicon import master_lexicon
+from core_engine.vision.dactylology_engine import MASTER_GRAPHEMES, VOWELS, CONSONANTS, DIGITS
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
 from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
@@ -95,10 +97,59 @@ class AcademyDashboard(QWidget):
         self._init_ui()
 
     def _load_curriculum_database(self) -> Dict[str, Dict[str, Any]]:
-        """Loads and indexes curriculum metadata from JSON files."""
+        """Loads and indexes comprehensive curriculum metadata from master lexicon, dactylology, and JSON files."""
         database: Dict[str, Dict[str, Any]] = {}
 
-        # 1. Load curriculum_data.json
+        # 1. Ingest Master BdSL Lexicon (50+ standardized signs across 6 domains)
+        try:
+            for sign in master_lexicon.all_signs():
+                slug = sign.get("slug", "")
+                bn = sign.get("label_bn", "")
+                en = sign.get("label_en", "")
+                meta = {
+                    "slug": slug,
+                    "label_bn": bn,
+                    "label_en": en,
+                    "phonetic": slug.replace("_", " ").title(),
+                    "category": sign.get("category", "General"),
+                    "handedness": sign.get("handedness", "single"),
+                    "mnemonic": sign.get("description", ""),
+                    "touch_rule": sign.get("touch_rule", "Follow standard BdSL motion trajectory."),
+                    "exercise_prompt": f"Demonstrate '{bn}' ({en}).",
+                    "timing_ms": sign.get("timing_ms", {}),
+                    "facs_action_units": sign.get("facs_action_units", {})
+                }
+                if bn:
+                    database[bn] = meta
+                if en:
+                    database[en] = meta
+                if slug:
+                    database[slug] = meta
+        except Exception as e:
+            logger.warning("Failed to load master_lexicon: %s", e)
+
+        # 2. Ingest Full Dactylology Inventory (Vowels, Consonants, Digits, Diacritics)
+        for sym, item in MASTER_GRAPHEMES.items():
+            slug = item.get("slug", sym)
+            name_en = item.get("name_en", "")
+            meta = {
+                "slug": slug,
+                "label_bn": sym,
+                "label_en": name_en,
+                "phonetic": item.get("phonetic", slug),
+                "category": f"Dactylology ({item.get('category', 'Alphabet')})",
+                "handedness": "single",
+                "mnemonic": item.get("description", f"Show finger gesture for '{sym}'."),
+                "touch_rule": "Maintain clear single-hand posture toward camera.",
+                "exercise_prompt": f"Hold grapheme '{sym}' ({name_en}) clearly in frame."
+            }
+            database[sym] = meta
+            if name_en:
+                database[name_en] = meta
+            if slug:
+                database[slug] = meta
+
+        # 3. Enrich with legacy curriculum_data.json
         curr_file = Path("dataset/curriculum_data.json")
         if curr_file.exists():
             try:
@@ -120,14 +171,16 @@ class AcademyDashboard(QWidget):
                                 "touch_rule": lesson.get("touch_rule", ""),
                                 "exercise_prompt": lesson.get("exercise_prompt", "")
                             }
-                            database[sym] = meta
-                            database[meta["label_en"]] = meta
-                            if slug:
+                            if sym not in database:
+                                database[sym] = meta
+                            if meta["label_en"] not in database:
+                                database[meta["label_en"]] = meta
+                            if slug and slug not in database:
                                 database[slug] = meta
             except Exception as e:
                 logger.warning("Failed to load curriculum_data.json: %s", e)
 
-        # 2. Enrich with labels.json
+        # 4. Enrich with labels.json
         labels_file = Path("dataset/labels.json")
         if labels_file.exists():
             try:
@@ -149,7 +202,8 @@ class AcademyDashboard(QWidget):
                             "touch_rule": "Follow standard BdSL motion trajectory.",
                             "exercise_prompt": f"Demonstrate '{bn}' ({en})."
                         }
-                    database[bn] = database.get(slug, {})
+                    if bn and bn not in database:
+                        database[bn] = database.get(slug, {})
             except Exception as e:
                 logger.warning("Failed to load labels.json: %s", e)
 
@@ -189,14 +243,34 @@ class AcademyDashboard(QWidget):
         left_panel = QFrame()
         left_panel.setObjectName("GlassCard")
         left_panel.setStyleSheet(f"background-color: {PANEL_COLOR}; border-radius: 12px; padding: 8px;")
-        left_panel.setMinimumWidth(220)
+        left_panel.setMinimumWidth(230)
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setContentsMargins(4, 4, 4, 4)
 
         left_header = QLabel("📚 পাঠ্যতালিকা (Curriculum)")
         left_header.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         left_header.setStyleSheet(f"color: {CYAN_ACCENT}; padding: 4px;")
         left_layout.addWidget(left_header)
+
+        # Real-Time Search & Filter Input Bar
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("🔍 খুঁজুন (Search sign/word)...")
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                background-color: #1E1E2E;
+                color: #CDD6F4;
+                border: 1px solid rgba(6, 182, 212, 0.4);
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            QLineEdit:focus {
+                border: 1.5px solid #06B6D4;
+                background-color: #181825;
+            }
+        """)
+        self.search_input.textChanged.connect(self._filter_curriculum)
+        left_layout.addWidget(self.search_input)
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
@@ -454,40 +528,115 @@ class AcademyDashboard(QWidget):
         # Load initial sign
         self._update_reference_card("dhonnobad")
 
+    def _filter_curriculum(self, query: str):
+        """Filters the curriculum tree items in real-time based on search text."""
+        q = query.strip().lower()
+        root = self.tree.invisibleRootItem()
+        for i in range(root.childCount()):
+            level_item = root.child(i)
+            level_has_match = False
+            for j in range(level_item.childCount()):
+                mod_item = level_item.child(j)
+                mod_has_match = False
+                for k in range(mod_item.childCount()):
+                    leaf_item = mod_item.child(k)
+                    txt = leaf_item.text(0).lower()
+                    matches = (not q) or (q in txt)
+                    leaf_item.setHidden(not matches)
+                    if matches:
+                        mod_has_match = True
+                mod_item.setHidden(not mod_has_match)
+                if mod_has_match:
+                    level_has_match = True
+            level_item.setHidden(not level_has_match)
+            if q and level_has_match:
+                level_item.setExpanded(True)
+
     def _build_curriculum(self):
-        """Populates the curriculum tree widget."""
+        """Populates the dynamic 5-level interactive curriculum syllabus."""
         self.curriculum_items_order.clear()
-        curriculum_file = "dataset/curriculum_data.json"
-        if os.path.exists(curriculum_file):
-            try:
-                with open(curriculum_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                for tier in data.get("tiers", []):
-                    t_item = QTreeWidgetItem(self.tree, [tier.get("tier_name", "Tier")])
-                    if "modules" in tier:
-                        for mod in tier["modules"]:
-                            m_item = QTreeWidgetItem(t_item, [mod.get("module_title", "Module")])
-                            for lesson in mod.get("lessons", []):
-                                sym = lesson.get("symbol", "")
-                                name = lesson.get("name_en", "")
-                                item_text = f"{sym} - {name}"
-                                QTreeWidgetItem(m_item, [item_text])
-                                self.curriculum_items_order.append(item_text)
-                self.tree.expandAll()
-                return
-            except Exception as e:
-                logger.debug("Tree parse fallback: %s", e)
+        self.tree.clear()
 
-        # Fallback items
-        l1 = QTreeWidgetItem(self.tree, ["Level 1: Alphabets & Digits"])
-        for sign in ["অ - Vowel A", "আ - Vowel Aa", "ই - Vowel I", "ক - Consonant Ka", "১ - One", "২ - Two"]:
-            QTreeWidgetItem(l1, [sign])
-            self.curriculum_items_order.append(sign)
+        # Level 1: বর্ণমালা ও সংখ্যা (Dactylology & Numerals)
+        l1 = QTreeWidgetItem(self.tree, ["লেভেল ১: বর্ণমালা ও সংখ্যা (Dactylology & Numerals)"])
+        m1_vowels = QTreeWidgetItem(l1, ["মডিউল ১.১: স্বরবর্ণ (11 Vowels)"])
+        for v in ["অ - Vowel A", "আ - Vowel Aa", "ই - Vowel I", "ঈ - Vowel Ee", "উ - Vowel U", "ঊ - Vowel Oo", "ঋ - Vowel Rri", "এ - Vowel E", "ঐ - Vowel Oi", "ও - Vowel O", "ঔ - Vowel Ou"]:
+            QTreeWidgetItem(m1_vowels, [v])
+            self.curriculum_items_order.append(v)
 
-        l2 = QTreeWidgetItem(self.tree, ["Level 2: Daily Words"])
-        for sign in ["ধন্যবাদ - Thank you", "সাহায্য - Help", "স্বাগতম - Welcome"]:
-            QTreeWidgetItem(l2, [sign])
-            self.curriculum_items_order.append(sign)
+        m1_cons = QTreeWidgetItem(l1, ["মডিউল ১.২: ব্যঞ্জনবর্ণ (39 Consonants)"])
+        cons_list = [
+            "ক - Consonant Ka", "খ - Consonant Kha", "গ - Consonant Ga", "ঘ - Consonant Gha", "ঙ - Consonant Umo",
+            "চ - Consonant Cha", "ছ - Consonant Chha", "জ - Consonant Ja", "ঝ - Consonant Jha", "ঞ - Consonant Iyo",
+            "ট - Consonant Ta", "ঠ - Consonant Tha", "ড - Consonant Da", "ঢ - Consonant Dha", "ণ - Consonant Murdhanya-Na",
+            "ত - Consonant T-Ta", "থ - Consonant T-Tha", "দ - Consonant D-Da", "ধ - Consonant D-Dha", "ন - Consonant Dantya-Na",
+            "প - Consonant Pa", "ফ - Consonant Pha", "ব - Consonant Ba", "ভ - Consonant Bha", "ম - Consonant Ma",
+            "য - Consonant Antastha-Ja", "র - Consonant Ra", "ল - Consonant La", "শ - Consonant Talobya-Sha", "ষ - Consonant Murdhanya-Sha",
+            "স - Consonant Dantya-Sa", "হ - Consonant Ha", "ড় - Consonant Dae-Ra", "ঢ় - Consonant Dhae-Ra", "য় - Consonant Antastha-Ya",
+            "ৎ - Khanda-Ta", "ং - Anusvara", "ঃ - Visarga", "ঁ - Chandrabindu"
+        ]
+        for c in cons_list:
+            QTreeWidgetItem(m1_cons, [c])
+            self.curriculum_items_order.append(c)
+
+        m1_digits = QTreeWidgetItem(l1, ["মডিউল ১.৩: সংখ্যা ও ট্রিগার (Digits & Conjunct Triggers)"])
+        digits_triggers = [
+            "০ - Zero", "১ - One", "২ - Two", "৩ - Three", "৪ - Four",
+            "৫ - Five", "৬ - Six", "৭ - Seven", "৮ - Eight", "৯ - Nine",
+            "ক্ষ - Ksha (T4 Trigger)", "জ্ঞ - Gyan (T5 Trigger)", "ঙ্ক - Ngka", "ঙ্গ - Ngga"
+        ]
+        for d in digits_triggers:
+            QTreeWidgetItem(m1_digits, [d])
+            self.curriculum_items_order.append(d)
+
+        # Level 2: মৌলিক আত্মপরিচয় ও অভিবাদন (Kinship & Greetings)
+        l2 = QTreeWidgetItem(self.tree, ["লেভেল ২: মৌলিক আত্মপরিচয় ও অভিবাদন (Kinship & Greetings)"])
+        m2_kin = QTreeWidgetItem(l2, ["মডিউল ২.১: পরিবার ও আত্মীয়তা (Kinship)"])
+        for k in ["মা - Mother", "বাবা - Father", "ভাই - Brother", "বোন - Sister", "বন্ধু - Friend", "চাচা - Paternal Uncle", "দাদা - Paternal Grandfather", "নানা - Maternal Grandfather", "দেবর - Brother-in-Law", "দুলাভাই - Brother-in-Law"]:
+            QTreeWidgetItem(m2_kin, [k])
+            self.curriculum_items_order.append(k)
+
+        m2_greet = QTreeWidgetItem(l2, ["মডিউল ২.২: শুভেচ্ছা ও সাধারণ শিষ্টাচার (Greetings)"])
+        for g in ["ধন্যবাদ - Thank you", "সালাম - Assalamu Alaikum", "নমস্কার - Namaskar", "কেমন আছেন? - How are you", "ভালো - Good / Fine", "স্বাগতম - Welcome"]:
+            QTreeWidgetItem(m2_greet, [g])
+            self.curriculum_items_order.append(g)
+
+        # Level 3: স্বাস্থ্য ও জরুরি সেবা (Healthcare & Emergency)
+        l3 = QTreeWidgetItem(self.tree, ["লেভেল ৩: স্বাস্থ্য ও জরুরি সেবা (Healthcare & Emergency)"])
+        m3_med = QTreeWidgetItem(l3, ["মডিউল ৩.১: চিকিৎসা ও জরুরি সংকেত (Medical & Emergency)"])
+        for m in ["ডাক্তার - Doctor", "হাসপাতাল - Hospital", "অসুস্থ - Sick / Ill", "ব্যথা - Pain", "ওষুধ - Medicine", "জরুরি - Emergency", "সাহায্য - Help", "অ্যাম্বুলেন্স - Ambulance"]:
+            QTreeWidgetItem(m3_med, [m])
+            self.curriculum_items_order.append(m)
+
+        # Level 4: নাগরিক জীবন ও শিক্ষা (Public, Education & Disaster)
+        l4 = QTreeWidgetItem(self.tree, ["লেভেল ৪: নাগরিক জীবন ও দুর্যোগ (Public, Education & Disaster)"])
+        m4_pub = QTreeWidgetItem(l4, ["মডিউল ৪.১: শিক্ষাপ্রতিষ্ঠান ও নাগরিক সেবা (Public Life)"])
+        for p in ["স্কুল - School", "শিক্ষক - Teacher", "টাকা - Money", "পুলিশ - Police", "ব্যাংক - Bank", "জাতীয় পরিচয়পত্র - National ID Card"]:
+            QTreeWidgetItem(m4_pub, [p])
+            self.curriculum_items_order.append(p)
+
+        m4_dis = QTreeWidgetItem(l4, ["মডিউল ৪.২: দুর্যোগ ও নিরাপত্তা (Disaster & Safety)"])
+        for s in ["ভূমিকম্প - Earthquake", "আগুন - Fire", "বন্যা - Flood", "পানি - Water", "সাবধান - Caution", "যানজট - Traffic Jam"]:
+            QTreeWidgetItem(m4_dis, [s])
+            self.curriculum_items_order.append(s)
+
+        # Level 5: ক্রিয়াপদ ও ব্যাকরণগত বাক্য (Action Verbs & Scenario Dialogue)
+        l5 = QTreeWidgetItem(self.tree, ["লেভেল ৫: ক্রিয়াপদ ও দৃশ্যপট বাক্য (Action Verbs & Dialogue)"])
+        m5_verbs = QTreeWidgetItem(l5, ["মডিউল ৫.১: প্রধান ক্রিয়াপদ (Core Action Verbs)"])
+        for v in ["খাওয়া - Eat", "যাওয়া - Go", "আসা - Come", "ঘুমানো - Sleep", "পড়া - Study / Read", "তাড়াতাড়ি - Hurry", "ছুড়ে মারা - Throw"]:
+            QTreeWidgetItem(m5_verbs, [v])
+            self.curriculum_items_order.append(v)
+
+        m5_dialogue = QTreeWidgetItem(l5, ["মডিউল ৫.২: যৌগিক শব্দ ও বাক্য (Compound & Sentences)"])
+        for d in [
+            "হোটেল - Hotel",
+            "ডাক্তারখানা - Medical Clinic",
+            "আমি ভাত খাই - I eat rice",
+            "আপনি কেমন আছেন? - How are you?",
+            "ডাক্তার কোথায়? - Where is the doctor?"
+        ]:
+            QTreeWidgetItem(m5_dialogue, [d])
+            self.curriculum_items_order.append(d)
 
         self.tree.expandAll()
 
@@ -561,9 +710,26 @@ class AcademyDashboard(QWidget):
         # Reset coach banner
         self.update_posture_coach(f"ক্যামেরার সামনে '{bn}' এর ভঙ্গি প্রদর্শন করুন...", state="idle")
 
-        # Load Visual Card via bulletproof SignCardViewer and 2D Kinematic Rig
+        # Load Visual Card via bulletproof SignCardViewer
         self.sign_card_viewer.load_sign(slug, bn, en)
-        self.human_rig_viewer.load_sign_motion(slug, bn, en)
+
+        # Check for multi-sign compound playback
+        compound_map = {
+            "hotel": ["khawa", "taka"],
+            "হোটেল": ["khawa", "taka"],
+            "ambulance": ["haspatal", "gari"],
+            "অ্যাম্বুলেন্স": ["haspatal", "gari"],
+            "daktarkhana": ["daktar", "bari"],
+            "ডাক্তারখানা": ["daktar", "bari"],
+            "আমি ভাত খাই": ["ami", "bhat", "khawa"],
+            "আপনি কেমন আছেন?": ["apni", "kemon_achen"],
+            "ডাক্তার কোথায়?": ["daktar", "kothay"]
+        }
+        compound_constituents = compound_map.get(slug) or compound_map.get(bn)
+        if compound_constituents:
+            self.human_rig_viewer.load_compound_sign(compound_constituents, bn, en)
+        else:
+            self.human_rig_viewer.load_sign_motion(slug, bn, en)
 
     def _set_reference_view_mode(self, mode_idx: int):
         """Switches between Static Card (0) and Kinematic Human Rig Motion Demo (1)."""

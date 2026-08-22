@@ -579,3 +579,86 @@ class KinematicMotionInterpolator:
         """Smooth Hermite cubic ease-in-out interpolation."""
         x = max(0.0, min(1.0, x))
         return x * x * (3.0 - 2.0 * x)
+
+    def load_compound_motion(
+        self,
+        gloss_list: List[str]
+    ) -> List[KinematicJointFrame]:
+        """Synthesizes and stitches multi-sign sequential kinematic motion frames
+
+        with smooth resting/co-articulation transitions between sub-signs.
+        """
+        if not gloss_list:
+            return self.resolve_motion_sequence("dhonnobad")
+
+        if len(gloss_list) == 1:
+            return self.resolve_motion_sequence(gloss_list[0])
+
+        compound_frames: List[KinematicJointFrame] = []
+        transition_len = 10  # ~150ms transition buffer
+
+        for sign_idx, gloss in enumerate(gloss_list):
+            sign_frames = self.resolve_motion_sequence(gloss)
+
+            for f in sign_frames:
+                frame_copy = KinematicJointFrame(
+                    frame_idx=len(compound_frames),
+                    head=f.head, neck=f.neck, chest=f.chest,
+                    left_shoulder=f.left_shoulder, right_shoulder=f.right_shoulder,
+                    left_elbow=f.left_elbow, right_elbow=f.right_elbow,
+                    left_wrist=f.left_wrist, right_wrist=f.right_wrist,
+                    left_hand=list(f.left_hand), right_hand=list(f.right_hand),
+                    is_left_active=f.is_left_active, is_right_active=f.is_right_active,
+                    particle_trail=list(f.particle_trail),
+                    touch_contacts=list(f.touch_contacts),
+                    right_hand_z=f.right_hand_z, left_hand_z=f.left_hand_z
+                )
+                compound_frames.append(frame_copy)
+
+            # Append resting transition between sub-signs
+            if sign_idx < len(gloss_list) - 1:
+                next_sign = gloss_list[sign_idx + 1]
+                next_sign_frames = self.resolve_motion_sequence(next_sign)
+                last_f = sign_frames[-1]
+                first_next_f = next_sign_frames[0]
+
+                for step in range(1, transition_len + 1):
+                    alpha = step / float(transition_len + 1)
+                    smooth_alpha = 0.5 * (1.0 - math.cos(math.pi * alpha))
+
+                    def lerp(p1, p2):
+                        return (p1[0] + (p2[0] - p1[0]) * smooth_alpha, p1[1] + (p2[1] - p1[1]) * smooth_alpha)
+
+                    def lerp_hand(h1, h2):
+                        if not h1 and not h2:
+                            return []
+                        if not h1:
+                            return list(h2)
+                        if not h2:
+                            return list(h1)
+                        return [lerp(h1[k], h2[k]) for k in range(min(len(h1), len(h2)))]
+
+                    trans_frame = KinematicJointFrame(
+                        frame_idx=len(compound_frames),
+                        head=lerp(last_f.head, first_next_f.head),
+                        neck=lerp(last_f.neck, first_next_f.neck),
+                        chest=lerp(last_f.chest, first_next_f.chest),
+                        left_shoulder=lerp(last_f.left_shoulder, first_next_f.left_shoulder),
+                        right_shoulder=lerp(last_f.right_shoulder, first_next_f.right_shoulder),
+                        left_elbow=lerp(last_f.left_elbow, first_next_f.left_elbow),
+                        right_elbow=lerp(last_f.right_elbow, first_next_f.right_elbow),
+                        left_wrist=lerp(last_f.left_wrist, first_next_f.left_wrist),
+                        right_wrist=lerp(last_f.right_wrist, first_next_f.right_wrist),
+                        left_hand=lerp_hand(last_f.left_hand, first_next_f.left_hand),
+                        right_hand=lerp_hand(last_f.right_hand, first_next_f.right_hand),
+                        is_left_active=last_f.is_left_active or first_next_f.is_left_active,
+                        is_right_active=last_f.is_right_active or first_next_f.is_right_active,
+                        particle_trail=[],
+                        touch_contacts=[],
+                        right_hand_z=last_f.right_hand_z + (first_next_f.right_hand_z - last_f.right_hand_z) * smooth_alpha,
+                        left_hand_z=last_f.left_hand_z + (first_next_f.left_hand_z - last_f.left_hand_z) * smooth_alpha
+                    )
+                    compound_frames.append(trans_frame)
+
+        return compound_frames
+

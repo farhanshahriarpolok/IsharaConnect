@@ -385,15 +385,19 @@ class SpatialNormalizer:
 
         if art_type in ["WRIST", "CARPAL"] and not is_facial_anchor:
             return lm[0]
-        elif art_type in ["PALM_CENTER", "PALM"] and not is_facial_anchor:
+        elif art_type in ["PALM_CENTER", "PALM", "PALM_CLASP"] and not is_facial_anchor:
             return (lm[0] + lm[9]) / 2.0
-        elif art_type in ["INDEX_TIP", "POINT", "FINGERTIP_LEADER"]:
+        elif art_type in ["INDEX_TIP", "POINT", "FINGERTIP_LEADER", "INDEX_HOOK", "PARALLEL_INDEX_TOUCH", "DUAL_INDEX_TOUCH"]:
             return lm[8]
         elif art_type in ["THUMB_TIP"]:
             return lm[4]
         elif art_type in ["THUMB_INDEX_PINCH", "PINCH"]:
             return (lm[4] + lm[8]) / 2.0
+        elif art_type in ["DUAL_INDEX_MIDDLE", "V_SHAPE_MIDDLE_INDEX"]:
+            return (lm[8] + lm[12]) / 2.0
         elif art_type in ["FINGERTIP", "FINGERTIPS", "FINGERTIPS_FLAT"]:
+            if len(lm) > 16 and np.any(lm[16]):
+                return (lm[8] + lm[12] + lm[16]) / 3.0
             return (lm[8] + lm[12]) / 2.0
 
         # AUTO mode: for all facial signs, strictly choose from fingertip contact candidates (NEVER wrist 0)

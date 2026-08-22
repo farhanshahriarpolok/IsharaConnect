@@ -88,11 +88,18 @@ class SignCorrectionAdvisor:
             face_landmarks, spec
         )
 
+        # ── Channel 6: Dynamic Motion Trajectory ─────────────────────────────
+        motion_type = spec.get("motion_type", "STATIC_HOLD")
+        motion_score, motion_status, motion_hint = self._eval_motion_trajectory(
+            motion_type, active_lm, trajectory_3d
+        )
+
         channel_scores = {
             "handedness": hand_score,
             "position": pos_score,
             "fingers": finger_score,
             "orientation": palm_score,
+            "motion": motion_score,
             "facs": facs_score,
             "handshape": finger_score,  # Alias for backward compatibility
         }
@@ -102,16 +109,18 @@ class SignCorrectionAdvisor:
             "position": pos_status,
             "fingers": finger_status,
             "orientation": palm_status,
+            "motion": motion_status,
             "facs": facs_status,
             "handshape": finger_status,  # Alias for backward compatibility
         }
 
-        # Weighted Composite Score: Fingers (40%) + Anchor Position (30%) + Palm Direction (20%) + FACS (10%)
+        # Weighted Composite Score: Fingers (35%) + Anchor Position (30%) + Palm Direction (15%) + Motion (10%) + FACS (10%)
         # Handedness acts as a hard gating multiplier
         raw_composite = (
-            finger_score * 0.40 +
+            finger_score * 0.35 +
             pos_score * 0.30 +
-            palm_score * 0.20 +
+            palm_score * 0.15 +
+            motion_score * 0.10 +
             facs_score * 0.10
         )
         match_score = round(raw_composite * hand_score * 100.0, 1)
@@ -135,6 +144,8 @@ class SignCorrectionAdvisor:
             hints.extend(finger_hints)
             if palm_hint:
                 hints.append(palm_hint)
+            if motion_hint:
+                hints.append(motion_hint)
             if facs_hint:
                 hints.append(facs_hint)
         else:
@@ -327,6 +338,53 @@ class SignCorrectionAdvisor:
             if is_mandatory:
                 return 0.0, "error", hint
             return 0.8, "ok", None
+
+        return 1.0, "ok", None
+
+    # ── Channel 6: Dynamic Motion Trajectory Evaluation ──────────────────────
+
+    def _eval_motion_trajectory(
+        self,
+        motion_type: str,
+        active_lm: Optional[np.ndarray],
+        trajectory_3d: Optional[np.ndarray] = None
+    ) -> Tuple[float, str, Optional[str]]:
+        """Evaluates temporal motion trajectory dynamics (TAP_TWICE, HIGH_FREQ_VIBRATION, PULL_RIGHT, etc.)."""
+        if motion_type in ["STATIC_HOLD", "NONE", "AUTO"]:
+            return 1.0, "ok", None
+
+        if trajectory_3d is None or len(trajectory_3d) < 5:
+            # Neutral/default pass when trajectory buffer is accumulating
+            return 1.0, "ok", None
+
+        traj = np.array(trajectory_3d, dtype=np.float32)
+
+        if motion_type in ["TAP_TWICE", "DOUBLE_TAP"]:
+            # Detect 2 discrete peaks/valleys in z/y
+            diffs = np.diff(traj[:, 1])
+            zero_crossings = np.where(np.diff(np.sign(diffs)))[0]
+            if len(zero_crossings) >= 2:
+                return 1.0, "ok", None
+            return 0.75, "warn", "⚠️ হাত দিয়ে দুবার মৃদু স্পর্শ (Double Tap) করুন।"
+
+        elif motion_type == "HIGH_FREQ_VIBRATION":
+            # Detect high frequency oscillation in x
+            diffs = np.diff(traj[:, 0])
+            zero_crossings = np.where(np.diff(np.sign(diffs)))[0]
+            if len(zero_crossings) >= 3:
+                return 1.0, "ok", None
+            return 0.70, "warn", "⚠️ দ্রুত কম্পনশীল গতি (Vibration) বজায় রাখুন।"
+
+        elif motion_type in ["PULL_RIGHT", "PULL_DOWN", "DOWNWARD_STROKE", "ARC_FORWARD"]:
+            delta_x = float(traj[-1, 0] - traj[0, 0])
+            delta_y = float(traj[-1, 1] - traj[0, 1])
+            if motion_type == "PULL_RIGHT" and delta_x > 0.02:
+                return 1.0, "ok", None
+            elif motion_type in ["PULL_DOWN", "DOWNWARD_STROKE"] and delta_y > 0.02:
+                return 1.0, "ok", None
+            elif motion_type == "ARC_FORWARD":
+                return 1.0, "ok", None
+            return 0.80, "warn", "⚠️ নির্দেশিত গতিশীল পথ অনুসরণ করুন।"
 
         return 1.0, "ok", None
 

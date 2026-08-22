@@ -117,7 +117,7 @@ def test_advisor_dactylology_consonant_ka():
     """Verify single index extended posture for consonant 'ক'."""
     advisor = SignCorrectionAdvisor()
     # Consonant Ka: Index pointing up, others curled in neutral space
-    hand_ka = _create_mock_hand(wrist_xy=(0.50, 0.48), fingers_up=[False, True, False, False, False])
+    hand_ka = _create_mock_hand(fingertip_xy=(0.50, 0.50), fingers_up=[False, True, False, False, False])
     diag_ka = advisor.evaluate_user_posture("cons_ka", right_landmarks=hand_ka)
     assert diag_ka.match_score >= 75.0
     assert diag_ka.is_match is True

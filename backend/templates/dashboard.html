@@ -305,6 +305,71 @@
       font-size: 13px;
       color: var(--text-muted);
     }
+
+    /* Subtitle flash micro-animation */
+    @keyframes subtitle-flash {
+      0%   { background: rgba(16, 185, 129, 0.20); }
+      100% { background: transparent; }
+    }
+    .subtitle-flash {
+      animation: subtitle-flash 0.4s ease-out;
+      border-radius: 6px;
+    }
+
+    /* Latency badge */
+    .latency-tag {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px;
+      background: rgba(139, 92, 246, 0.18);
+      color: var(--violet);
+      border-radius: 6px;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+
+    /* CSLR feed badge */
+    .cslr-badge {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    /* Transcript panel */
+    .transcript-panel {
+      background: rgba(10, 15, 29, 0.7);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 28px;
+    }
+    .transcript-panel h3 {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .transcript-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .transcript-row {
+      display: grid;
+      grid-template-columns: 80px 130px 1fr;
+      gap: 10px;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.03);
+      transition: background 0.15s;
+    }
+    .transcript-row:hover { background: rgba(255,255,255,0.07); }
+    .tr-ts      { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .tr-speaker { color: var(--cyan); font-weight: 600; }
+    .tr-text    { color: var(--text-main); }
   </style>
 </head>
 <body>
@@ -348,7 +413,11 @@
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">শনাক্তকৃত বাক্য (Continuous CSLR):</div>
           <div class="subtitle-text" id="signer-subtitle">ক্যামেরার সামনে ইশারা করুন...</div>
         </div>
-        <div class="conf-tag" id="confidence-tag">১০০% নির্ভুল</div>
+        <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+          <span class="conf-tag" id="confidence-tag">— নির্ভুলতা</span>
+          <span class="latency-tag" id="latency-tag">⚡ —ms</span>
+          <span class="cslr-badge" id="cslr-feed-badge">◌ CSLR প্রস্তুত</span>
+        </div>
       </div>
 
       <div style="display: flex; gap: 10px;">
@@ -384,9 +453,15 @@
     </div>
   </main>
 
+  <!-- Live Transcript Panel -->
+  <section class="transcript-panel" aria-label="Conversation Transcript">
+    <h3>📝 কথোপকথন লগ (সর্বশেষ ৪০টি বার্তা)</h3>
+    <ul class="transcript-list" id="transcript-list"></ul>
+  </section>
+
   <!-- Footer -->
   <footer>
-    <div>রিয়েল-টাইম কনফরমার CSLR ONNX পাইপলাইন &bull; COTURN NAT Traversal অ্যাক্টিভ &bull; মাস্টার লেক্সিকন: {{ signs_count }} সাইন</div>
+    <div>রিয়েল-টাইম Beam Search CTC CSLR &bull; COTURN NAT Traversal &bull; মাস্টার লেক্সিকন: {{ signs_count }} সাইন &bull; Ban-Sign-Sent-9K ইন্টিগ্রেটেড</div>
     <div>IsharaConnect &copy; 2026 Bangladesh National BdSL Initiative</div>
   </footer>
 

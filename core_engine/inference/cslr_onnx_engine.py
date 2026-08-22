@@ -2,7 +2,8 @@
 
 Executes sub-35ms quantized (FP16/INT8) ST-GCN / Conformer-CTC inference on a sliding
 window buffer (32/64 frames) of 75-node normalized landmark vectors (Pose, Hands, Face),
-decoding gloss tokens and mapping them to syntactically normalized Bengali sentences.
+decoding gloss tokens via CTC Beam Search (W=10, α=0.6, β=1.2) with Bengali LM rescoring
+and mapping them to syntactically normalized Bengali sentences.
 """
 
 import asyncio
@@ -19,6 +20,8 @@ try:
     import onnxruntime as ort
 except ImportError:
     ort = None
+
+from core_engine.inference.ctc_beam_decoder import CTCBeamSearchDecoder, DEFAULT_BDSL_VOCAB
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +103,15 @@ class CSLROnnxEngine:
             "পানি খাওয়া": "আমাকে পানি দিন।"
         }
 
+        # CTC Beam Search Decoder (W=10, α=0.6, β=1.2 with Bengali LM)
+        self.decoder = CTCBeamSearchDecoder(
+            vocab=self.vocab,
+            beam_width=10,
+            alpha=0.6,
+            beta=1.2,
+            use_lm=True
+        )
+
         self._init_session()
 
     def _init_session(self) -> None:
@@ -123,21 +135,13 @@ class CSLROnnxEngine:
         arr = np.array(window_32x75x3, dtype=np.float32)
 
         if self.session is not None:
-            # Prepare tensor: (1, 32, 225)
+            # Prepare tensor: (1, T, 225)
             inp_tensor = arr.reshape(1, self.window_size, -1)
             inp_name = self.session.get_inputs()[0].name
-            logits = self.session.run(None, {inp_name: inp_tensor})[0]  # (1, 32, num_classes)
-            # Greedy CTC decode: argmax -> collapse repeats -> remove <blank> (0)
-            best_ids = np.argmax(logits[0], axis=-1)
-            collapsed = []
-            prev = None
-            for idx in best_ids:
-                if idx != prev and idx != 0:
-                    collapsed.append(idx)
-                prev = idx
-            tokens = [self.vocab[i] for i in collapsed if i < len(self.vocab)]
-            gloss = " ".join(tokens) if tokens else ""
-            conf = float(np.max(logits))
+            logits = self.session.run(None, {inp_name: inp_tensor})[0]  # (1, T, num_classes)
+            # CTC Beam Search Decode (replaces greedy argmax)
+            logits_T_C = logits[0]  # shape (T, C)
+            gloss, conf = self.decoder.decode(logits_T_C)
         else:
             # Deterministic simulation with realistic latency
             await asyncio.sleep(0.015)

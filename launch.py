@@ -61,12 +61,14 @@ def free_port(port: int = 8000):
 
 
 def stream_logs(proc: subprocess.Popen, prefix: str = "[Backend]"):
-    """Reads stdout lines from a subprocess and prints them in real time."""
+    """Reads stdout/stderr lines from a subprocess and prints them in real time."""
     try:
         if proc.stdout:
             for line in iter(proc.stdout.readline, ""):
                 if line:
-                    print(f"\033[90m{prefix} {line.strip()}\033[0m", flush=True)
+                    clean_line = line.strip()
+                    if clean_line:
+                        print(f"\033[90m{prefix} {clean_line}\033[0m", flush=True)
                 else:
                     break
     except Exception as e:
@@ -76,7 +78,7 @@ def stream_logs(proc: subprocess.Popen, prefix: str = "[Backend]"):
 def check_server_health(
     urls: List[str],
     process: Optional[subprocess.Popen] = None,
-    retries: int = 10,
+    retries: int = 90,
     delay: float = 0.5
 ) -> bool:
     """Polls backend health endpoints until ready or process crashes."""
@@ -94,7 +96,8 @@ def check_server_health(
             except Exception:
                 pass
 
-        logger.info("Waiting for backend server to start... (%d/%d)", i + 1, retries)
+        if (i + 1) % 6 == 0 or i == 0:
+            logger.info("Waiting for backend server to start... (%d/%d)", i + 1, retries)
         time.sleep(delay)
 
     return False
@@ -102,10 +105,10 @@ def check_server_health(
 
 def _wait_for_backend(
     port: int = 8000,
-    timeout: int = 10,
+    timeout: int = 45,
     process: Optional[subprocess.Popen] = None
 ) -> bool:
-    """Throttled health check waiting for backend with strict 0.5s intervals."""
+    """Throttled health check waiting for backend with strict 0.5s intervals (45s window)."""
     retries = max(1, int(timeout / 0.5))
     urls = [
         f"http://127.0.0.1:{port}/health",
@@ -152,8 +155,8 @@ def main():
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
-    # 3. Wait for backend to be healthy
-    if not _wait_for_backend(port=8000, timeout=10, process=backend_process):
+    # 3. Wait for backend to be healthy (up to 45s)
+    if not _wait_for_backend(port=8000, timeout=45, process=backend_process):
         logger.error("Backend server failed to start within the expected time. Aborting.")
         cleanup()
 

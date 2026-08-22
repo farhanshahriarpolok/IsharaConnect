@@ -242,7 +242,75 @@ class MasterBdSLLexicon:
             })
         }
 
+    def expand_with_bornildb_vocab(self, vocab_tokens: List[str]) -> Dict[str, Any]:
+        """Registers BornilDB continuous vocabulary tokens into the lexicon for coverage tracking.
+
+        Tokens not already in the lexicon are added as lightweight CSLR-only entries
+        (without full articulatory specs) and tagged with source='BornilDB_v1.0'.
+
+        Args:
+            vocab_tokens: List of Bengali gloss tokens from the BornilDB corpus.
+
+        Returns:
+            Dictionary with 'added', 'already_present', and 'total_known' counts.
+        """
+        added: List[str] = []
+        already_present: List[str] = []
+
+        for token in vocab_tokens:
+            clean = token.strip()
+            if not clean:
+                continue
+            if clean in self.signs_by_bn:
+                already_present.append(clean)
+                continue
+            # Create a lightweight CSLR-only entry
+            slug = clean.replace(" ", "_").lower()
+            entry: Dict[str, Any] = {
+                "slug": f"cslr_{slug}",
+                "label_bn": clean,
+                "label_en": clean,
+                "category": "CSLR Continuous Vocab",
+                "source": "BornilDB_v1.0",
+                "handedness": "single",
+                "articulator_type": "INDEX_TIP",
+                "motion_type": "STATIC_HOLD",
+                "target_body_anchor": "NEUTRAL_SPACE"
+            }
+            self.signs_by_slug[f"cslr_{slug}"] = entry
+            self.signs_by_bn[clean] = entry
+            cat = "CSLR Continuous Vocab"
+            if cat not in self.signs_by_category:
+                self.signs_by_category[cat] = []
+            self.signs_by_category[cat].append(entry)
+            added.append(clean)
+
+        return {
+            "added": len(added),
+            "already_present": len(already_present),
+            "total_known": len(self.signs_by_bn),
+            "new_tokens": added
+        }
+
+    def get_bornildb_coverage(self, vocab_tokens: List[str]) -> Dict[str, Any]:
+        """Computes coverage of BornilDB vocabulary against the current master lexicon.
+
+        Returns:
+            Dict with 'covered', 'missing', 'coverage_pct', and 'missing_tokens'.
+        """
+        covered = [t for t in vocab_tokens if t.strip() in self.signs_by_bn]
+        missing = [t for t in vocab_tokens if t.strip() not in self.signs_by_bn]
+        total = len(vocab_tokens)
+        return {
+            "total": total,
+            "covered": len(covered),
+            "missing": len(missing),
+            "coverage_pct": round(100.0 * len(covered) / max(total, 1), 2),
+            "missing_tokens": missing[:50]  # First 50 for brevity
+        }
+
 
 # Module-level singleton
 master_lexicon = MasterBdSLLexicon()
+
 

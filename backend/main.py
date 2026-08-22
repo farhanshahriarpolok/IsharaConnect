@@ -29,6 +29,7 @@ from backend.api.v1.progress import router as progress_router
 from backend.api.v1.exams import router as exams_router
 from backend.api.v1.certificates import router as certificates_router
 from backend.api.v1.rooms import router as rooms_router
+from backend.api.v1.nlp import router as nlp_router
 from backend.db.session import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Request, Depends, Query
@@ -56,13 +57,14 @@ app.include_router(api_router)
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(room_router)
 
-# Include Mega Sprint 19 & 22 routers
+# Include Mega Sprint 19, 22 & 23 routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(progress_router, prefix="/api/v1/progress", tags=["Progress"])
 app.include_router(exams_router, prefix="/api/v1/exams", tags=["Exams"])
 app.include_router(certificates_router, prefix="/api/v1/certificates", tags=["Certificates"])
 app.include_router(rooms_router, prefix="/api/v1/rooms", tags=["Rooms"])
+app.include_router(nlp_router, prefix="/api/v1/nlp", tags=["NLP Translation"])
 
 # Public Web Verification Endpoints (QR Code Target)
 @app.get("/verify/{cert_hash}", response_class=HTMLResponse, tags=["Public Verification"])

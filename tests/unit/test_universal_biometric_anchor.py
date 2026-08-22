@@ -98,8 +98,8 @@ def test_directional_guidance_text():
         face_landmarks=facemesh
     )
     assert hint_low is not None
-    assert "হাত নিচে রয়েছে" in hint_low
-    assert "উপরে" in hint_low
+    assert "আঙুলের ডগা" in hint_low
+    assert "তুলুন" in hint_low
 
     # Hand too high (Forehead y=0.15) when target is Chin (y=0.45)
     hand_high = _create_hand_at_location(0.50, 0.15)
@@ -109,8 +109,8 @@ def test_directional_guidance_text():
         face_landmarks=facemesh
     )
     assert hint_high is not None
-    assert "উপরে" in hint_high
-    assert "নিচে নামিয়ে" in hint_high
+    assert "আঙুলের ডগা" in hint_high
+    assert "নামিয়ে" in hint_high
 
 
 def test_active_articulator_modes():

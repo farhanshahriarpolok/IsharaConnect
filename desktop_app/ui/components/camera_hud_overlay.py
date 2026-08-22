@@ -175,7 +175,7 @@ class CameraHUDOverlay:
         w: int,
         h: int
     ):
-        """Draws pulsing on-face target aura and animated directional vector arrow pointing from hand to anchor."""
+        """Draws pulsing on-face target aura, fingertip tracker ring, and animated directional vector arrow."""
         if not target_anchor or target_anchor.upper() == "NEUTRAL_SPACE":
             return
 
@@ -184,25 +184,33 @@ class CameraHUDOverlay:
         ax = int(np.clip(anchor_3d[0] * w, 0, w - 1))
         ay = int(np.clip(anchor_3d[1] * h, 0, h - 1))
 
-        is_aligned = match_score >= 75.0
-        aura_color = (129, 185, 16) if is_aligned else (212, 182, 6)  # Green vs Cyan
+        is_aligned = match_score >= 80.0
+        target_color = (129, 185, 16) if is_aligned else (212, 182, 6)  # Green vs Cyan
         radius = int(18 + 4 * math.sin(self.pulse_phase * 2))
 
-        # Draw glowing aura rings
-        cv2.circle(frame, (ax, ay), radius + 8, aura_color, 1, cv2.LINE_AA)
-        cv2.circle(frame, (ax, ay), radius, aura_color, 2, cv2.LINE_AA)
+        # 1. Draw glowing Target Facial Feature Aura
+        cv2.circle(frame, (ax, ay), radius + 8, target_color, 1, cv2.LINE_AA)
+        cv2.circle(frame, (ax, ay), radius, target_color, 2, cv2.LINE_AA)
         cv2.circle(frame, (ax, ay), 4, (255, 255, 255), -1, cv2.LINE_AA)
 
-        # Draw directional guidance arrow if user hand is detected but not aligned
-        if active_user_lm is not None and len(active_user_lm) >= 21 and not is_aligned:
-            art_3d = SpatialNormalizer.resolve_active_articulator(active_user_lm, "AUTO")
+        # 2. Draw Active Fingertip Tracker Ring & Directional Arrow
+        if active_user_lm is not None and len(active_user_lm) >= 21:
+            art_3d = SpatialNormalizer.resolve_active_articulator(
+                active_user_lm, "AUTO", anchor_3d=anchor_3d, target_anchor_name=target_anchor
+            )
             hx = int(np.clip(art_3d[0] * w, 0, w - 1))
             hy = int(np.clip(art_3d[1] * h, 0, h - 1))
 
+            fingertip_color = (129, 185, 16) if is_aligned else (11, 158, 245)  # Green vs Amber
+
+            # Draw glowing tracker on fingertip
+            cv2.circle(frame, (hx, hy), 12, fingertip_color, 1, cv2.LINE_AA)
+            cv2.circle(frame, (hx, hy), 6, fingertip_color, -1, cv2.LINE_AA)
+            cv2.circle(frame, (hx, hy), 2, (255, 255, 255), -1, cv2.LINE_AA)
+
             dist = math.hypot(ax - hx, ay - hy)
-            if dist > 30:  # Only draw arrow when hand is away
+            if dist > 25 and not is_aligned:  # Draw directional vector when away
                 cv2.arrowedLine(frame, (hx, hy), (ax, ay), (11, 158, 245), 2, tipLength=0.15, line_type=cv2.LINE_AA)
-                cv2.circle(frame, (hx, hy), 5, (11, 158, 245), -1, cv2.LINE_AA)
 
     def _draw_diagnostic_chips(
         self,

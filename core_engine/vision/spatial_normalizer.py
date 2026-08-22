@@ -270,39 +270,61 @@ class SpatialNormalizer:
     ) -> np.ndarray:
         """Resolves the exact 3D biometric landmark coordinate for a target body anchor.
 
-        MediaPipe Bindings:
-        - CHIN: FaceMesh 152 & 175 (Mental protuberance)
-        - UPPER_LIP / PHILTRUM: FaceMesh 0 & 13
-        - FOREHEAD / GLABELLA: FaceMesh 10 & 151
-        - CHEEK_RIGHT: FaceMesh 234 | CHEEK_LEFT: FaceMesh 454
-        - CHEST_MID: Pose 11 (left shoulder) & 12 (right shoulder) midpoint
+        MediaPipe FaceMesh Keypoint Clusters:
+        - FOREHEAD / GLABELLA: Indices 10, 151, 9 (Mid Forehead)
+        - NOSE: Indices 1, 4, 195 (Nose Tip / Bridge)
+        - UPPER_LIP / PHILTRUM: Indices 0, 13, 267
+        - CHIN / LOWER_CHIN: Indices 152, 175, 199 (Mental protuberance)
+        - CHEEK_RIGHT: Indices 234, 93 | CHEEK_LEFT: Indices 454, 323
+        - CHEST_MID: Pose 11 & 12 midpoint (Mid Sternum)
         - LEFT_WRIST: Pose 15
-        - NEUTRAL_SPACE: Standard center signing envelope
         """
         name = anchor_name.upper()
 
-        # 1. FaceMesh 3D Biometric Landmarks
-        if face_landmarks is not None and len(face_landmarks) >= 152:
+        # 1. FaceMesh 3D Biometric Keypoint Clusters
+        if face_landmarks is not None and len(face_landmarks) >= 153:
             flm = np.array(face_landmarks, dtype=np.float32)
             if flm.shape[-1] == 2:
                 flm = np.pad(flm, ((0, 0), (0, 1)), mode="constant")
 
             if name in ["CHIN", "LOWER_CHIN"]:
-                p1 = flm[152]
-                p2 = flm[175] if len(flm) > 175 else p1
-                return (p1 + p2) / 2.0
+                cluster = [flm[152]]
+                if len(flm) > 175 and np.any(flm[175]):
+                    cluster.append(flm[175])
+                if len(flm) > 199 and np.any(flm[199]):
+                    cluster.append(flm[199])
+                return np.mean(cluster, axis=0)
             elif name in ["UPPER_LIP", "LIP_UPPER", "PHILTRUM"]:
-                p1 = flm[0]
-                p2 = flm[13] if len(flm) > 13 else p1
-                return (p1 + p2) / 2.0
+                cluster = [flm[0]]
+                if len(flm) > 13 and np.any(flm[13]):
+                    cluster.append(flm[13])
+                if len(flm) > 267 and np.any(flm[267]):
+                    cluster.append(flm[267])
+                return np.mean(cluster, axis=0)
+            elif name in ["NOSE", "NOSE_TIP"]:
+                cluster = [flm[1]]
+                if len(flm) > 4 and np.any(flm[4]):
+                    cluster.append(flm[4])
+                if len(flm) > 195 and np.any(flm[195]):
+                    cluster.append(flm[195])
+                return np.mean(cluster, axis=0)
             elif name in ["FOREHEAD", "GLABELLA"]:
-                p1 = flm[10]
-                p2 = flm[151] if len(flm) > 151 else p1
-                return (p1 + p2) / 2.0
+                cluster = [flm[10]]
+                if len(flm) > 151 and np.any(flm[151]):
+                    cluster.append(flm[151])
+                if len(flm) > 9 and np.any(flm[9]):
+                    cluster.append(flm[9])
+                return np.mean(cluster, axis=0)
             elif name in ["CHEEK", "CHEEK_RIGHT"]:
-                return flm[234] if len(flm) > 234 else np.array([0.62, 0.30, 0.0], dtype=np.float32)
+                cluster = [flm[234]] if (len(flm) > 234 and np.any(flm[234])) else [np.array([0.62, 0.30, 0.0], dtype=np.float32)]
+                if len(flm) > 93 and np.any(flm[93]):
+                    cluster.append(flm[93])
+                return np.mean(cluster, axis=0)
             elif name == "CHEEK_LEFT":
-                return flm[454] if len(flm) > 454 else np.array([0.38, 0.30, 0.0], dtype=np.float32)
+                cluster = [flm[454]] if (len(flm) > 454 and np.any(flm[454])) else [np.array([0.38, 0.30, 0.0], dtype=np.float32)]
+                if len(flm) > 323 and np.any(flm[323]):
+                    cluster.append(flm[323])
+                return np.mean(cluster, axis=0)
 
         # 2. Pose 3D Biometric Landmarks
         if pose_landmarks is not None and len(pose_landmarks) >= 16:
@@ -318,7 +340,25 @@ class SpatialNormalizer:
                 return plm[16]
 
         # 3. Standard Fallbacks
-        xy = BODY_ANCHOR_MAP.get(name, (0.50, 0.48))
+        fallback_map = {
+            "CHIN": (0.50, 0.44),
+            "LOWER_CHIN": (0.50, 0.44),
+            "UPPER_LIP": (0.50, 0.38),
+            "LIP_UPPER": (0.50, 0.38),
+            "PHILTRUM": (0.50, 0.38),
+            "NOSE": (0.50, 0.32),
+            "FOREHEAD": (0.50, 0.20),
+            "GLABELLA": (0.50, 0.20),
+            "CHEEK": (0.62, 0.34),
+            "CHEEK_RIGHT": (0.62, 0.34),
+            "CHEEK_LEFT": (0.38, 0.34),
+            "CHEST": (0.50, 0.60),
+            "CHEST_MID": (0.50, 0.60),
+            "LEFT_WRIST": (0.42, 0.65),
+            "RIGHT_WRIST": (0.58, 0.65),
+            "NEUTRAL_SPACE": (0.50, 0.50)
+        }
+        xy = fallback_map.get(name, BODY_ANCHOR_MAP.get(name, (0.50, 0.48)))
         return np.array([xy[0], xy[1], 0.0], dtype=np.float32)
 
     @classmethod
@@ -326,9 +366,10 @@ class SpatialNormalizer:
         cls,
         hand_landmarks: np.ndarray,
         articulator_type: str = "AUTO",
-        anchor_3d: Optional[np.ndarray] = None
+        anchor_3d: Optional[np.ndarray] = None,
+        target_anchor_name: str = "NEUTRAL_SPACE"
     ) -> np.ndarray:
-        """Determines the active 3D contacting point on the hand (Fingertips vs Wrist vs Palm)."""
+        """Determines active contacting point on hand, strictly enforcing fingertip contact for facial signs."""
         if hand_landmarks is None or len(hand_landmarks) < 21:
             return np.array([0.50, 0.50, 0.0], dtype=np.float32)
 
@@ -337,26 +378,43 @@ class SpatialNormalizer:
             lm = np.pad(lm, ((0, 0), (0, 1)), mode="constant")
 
         art_type = articulator_type.upper()
-        if art_type in ["WRIST", "CARPAL"]:
+        is_facial_anchor = target_anchor_name.upper() in [
+            "CHIN", "LOWER_CHIN", "UPPER_LIP", "PHILTRUM", "LIP_UPPER",
+            "NOSE", "FOREHEAD", "GLABELLA", "CHEEK", "CHEEK_RIGHT", "CHEEK_LEFT"
+        ]
+
+        if art_type in ["WRIST", "CARPAL"] and not is_facial_anchor:
             return lm[0]
-        elif art_type in ["PALM_CENTER", "PALM"]:
+        elif art_type in ["PALM_CENTER", "PALM"] and not is_facial_anchor:
             return (lm[0] + lm[9]) / 2.0
-        elif art_type in ["INDEX_TIP", "POINT"]:
+        elif art_type in ["INDEX_TIP", "POINT", "FINGERTIP_LEADER"]:
             return lm[8]
         elif art_type in ["THUMB_TIP"]:
             return lm[4]
-        elif art_type in ["FINGERTIP", "FINGERTIPS"]:
+        elif art_type in ["THUMB_INDEX_PINCH", "PINCH"]:
+            return (lm[4] + lm[8]) / 2.0
+        elif art_type in ["FINGERTIP", "FINGERTIPS", "FINGERTIPS_FLAT"]:
             return (lm[8] + lm[12]) / 2.0
 
-        # AUTO mode: find closest primary contact candidate to anchor if provided
-        if anchor_3d is not None:
+        # AUTO mode: for all facial signs, strictly choose from fingertip contact candidates (NEVER wrist 0)
+        if is_facial_anchor or (anchor_3d is not None and anchor_3d[1] < 0.52):
             candidates = [
-                (lm[8] + lm[12]) / 2.0,  # Fingertips
-                (lm[0] + lm[9]) / 2.0,   # Palm Center
-                lm[0],                   # Wrist
-                lm[8],                   # Index Tip
-                lm[4]                    # Thumb Tip
+                (lm[8] + lm[12]) / 2.0,  # Fingertips flat
+                lm[8],                   # Index tip
+                (lm[4] + lm[8]) / 2.0,   # Pinch center
+                lm[4],                   # Thumb tip
+                lm[12]                   # Middle tip
             ]
+        else:
+            candidates = [
+                (lm[8] + lm[12]) / 2.0,
+                (lm[0] + lm[9]) / 2.0,
+                lm[0],
+                lm[8],
+                lm[4]
+            ]
+
+        if anchor_3d is not None:
             dists = [float(np.linalg.norm(c - anchor_3d)) for c in candidates]
             return candidates[int(np.argmin(dists))]
 
@@ -371,24 +429,18 @@ class SpatialNormalizer:
         pose_landmarks: Optional[np.ndarray] = None,
         articulator_type: str = "AUTO"
     ) -> Tuple[float, float, Optional[str], Dict[str, Any]]:
-        """Calculates biometrically normalized alignment score (0.0 - 1.0) and directional hint.
-
-        Args:
-            hand_landmarks: (21, 3) or (21, 2) hand array.
-            target_anchor_name: Target anchor (e.g. "CHIN", "FOREHEAD", "CHEEK_RIGHT", "CHEST_MID").
-            face_landmarks: Optional (468, 3) FaceMesh array.
-            pose_landmarks: Optional (33, 3) Pose array.
-            articulator_type: "AUTO", "FINGERTIPS", "WRIST", "INDEX_TIP", "PALM_CENTER".
-
-        Returns:
-            (score, dist_cm, directional_hint, debug_meta)
-        """
+        """Calculates biometrically normalized fingertip-to-anchor alignment score and explicit Bengali hints."""
         if hand_landmarks is None or len(hand_landmarks) < 21:
             return 0.0, 50.0, "⚠️ হাত ক্যামেরার সামনে প্রস্তুত রাখুন।", {}
 
-        # 1. Resolve 3D Anchor & Articulator
+        # 1. Resolve 3D Anchor & Fingertip-Centric Articulator
         anchor_3d = cls.get_anatomical_anchor_3d(target_anchor_name, face_landmarks, pose_landmarks)
-        articulator_3d = cls.resolve_active_articulator(hand_landmarks, articulator_type, anchor_3d=anchor_3d)
+        articulator_3d = cls.resolve_active_articulator(
+            hand_landmarks,
+            articulator_type,
+            anchor_3d=anchor_3d,
+            target_anchor_name=target_anchor_name
+        )
 
         # 2. Biometric Scale Normalization (Face Height)
         face_height = 0.22
@@ -404,47 +456,61 @@ class SpatialNormalizer:
         dist_cm = round(euclidean_dist * 50.0, 1)
 
         # Score computation:
-        # Perfect (score >= 0.85) when dist_bio <= 0.38 (~6-8cm)
-        # Drop smoothly to 0.0 when dist_bio >= 0.90 (~20-22cm)
-        if dist_bio <= 0.38:
-            score = 1.0 - (dist_bio / 0.38) * 0.15  # 0.85 - 1.00
+        # Match <= 0.22 * H_face -> 92% - 100% score
+        # 0.22 < dist_bio <= 0.45 -> 60% - 92% score
+        # dist_bio > 0.45 -> drops to 0.0 at >= 0.80
+        if dist_bio <= 0.22:
+            score = 1.0 - (dist_bio / 0.22) * 0.08  # 0.92 - 1.00
+        elif dist_bio <= 0.45:
+            score = 0.92 - ((dist_bio - 0.22) / 0.23) * 0.32  # 0.60 - 0.92
         else:
-            score = max(0.0, 0.85 - ((dist_bio - 0.38) / 0.52) * 0.85)
+            score = max(0.0, 0.60 - ((dist_bio - 0.45) / 0.35) * 0.60)  # 0.00 - 0.60
 
-        # 4. Directional Guidance Vector
+        # 4. Explicit Directional Guidance Vector mentioning 'আঙুলের ডগা'
         dx = float(articulator_3d[0] - anchor_3d[0])
         dy = float(articulator_3d[1] - anchor_3d[1])  # +y is downwards
 
         anchor_bn_map = {
-            "CHIN": "চিবুক (Chin)",
-            "LOWER_CHIN": "চিবুক",
-            "UPPER_LIP": "ঠোঁটের ওপর (গোঁফের কাছে)",
+            "CHIN": "চিবুকে",
+            "LOWER_CHIN": "চিবুকে",
+            "UPPER_LIP": "ঠোঁটের ওপর",
             "LIP_UPPER": "ঠোঁটের ওপর",
             "PHILTRUM": "ঠোঁটের ওপর",
-            "CHEEK": "ডান গাল (Right Cheek)",
-            "CHEEK_RIGHT": "ডান গাল (Right Cheek)",
-            "CHEEK_LEFT": "বাম গাল (Left Cheek)",
-            "FOREHEAD": "কপাল (Forehead)",
-            "GLABELLA": "কপাল",
-            "CHEST": "বুকের সামনে (Chest)",
-            "CHEST_MID": "বুকের মাঝে (Mid-Chest)",
-            "LEFT_WRIST": "বাম হাতের কবজি (Left Wrist)",
+            "NOSE": "নাকে",
+            "CHEEK": "ডান গালে",
+            "CHEEK_RIGHT": "ডান গালে",
+            "CHEEK_LEFT": "বাম গালে",
+            "FOREHEAD": "কপালে",
+            "GLABELLA": "কপালে",
+            "CHEST": "বুকের সামনে",
+            "CHEST_MID": "বুকের মাঝে",
+            "LEFT_WRIST": "বাম হাতের কবজিতে",
             "NEUTRAL_SPACE": "ক্যামেরা ফ্রেমের মাঝে"
         }
         loc_str = anchor_bn_map.get(target_anchor_name.upper(), "নির্দিষ্ট স্থানে")
+        t_name = target_anchor_name.upper()
 
         hint = None
         if score < 0.75:
-            if dy > 0.12:
-                hint = f"⚠️ হাত নিচে রয়েছে। হাতটি উপরে {loc_str}-এর কাছে তুলুন।"
-            elif dy < -0.12:
-                hint = f"⚠️ হাত অনেক উপরে (কপালে) রয়েছে। হাতটি নিচে নামিয়ে {loc_str}-এর কাছে আনুন।"
-            elif dx > 0.10:
-                hint = f"⚠️ হাতটি একটু ডানে/বামে সমন্বয় করে {loc_str}-এর কাছে আনুন।"
-            elif dx < -0.10:
-                hint = f"⚠️ হাতটি একটু সমন্বয় করে {loc_str}-এর কাছে আনুন।"
+            # Special case 1: Forehead target but hand at chin (e.g. Salam)
+            if t_name in ["FOREHEAD", "GLABELLA"] and articulator_3d[1] > 0.35:
+                hint = f"⚠️ আঙুলের ডগা চিবুকে রয়েছে। আঙুলের ডগা উপরে {loc_str} স্পর্শ করুন।"
+            # Special case 2: Chin target but hand at forehead (e.g. Dhonnobad)
+            elif t_name in ["CHIN", "LOWER_CHIN", "UPPER_LIP"] and articulator_3d[1] < 0.28:
+                hint = f"⚠️ আঙুলের ডগা কপালে রয়েছে। আঙুলের ডগা নামিয়ে {loc_str} স্পর্শ করুন।"
+            # Special case 3: Hand at chest for face sign
+            elif articulator_3d[1] >= 0.58 and t_name in ["CHIN", "UPPER_LIP", "NOSE", "FOREHEAD", "CHEEK", "CHEEK_RIGHT"]:
+                hint = f"⚠️ আঙুলের ডগা বুকের কাছে। আঙুলের ডগা {loc_str} তুলুন।"
+            elif dy > 0.10:
+                hint = f"⚠️ আঙুলের ডগা নিচে রয়েছে। আঙুলের ডগা উপরে {loc_str} তুলুন।"
+            elif dy < -0.10:
+                hint = f"⚠️ আঙুলের ডগা অনেক উপরে রয়েছে। আঙুলের ডগা নামিয়ে {loc_str} স্পর্শ করুন।"
+            elif dx > 0.08:
+                hint = f"⚠️ আঙুলের ডগা একটু ডানে/বামে সমন্বয় করে {loc_str} স্পর্শ করুন।"
+            elif dx < -0.08:
+                hint = f"⚠️ আঙুলের ডগা একটু সমন্বয় করে {loc_str} স্পর্শ করুন।"
             else:
-                hint = f"⚠️ হাতটি আরও কাছে {loc_str}-এর সাথে স্পর্শ/সন্নিবেশ করুন।"
+                hint = f"⚠️ আঙুলের ডগা আরও কাছে এনে {loc_str} স্পর্শ করুন।"
 
         debug_meta = {
             "anchor_3d": anchor_3d.tolist(),

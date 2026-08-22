@@ -7,6 +7,7 @@ Tests:
 4. Integration with EnsemblePredictor multi-modal dactylology & syntax pipeline.
 """
 
+from typing import Optional
 import numpy as np
 import pytest
 
@@ -15,13 +16,17 @@ from core_engine.inference.ensemble_predictor import EnsemblePredictor
 
 
 def _create_mock_hand(
-    wrist_xy: tuple = (0.50, 0.38),
+    wrist_xy: tuple = (0.50, 0.60),
     fingers_up: list = [True, True, True, True, True],
-    palm_z: float = 0.0
+    palm_z: float = 0.0,
+    fingertip_xy: Optional[tuple] = None
 ) -> np.ndarray:
     """Creates a synthetic 21-landmark hand array for testing."""
     lm = np.zeros((21, 3), dtype=np.float32)
-    wx, wy = wrist_xy
+    if fingertip_xy is not None:
+        wx, wy = fingertip_xy[0], fingertip_xy[1] + 0.17
+    else:
+        wx, wy = wrist_xy
     lm[0] = [wx, wy, palm_z]  # Wrist
 
     # Thumb: 1, 2, 3, 4
@@ -57,8 +62,8 @@ def _create_mock_hand(
 def test_advisor_perfect_posture_dhonnobad():
     """Verify perfect flat-palm chin posture for 'dhonnobad' yields >80% match score."""
     advisor = SignCorrectionAdvisor()
-    # Chin position is (0.50, 0.38), all fingers extended
-    hand = _create_mock_hand(wrist_xy=(0.50, 0.38), fingers_up=[True, True, True, True, True])
+    # Chin position is (0.50, 0.44), all fingers extended
+    hand = _create_mock_hand(fingertip_xy=(0.50, 0.44), fingers_up=[True, True, True, True, True])
 
     diag = advisor.evaluate_user_posture("dhonnobad", right_landmarks=hand)
     assert isinstance(diag, DiagnosticResult)
@@ -72,8 +77,8 @@ def test_advisor_perfect_posture_dhonnobad():
 def test_advisor_incorrect_position_chin_vs_chest():
     """Verify placing hand at chest instead of chin lowers position score and triggers hint."""
     advisor = SignCorrectionAdvisor()
-    # Chest position (0.50, 0.75) instead of Chin (0.50, 0.38)
-    hand_wrong_pos = _create_mock_hand(wrist_xy=(0.50, 0.75), fingers_up=[True, True, True, True, True])
+    # Chest position (0.50, 0.70) instead of Chin (0.50, 0.44)
+    hand_wrong_pos = _create_mock_hand(fingertip_xy=(0.50, 0.70), fingers_up=[True, True, True, True, True])
 
     diag = advisor.evaluate_user_posture("dhonnobad", right_landmarks=hand_wrong_pos)
     assert diag.channel_scores["position"] < 0.60
@@ -83,8 +88,8 @@ def test_advisor_incorrect_position_chin_vs_chest():
 def test_advisor_incorrect_handshape_curled_fingers():
     """Verify curled fingers for an open-palm sign triggers finger extension advice."""
     advisor = SignCorrectionAdvisor()
-    # Fist (all fingers curled)
-    hand_fist = _create_mock_hand(wrist_xy=(0.50, 0.38), fingers_up=[False, False, False, False, False])
+    # Fist at chin
+    hand_fist = _create_mock_hand(fingertip_xy=(0.50, 0.44), fingers_up=[False, False, False, False, False])
 
     diag = advisor.evaluate_user_posture("dhonnobad", right_landmarks=hand_fist)
     assert diag.channel_scores["handshape"] < 0.50
@@ -95,14 +100,14 @@ def test_advisor_father_vs_mother_posture():
     """Verify distinct anchor and finger requirements for 'baba' (mustache) vs 'ma' (cheek)."""
     advisor = SignCorrectionAdvisor()
 
-    # Father: index extended at philtrum / upper lip (0.50, 0.32)
-    hand_baba = _create_mock_hand(wrist_xy=(0.50, 0.32), fingers_up=[False, True, False, False, False])
+    # Father: index extended at philtrum / upper lip (0.50, 0.38)
+    hand_baba = _create_mock_hand(fingertip_xy=(0.50, 0.38), fingers_up=[False, True, False, False, False])
     diag_baba = advisor.evaluate_user_posture("baba", right_landmarks=hand_baba)
     assert diag_baba.match_score >= 70.0
     assert diag_baba.channel_status["handshape"] == "ok"
 
-    # Mother: open palm at right cheek (0.65, 0.30)
-    hand_ma = _create_mock_hand(wrist_xy=(0.65, 0.30), fingers_up=[True, True, True, True, True])
+    # Mother: open palm at right cheek (0.62, 0.34)
+    hand_ma = _create_mock_hand(fingertip_xy=(0.62, 0.34), fingers_up=[True, True, True, True, True])
     diag_ma = advisor.evaluate_user_posture("ma", right_landmarks=hand_ma)
     assert diag_ma.match_score >= 70.0
     assert diag_ma.channel_status["position"] == "ok"

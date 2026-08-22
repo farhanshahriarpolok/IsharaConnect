@@ -20,6 +20,7 @@ from core_engine.dsl.bdsl_v3_spec import (
     BdSLTemporalPhases,
     BdSLMorphosyntax,
 )
+from core_engine.dsl.procedural_synthesizer import HyperKinematicSynthesizer
 
 __all__ = [
     "load_bdsl_dictionary",
@@ -36,4 +37,5 @@ __all__ = [
     "BdSLContactPhysics",
     "BdSLTemporalPhases",
     "BdSLMorphosyntax",
+    "HyperKinematicSynthesizer",
 ]

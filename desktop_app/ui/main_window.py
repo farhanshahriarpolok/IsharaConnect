@@ -30,8 +30,11 @@ from desktop_app.ui.theme import (
 )
 from desktop_app.ui.components.badges import PulsingStatusBadge
 from desktop_app.ui.components.sentence_ticker import SentenceTickerWidget
+from desktop_app.ui.components.subtitle_ticker import SubtitleTickerWidget
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 from desktop_app.ui.components.gesture_avatar import GestureAvatarWidget
+from core_engine.nlp.gloss_to_sentence import GlossToSentenceTranslator
+from desktop_app.controllers.audio_player import audio_controller
 
 class IsharaMainWindow(QMainWindow):
     """Main Application Window."""
@@ -47,6 +50,8 @@ class IsharaMainWindow(QMainWindow):
         self.audio_cache = {}
         self.user_settings = load_user_settings()
         self.message_history = []
+        self.translator = GlossToSentenceTranslator()
+        self.subtitle_ticker = None
         
         self._init_ui()
         self._start_workers()
@@ -229,9 +234,10 @@ class IsharaMainWindow(QMainWindow):
         cam_toolbar.addStretch()
         comm_layout.addLayout(cam_toolbar)
         
-        # Lower area: Sentence Ticker HUD
-        self.sentence_ticker = SentenceTickerWidget()
-        comm_layout.addWidget(self.sentence_ticker)
+        # Lower area: Live Subtitle Ticker HUD
+        self.subtitle_ticker = SubtitleTickerWidget()
+        self.sentence_ticker = self.subtitle_ticker
+        comm_layout.addWidget(self.subtitle_ticker)
         return self.comm_view
 
     def _create_speaker_view(self) -> QWidget:
@@ -458,20 +464,34 @@ class IsharaMainWindow(QMainWindow):
                 self.learning_view.process_prediction(data)
             return
 
-        # Update Sentence Ticker
-        if hasattr(self, 'sentence_ticker'):
-            self.sentence_ticker.update_ticker(data)
-        
-        # Send to backend only on new triggers
-        if self.network_worker and data.get("is_stable") and data.get("is_new_trigger", True):
-            label_bn = data.get("label_bn", "")
-            label_en = data.get("label_en", "")
-            if label_bn:
+        label_bn = data.get("label_bn", "").strip()
+        confidence = float(data.get("confidence", 0.9))
+
+        # Real-time Continuous NLP Stream Ingestion
+        if label_bn:
+            stream_res = self.translator.process_stream(label_bn, confidence)
+            if hasattr(self, "subtitle_ticker") and self.subtitle_ticker:
+                self.subtitle_ticker.update_active_glosses(stream_res.get("raw_glosses", []))
+                self.subtitle_ticker.update_translation(
+                    stream_res.get("translated_text", ""),
+                    stream_res.get("confidence", confidence),
+                    stream_res.get("is_final", False)
+                )
+
+            # Automated Continuous Bengali Vocalization upon sentence boundary finalization
+            if stream_res.get("is_final") and stream_res.get("translated_text"):
+                translated_bn = stream_res["translated_text"]
                 self.message_history.append({
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "sender": "Signer",
-                    "text": f"{label_bn} ({label_en})" if label_en else label_bn
+                    "text": translated_bn
                 })
+                if not self.user_settings.get("tts_muted", False):
+                    clean_audio_text = translated_bn.rstrip("।!?")
+                    audio_controller.speak_bengali(clean_audio_text)
+        
+        # Send to backend only on new triggers
+        if self.network_worker and data.get("is_stable") and data.get("is_new_trigger", True):
             try:
                 self.network_worker.send_sign_event(data)
             except Exception as e:
@@ -639,8 +659,12 @@ class IsharaMainWindow(QMainWindow):
 
     @pyqtSlot()
     def _clear_hud(self):
-        if hasattr(self, 'sentence_ticker'):
+        if hasattr(self, 'subtitle_ticker') and self.subtitle_ticker:
+            self.subtitle_ticker.clear_ticker()
+        elif hasattr(self, 'sentence_ticker') and self.sentence_ticker:
             self.sentence_ticker.clear_ticker()
+        if hasattr(self, 'translator') and self.translator:
+            self.translator.reset()
 
     @pyqtSlot()
     def _revoice_current_sign(self):

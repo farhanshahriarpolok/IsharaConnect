@@ -16,9 +16,11 @@ import numpy as np
 
 from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
+from core_engine.vision.dactylology_engine import DactylologyEngine
 from core_engine.inference.predictor import RealTimePredictor
 from core_engine.inference.minimal_pair_discriminator import MinimalPairDiscriminator
 from core_engine.nlp.master_lexicon import master_lexicon
+from core_engine.nlp.bdsl_syntax_engine import bdsl_syntax_engine
 
 logger = logging.getLogger(__name__)
 
@@ -167,10 +169,28 @@ class EnsemblePredictor:
         self.latch = PredictionLatch()
         self.minimal_pair_discriminator = MinimalPairDiscriminator()
         self.master_lexicon = master_lexicon
+        self.dactylology_engine = DactylologyEngine()
+        self.syntax_engine = bdsl_syntax_engine
 
         self.geometric_threshold = geometric_threshold
         self.sensitivity = sensitivity
         self._apply_sensitivity(sensitivity)
+
+    def process_dactylology(
+        self,
+        raw_character: str,
+        confidence: float,
+        timestamp: Optional[float] = None,
+        trigger_id: str = "T0"
+    ) -> Optional[str]:
+        """Processes fingerspelling characters with trigger modifiers & debounced accumulation."""
+        return self.dactylology_engine.process_character_prediction(
+            raw_character, confidence, timestamp, trigger_id
+        )
+
+    def synthesize_sentence(self, gloss_tokens: List[str]) -> Dict[str, Any]:
+        """Performs visual-spatial syntax transformation and morphological natural sentence synthesis."""
+        return self.syntax_engine.bdsl_gloss_to_text(gloss_tokens)
 
     def set_sensitivity(self, level: str):
         """Sets sensitivity mode: 'high', 'normal', or 'strict'."""

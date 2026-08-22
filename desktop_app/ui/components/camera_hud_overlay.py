@@ -60,7 +60,8 @@ class CameraHUDOverlay:
         left_landmarks: Optional[np.ndarray] = None,
         right_landmarks: Optional[np.ndarray] = None,
         prediction_payload: Optional[Dict[str, Any]] = None,
-        fps: float = 30.0
+        fps: float = 30.0,
+        diagnostic_result: Optional[Any] = None
     ) -> np.ndarray:
         """Draws glowing skeleton landmarks, HUD cards, and tracking telemetry.
 
@@ -70,6 +71,7 @@ class CameraHUDOverlay:
             right_landmarks: (21, 3) normalized right hand coordinates.
             prediction_payload: Optional active prediction dictionary.
             fps: Current FPS reading.
+            diagnostic_result: Optional DiagnosticResult instance from SignCorrectionAdvisor.
 
         Returns:
             Annotated BGR frame.
@@ -110,7 +112,11 @@ class CameraHUDOverlay:
         # 3. Draw Top Tracking Status Pill
         self._draw_status_pill(out_frame, has_left, has_right, safe_fps)
 
-        # 4. Draw Floating Prediction Tag above Active Hand
+        # 4. Draw 4-Channel Articulatory Diagnostic Status Chips & Advice
+        if diagnostic_result is not None:
+            self._draw_diagnostic_chips(out_frame, diagnostic_result, w, h)
+
+        # 5. Draw Floating Prediction Tag above Active Hand
         if prediction_payload and isinstance(prediction_payload, dict):
             active_lm = right_landmarks if has_right else (left_landmarks if has_left else None)
             if active_lm is not None and len(active_lm) > 0:
@@ -125,6 +131,82 @@ class CameraHUDOverlay:
                 self._draw_floating_tag(out_frame, 80, 80, prediction_payload)
 
         return out_frame
+
+    def _draw_diagnostic_chips(
+        self,
+        frame: np.ndarray,
+        diag: Any,
+        w: int,
+        h: int
+    ):
+        """Draws 4-channel diagnostic telemetry chips and corrective guidance."""
+        channel_status = getattr(diag, "channel_status", {}) or {}
+        hints = getattr(diag, "corrective_hints", []) or []
+        match_score = getattr(diag, "match_score", 0.0)
+
+        # Status chip definitions: (label, key)
+        chips = [
+            ("Shape", "handshape"),
+            ("Pos", "position"),
+            ("Palm", "orientation"),
+            ("Face", "facs")
+        ]
+
+        chip_w = 68
+        chip_h = 22
+        start_x = 12
+        y = h - chip_h - 12
+
+        # Draw semi-transparent background bar
+        bar_bg = frame[max(0, y - 4): min(h, y + chip_h + 4), 8: min(w, 8 + len(chips) * (chip_w + 6) + 120)]
+        if bar_bg.size > 0:
+            dark_overlay = np.full_like(bar_bg, (15, 23, 42), dtype=np.uint8)
+            cv2.addWeighted(bar_bg, 0.25, dark_overlay, 0.75, 0, bar_bg)
+
+        for idx, (label, key) in enumerate(chips):
+            cx = start_x + idx * (chip_w + 6)
+            status = channel_status.get(key, "ok")
+            if status == "ok":
+                color_bg = (16, 185, 129)  # Green
+                icon = "OK"
+            elif status == "warn":
+                color_bg = (11, 158, 245)  # Amber
+                icon = "!"
+            else:
+                color_bg = (94, 63, 244)   # Rose
+                icon = "X"
+
+            # Draw chip box
+            cv2.rectangle(frame, (cx, y), (cx + chip_w, y + chip_h), (15, 23, 42), -1)
+            cv2.rectangle(frame, (cx, y), (cx + chip_w, y + chip_h), color_bg, 1)
+
+            text_str = f"{label}: {icon}"
+            cv2.putText(
+                frame,
+                text_str,
+                (cx + 4, y + 15),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.36,
+                (248, 250, 252),
+                1,
+                cv2.LINE_AA
+            )
+
+        # Draw Match Accuracy Score Chip
+        score_x = start_x + len(chips) * (chip_w + 6) + 4
+        score_color = (16, 185, 129) if match_score >= 75.0 else ((11, 158, 245) if match_score >= 50.0 else (94, 63, 244))
+        cv2.rectangle(frame, (score_x, y), (score_x + 90, y + chip_h), (15, 23, 42), -1)
+        cv2.rectangle(frame, (score_x, y), (score_x + 90, y + chip_h), score_color, 1)
+        cv2.putText(
+            frame,
+            f"Match: {int(match_score)}%",
+            (score_x + 6, y + 15),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.38,
+            score_color,
+            1,
+            cv2.LINE_AA
+        )
 
     def _draw_hand_skeleton(
         self,

@@ -34,6 +34,7 @@ from core_engine.vision.dactylology_engine import MASTER_GRAPHEMES, VOWELS, CONS
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
 from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
 from core_engine.vision.spatial_hand_engine import SpatialHandEngine
+from core_engine.vision.sign_correction_advisor import SignCorrectionAdvisor
 from desktop_app.controllers.audio_player import audio_controller
 from desktop_app.controllers.certificate_generator import CertificateGenerator
 from desktop_app.ui.components.circular_gauge import CircularAccuracyGauge
@@ -89,7 +90,8 @@ class AcademyDashboard(QWidget):
         self.streak = 0
         self.exam_signs = []
         self.current_exam_index = 0
-        self.exam_correct = 0
+        self.rule_engine = BdSLGeometricRuleEngine()
+        self.correction_advisor = SignCorrectionAdvisor()
 
         # Simulated Reference Data for ghost overlay
         self.mock_ref_landmarks = [(100 + i * 5, 100 + (i % 5) * 5) for i in range(42)]
@@ -900,27 +902,40 @@ class AcademyDashboard(QWidget):
         left_lm = data.get("left_landmarks")
         right_lm = data.get("right_landmarks")
 
-        # Evaluate target posture directly if landmarks are available
+        # Evaluate target posture with 5-channel SignCorrectionAdvisor
         if left_lm is not None or right_lm is not None:
-            score, is_match, checklist, advice = self.rule_engine.evaluate_target_posture(
-                left_lm, right_lm, self.current_sign_slug
+            diag = self.correction_advisor.evaluate_user_posture(
+                target_sign=self.current_sign_slug,
+                right_landmarks=right_lm,
+                left_landmarks=left_lm,
+                face_landmarks=data.get("face_landmarks"),
+                pose_landmarks=data.get("pose_landmarks"),
+                trajectory_3d=data.get("temporal_buffer")
             )
-            if score is None or not isinstance(score, (int, float)) or math.isnan(score) or math.isinf(score):
-                score = 0.0
-            score = max(0.0, min(1.0, float(score)))
-            pct = int(score * 100.0)
-            self.progress_bar.setValue(pct)
+            pct = diag.match_score
+            self.progress_bar.setValue(int(pct))
             self.match_gauge.set_value(float(pct))
-            
-            if checklist:
-                items_html = " ".join([
-                    f"<span style='color: {'#10B981' if c.get('matched') else '#F43F5E'};'>{'✓' if c.get('matched') else '✗'} {c.get('item_bn')}</span>"
-                    for c in checklist
-                ])
-                self.posture_hud.setHtml(f"<b>চেকলিস্ট:</b> {items_html}")
 
-            if is_match:
-                self.update_posture_coach(advice, state="perfect")
+            status_map = {
+                "ok": ("#10B981", "✓"),
+                "warn": ("#F59E0B", "!"),
+                "error": ("#F43F5E", "✗")
+            }
+            channel_labels = [
+                ("আকৃতি", diag.channel_status.get("handshape", "ok")),
+                ("অবস্থান", diag.channel_status.get("position", "ok")),
+                ("তালুর দিক", diag.channel_status.get("orientation", "ok")),
+                ("অভিব্যক্তি", diag.channel_status.get("facs", "ok")),
+            ]
+            items_html = " ".join([
+                f"<span style='color: {status_map[st][0]}; font-weight: bold;'>[{status_map[st][1]} {lbl}]</span>"
+                for lbl, st in channel_labels
+            ])
+            self.posture_hud.setHtml(f"<b>ডায়াগনস্টিক চ্যানেল:</b> {items_html}")
+
+            if diag.is_match:
+                advice_str = diag.corrective_hints[0] if diag.corrective_hints else "ভঙ্গি নিখুঁত!"
+                self.update_posture_coach(advice_str, state="perfect")
                 if self.practice_running:
                     self.xp_score += 5
                     self.streak += 1
@@ -928,7 +943,8 @@ class AcademyDashboard(QWidget):
                     self.streak_label.setText(f"Streak: {self.streak} 🔥")
                     self.xp_header_lbl.setText(f"XP: {self.xp_score} ⭐")
             else:
-                self.update_posture_coach(advice, state="warning")
+                primary_hint = diag.corrective_hints[0] if diag.corrective_hints else "হাত ক্যামেরার সামনে আনুন..."
+                self.update_posture_coach(primary_hint, state="warning")
             return
 
         # Fallback if only prediction classification dict is forwarded

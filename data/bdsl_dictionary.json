@@ -1,0 +1,306 @@
+{
+  "ধন্যবাদ": {
+    "slug": "dhonnobad",
+    "label_bn": "ধন্যবাদ",
+    "label_en": "Thank you",
+    "tier": "word",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "flat_open_palm",
+      "orientation": "palm_facing_inward",
+      "start_position": "chin_contact",
+      "trajectory": "forward_arc_towards_interlocutor",
+      "end_position": "mid_air_chest_height",
+      "facial_expression": "pleasant_smile",
+      "duration_ms": 1200
+    }
+  },
+  "dhonnobad": {
+    "slug": "dhonnobad",
+    "label_bn": "ধন্যবাদ",
+    "label_en": "Thank you",
+    "tier": "word",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "flat_open_palm",
+      "orientation": "palm_facing_inward",
+      "start_position": "chin_contact",
+      "trajectory": "forward_arc_towards_interlocutor",
+      "end_position": "mid_air_chest_height",
+      "facial_expression": "pleasant_smile",
+      "duration_ms": 1200
+    }
+  },
+  "আসসালামু আলাইকুম": {
+    "slug": "assalamu_alaikum",
+    "label_bn": "আসসালামু আলাইকুম",
+    "label_en": "Peace be upon you / Hello",
+    "tier": "greeting",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "flat_palm_fingers_together",
+      "orientation": "palm_facing_inward",
+      "start_position": "forehead_touch",
+      "trajectory": "outward_gentle_diagonal_rise",
+      "end_position": "forward_high_right",
+      "facial_expression": "respectful_neutral",
+      "duration_ms": 1500
+    }
+  },
+  "assalamu_alaikum": {
+    "slug": "assalamu_alaikum",
+    "label_bn": "আসসালামু আলাইকুম",
+    "label_en": "Peace be upon you / Hello",
+    "tier": "greeting",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "flat_palm_fingers_together",
+      "orientation": "palm_facing_inward",
+      "start_position": "forehead_touch",
+      "trajectory": "outward_gentle_diagonal_rise",
+      "end_position": "forward_high_right",
+      "facial_expression": "respectful_neutral",
+      "duration_ms": 1500
+    }
+  },
+  "স্বাগতম": {
+    "slug": "shagotom",
+    "label_bn": "স্বাগতম",
+    "label_en": "Welcome",
+    "tier": "greeting",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "open_curved_palms",
+      "orientation": "palms_facing_upwards",
+      "start_position": "chest_sides",
+      "trajectory": "inward_welcoming_sweep",
+      "end_position": "central_chest_level",
+      "facial_expression": "warm_welcoming_smile",
+      "duration_ms": 1400
+    }
+  },
+  "shagotom": {
+    "slug": "shagotom",
+    "label_bn": "স্বাগতম",
+    "label_en": "Welcome",
+    "tier": "greeting",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "open_curved_palms",
+      "orientation": "palms_facing_upwards",
+      "start_position": "chest_sides",
+      "trajectory": "inward_welcoming_sweep",
+      "end_position": "central_chest_level",
+      "facial_expression": "warm_welcoming_smile",
+      "duration_ms": 1400
+    }
+  },
+  "কেমন আছেন": {
+    "slug": "kemon_achen",
+    "label_bn": "কেমন আছেন",
+    "label_en": "How are you?",
+    "tier": "conversational",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "bent_five_fingers",
+      "orientation": "palms_facing_body_to_outward",
+      "start_position": "chest_level",
+      "trajectory": "outward_wrist_rotation",
+      "end_position": "open_forward",
+      "facial_expression": "raised_eyebrows_question",
+      "duration_ms": 1300
+    }
+  },
+  "kemon_achen": {
+    "slug": "kemon_achen",
+    "label_bn": "কেমন আছেন",
+    "label_en": "How are you?",
+    "tier": "conversational",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "bent_five_fingers",
+      "orientation": "palms_facing_body_to_outward",
+      "start_position": "chest_level",
+      "trajectory": "outward_wrist_rotation",
+      "end_position": "open_forward",
+      "facial_expression": "raised_eyebrows_question",
+      "duration_ms": 1300
+    }
+  },
+  "ভালো": {
+    "slug": "bhalo",
+    "label_bn": "ভালো",
+    "label_en": "Good / Well",
+    "tier": "word",
+    "handedness": "single",
+    "motion_type": "static",
+    "category": "static",
+    "dsl": {
+      "hand": "right",
+      "handshape": "thumbs_up_fist",
+      "orientation": "thumb_pointing_upwards",
+      "start_position": "chest_height",
+      "trajectory": "stationary_hold",
+      "end_position": "chest_height",
+      "facial_expression": "affirmative_nod",
+      "duration_ms": 1000
+    }
+  },
+  "bhalo": {
+    "slug": "bhalo",
+    "label_bn": "ভালো",
+    "label_en": "Good / Well",
+    "tier": "word",
+    "handedness": "single",
+    "motion_type": "static",
+    "category": "static",
+    "dsl": {
+      "hand": "right",
+      "handshape": "thumbs_up_fist",
+      "orientation": "thumb_pointing_upwards",
+      "start_position": "chest_height",
+      "trajectory": "stationary_hold",
+      "end_position": "chest_height",
+      "facial_expression": "affirmative_nod",
+      "duration_ms": 1000
+    }
+  },
+  "আমি": {
+    "slug": "ami",
+    "label_bn": "আমি",
+    "label_en": "I / Me",
+    "tier": "pronoun",
+    "handedness": "single",
+    "motion_type": "static",
+    "category": "static",
+    "dsl": {
+      "hand": "right",
+      "handshape": "index_finger_extended",
+      "orientation": "index_pointing_to_chest",
+      "start_position": "center_chest",
+      "trajectory": "gentle_index_tap_on_chest",
+      "end_position": "center_chest",
+      "facial_expression": "neutral",
+      "duration_ms": 800
+    }
+  },
+  "ami": {
+    "slug": "ami",
+    "label_bn": "আমি",
+    "label_en": "I / Me",
+    "tier": "pronoun",
+    "handedness": "single",
+    "motion_type": "static",
+    "category": "static",
+    "dsl": {
+      "hand": "right",
+      "handshape": "index_finger_extended",
+      "orientation": "index_pointing_to_chest",
+      "start_position": "center_chest",
+      "trajectory": "gentle_index_tap_on_chest",
+      "end_position": "center_chest",
+      "facial_expression": "neutral",
+      "duration_ms": 800
+    }
+  },
+  "ভাত": {
+    "slug": "bhaat",
+    "label_bn": "ভাত",
+    "label_en": "Rice / Food",
+    "tier": "food",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "upward_bringing_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1200
+    }
+  },
+  "bhaat": {
+    "slug": "bhaat",
+    "label_bn": "ভাত",
+    "label_en": "Rice / Food",
+    "tier": "food",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "upward_bringing_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1200
+    }
+  },
+  "সাহায্য": {
+    "slug": "shahajjo",
+    "label_bn": "সাহায্য",
+    "label_en": "Help / Assist",
+    "tier": "emergency",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "dominant_fist_thumbs_up_on_nondominant_flat_palm",
+      "orientation": "nondominant_palm_up_dominant_fist_up",
+      "start_position": "stomach_level",
+      "trajectory": "upward_lifting_together",
+      "end_position": "chest_level",
+      "facial_expression": "concerned_urgency",
+      "duration_ms": 1100
+    }
+  },
+  "shahajjo": {
+    "slug": "shahajjo",
+    "label_bn": "সাহায্য",
+    "label_en": "Help / Assist",
+    "tier": "emergency",
+    "handedness": "dual",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "both",
+      "handshape": "dominant_fist_thumbs_up_on_nondominant_flat_palm",
+      "orientation": "nondominant_palm_up_dominant_fist_up",
+      "start_position": "stomach_level",
+      "trajectory": "upward_lifting_together",
+      "end_position": "chest_level",
+      "facial_expression": "concerned_urgency",
+      "duration_ms": 1100
+    }
+  }
+}

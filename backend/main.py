@@ -111,6 +111,22 @@ async def serve_root():
     return HTMLResponse("<h1>IsharaConnect Backend Running</h1>")
 
 
+@app.get("/player", response_class=HTMLResponse)
+async def serve_skeleton_player():
+    p = TEMPLATES_DIR / "skeleton_player.html"
+    if p.exists():
+        return FileResponse(p)
+    return HTMLResponse("<h1>Skeleton Player</h1>")
+
+
+@app.get("/avatar", response_class=HTMLResponse)
+async def serve_avatar_viewport():
+    p = TEMPLATES_DIR / "avatar_viewport.html"
+    if p.exists():
+        return FileResponse(p)
+    return HTMLResponse("<h1>Avatar Viewport</h1>")
+
+
 @app.get("/health")
 async def health_check():
     """Ultra-fast root health endpoint for launcher and health probes."""

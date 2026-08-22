@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IsharaConnect - 3D Avatar Viewport</title>
+  <style>
+    body {
+      margin: 0;
+      background: #090d16;
+      color: #f8fafc;
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+    }
+    #viewport-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    .hud-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      z-index: 10;
+    }
+    .hud-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #38bdf8;
+    }
+    .hud-sign {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: #10b981;
+    }
+    .controls {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 10px 18px;
+      border-radius: 9999px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      z-index: 10;
+    }
+    button {
+      background: #38bdf8;
+      color: #020617;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+      transform: translateY(-1px);
+    }
+  </style>
+  <!-- Three.js & OrbitControls CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div id="viewport-container"></div>
+
+  <div class="hud-overlay">
+    <div class="hud-title">Active BdSL Sequence</div>
+    <div class="hud-sign" id="active-gloss">লোড হচ্ছে...</div>
+  </div>
+
+  <div class="controls">
+    <button id="btn-play">Pause</button>
+    <button id="btn-reset">Reset Pose</button>
+  </div>
+
+  <script src="/static/avatar_renderer.js"></script>
+</body>
+</html>

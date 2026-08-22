@@ -77,7 +77,7 @@ def test_ui_components():
 def test_web_templates():
     """Verify HTML templates and static assets exist for WebRTC/Verification."""
     templates_dir = PROJECT_ROOT / "backend" / "templates"
-    required = ["index.html", "verify_certificate.html", "skeleton_player.html"]
+    required = ["index.html", "verify_certificate.html", "skeleton_player.html", "avatar_viewport.html"]
     for t in required:
         assert (templates_dir / t).exists(), f"Missing template: {t}"
     return f"({len(required)} web templates verified)"

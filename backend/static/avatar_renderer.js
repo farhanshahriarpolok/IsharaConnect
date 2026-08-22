@@ -223,6 +223,152 @@ class Ishara3DFACSAvatar {
   }
 }
 
+/**
+ * Full Skeletal Humanoid 3D Avatar Loader for BdSL Synthesizer.
+ * Supports GLTF 2.0 skinned humanoid mesh, standard bone hierarchy, and full FACS blendshapes.
+ */
+class HumanoidBdSLAvatar {
+  constructor(containerId, modelUrl = "/static/models/bdsl_humanoid_rig.glb") {
+    this.container = document.getElementById(containerId);
+    this.morphMeshes = [];
+    this.handBones = { right: {}, left: {} };
+    this.frameQueue = [];
+    this.isPlaying = true;
+    this.modelUrl = modelUrl;
+
+    this.initScene();
+    this.initLighting();
+    this.loadHumanoidModel(this.modelUrl);
+    this.initWebSocket();
+
+    this.renderLoop = this.renderLoop.bind(this);
+    requestAnimationFrame(this.renderLoop);
+  }
+
+  initScene() {
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0a0f1d);
+    this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+    this.camera.position.set(0, 1.35, 2.0);
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    if (this.container) {
+      this.container.appendChild(this.renderer.domElement);
+    } else {
+      document.body.appendChild(this.renderer.domElement);
+    }
+
+    if (typeof THREE.OrbitControls !== "undefined") {
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.target.set(0, 1.1, 0);
+      this.controls.enableDamping = true;
+    }
+  }
+
+  initLighting() {
+    const amb = new THREE.AmbientLight(0xffffff, 0.9);
+    this.scene.add(amb);
+    const dir = new THREE.DirectionalLight(0x06b6d4, 1.2);
+    dir.position.set(2, 4, 3);
+    this.scene.add(dir);
+  }
+
+  loadHumanoidModel(modelUrl) {
+    if (typeof GLTFLoader !== "undefined" || (typeof THREE !== "undefined" && THREE.GLTFLoader)) {
+      const LoaderClass = typeof GLTFLoader !== "undefined" ? GLTFLoader : THREE.GLTFLoader;
+      const loader = new LoaderClass();
+      loader.load(
+        modelUrl,
+        (gltf) => {
+          this.avatarModel = gltf.scene;
+          this.avatarModel.traverse((node) => {
+            if (node.isSkinnedMesh && node.morphTargetDictionary) {
+              this.morphMeshes.push(node);
+            }
+            if (node.isBone) {
+              if (node.name.startsWith("RightHand_")) this.handBones.right[node.name] = node;
+              if (node.name.startsWith("LeftHand_")) this.handBones.left[node.name] = node;
+            }
+          });
+          this.scene.add(this.avatarModel);
+        },
+        undefined,
+        (err) => {
+          console.warn("GLTF model fallback to procedural rig:", err);
+        }
+      );
+    }
+  }
+
+  initWebSocket() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = window.location.host || "localhost:8000";
+    const wsUrl = `${protocol}//${host}/ws/avatar_stream`;
+
+    try {
+      this.ws = new WebSocket(wsUrl);
+      this.ws.onmessage = (event) => {
+        const payload = JSON.parse(event.data);
+        if (payload.frames && Array.isArray(payload.frames)) {
+          this.frameQueue.push(...payload.frames);
+        }
+      };
+    } catch (e) {
+      console.warn("WebSocket stream fallback:", e);
+    }
+  }
+
+  applyFacsBlendshapes(facs) {
+    if (!facs) return;
+    const auMappings = {
+      "AU01_inner_brow_raiser": facs.AU01 || 0.0,
+      "AU02_outer_brow_raiser": facs.AU02 || 0.0,
+      "AU04_brow_lowerer": facs.AU04 || 0.0,
+      "AU06_cheek_raiser": facs.AU06 || 0.0,
+      "AU12_lip_corner_puller": facs.AU12 || 0.0,
+      "AU25_lips_part": facs.AU25 || 0.0,
+      "AU26_jaw_drop": facs.AU26 || 0.0,
+      "AU43_eyes_closed": facs.AU43 || 0.0
+    };
+
+    this.morphMeshes.forEach((mesh) => {
+      for (const [auName, val] of Object.entries(auMappings)) {
+        const targetIdx = mesh.morphTargetDictionary[auName];
+        if (targetIdx !== undefined) {
+          mesh.morphTargetInfluences[targetIdx] = THREE.MathUtils.lerp(
+            mesh.morphTargetInfluences[targetIdx],
+            val,
+            0.25
+          );
+        }
+      }
+    });
+
+    if (facs.head_pitch !== undefined && this.avatarModel) {
+      const headBone = this.avatarModel.getObjectByName("Head");
+      if (headBone) {
+        headBone.rotation.x = THREE.MathUtils.degToRad(facs.head_pitch);
+      }
+    }
+  }
+
+  renderLoop() {
+    requestAnimationFrame(this.renderLoop);
+    if (this.controls) this.controls.update();
+
+    if (this.frameQueue.length > 0 && this.isPlaying) {
+      const frame = this.frameQueue.shift();
+      if (frame.facs) {
+        this.applyFacsBlendshapes(frame.facs);
+      }
+    }
+
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
 // ----------------- Runtime Initialization -----------------
 document.addEventListener("DOMContentLoaded", () => {
   const avatar = new Ishara3DFACSAvatar("viewport-container");

@@ -255,17 +255,68 @@ class BdSLVideoV3Extractor:
         return "HS_FLAT_BENT_THUMB"
 
 
+def process_single_sign(video_path: str, meta: dict) -> dict:
+    """Helper worker for multi-process dataset extraction."""
+    extractor = BdSLVideoV3Extractor(fps_override=60)
+    return extractor.extract_from_video(
+        video_path=video_path,
+        gloss_bn=meta["gloss_bn"],
+        gloss_en=meta["gloss_en"],
+        pos_tag=meta.get("pos", "NOUN"),
+        sign_id=meta.get("sign_id", "BDSL_V3_CUSTOM")
+    )
+
+
+def build_master_dataset(metadata_file: str, output_file: str, max_workers: int = 8):
+    """Compiles complete multi-sign master dataset in parallel using ProcessPoolExecutor."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    with open(metadata_file, "r", encoding="utf-8") as f:
+        metadata_list = json.load(f)
+
+    master_dataset = {}
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(process_single_sign, item["video_path"], item): item.get("gloss_bn", item.get("slug", "unknown"))
+            for item in metadata_list
+        }
+        for future in futures:
+            gloss = futures[future]
+            try:
+                schema = future.result()
+                master_dataset[gloss] = schema
+            except Exception as e:
+                logger.error(f"Error processing {gloss}: {e}")
+
+    out_p = Path(output_file)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(master_dataset, f, ensure_ascii=False, indent=2)
+
+    print(f"✨ Master dataset compiled with {len(master_dataset)} entries -> {output_file}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="BdSL Video-to-v3 Schema Extractor")
-    parser.add_argument("--video", required=True, help="Input video file path")
-    parser.add_argument("--gloss-bn", required=True, help="Bengali gloss label")
-    parser.add_argument("--gloss-en", required=True, help="English gloss slug")
+    parser.add_argument("--video", default=None, help="Input video file path")
+    parser.add_argument("--gloss-bn", default="কাস্টম", help="Bengali gloss label")
+    parser.add_argument("--gloss-en", default="custom", help="English gloss slug")
     parser.add_argument("--output", default=None, help="Output JSON path")
     parser.add_argument("--pos", default="NOUN", help="Part of speech")
     parser.add_argument("--sign-id", default="BDSL_V3_CUSTOM", help="Sign ID code")
+    parser.add_argument("--batch-meta", default=None, help="Path to batch metadata JSON for parallel compilation")
 
     args = parser.parse_args()
-    extractor = BdSLVideoV3Extractor()
+
+    if args.batch_meta and args.output:
+        build_master_dataset(args.batch_meta, args.output)
+        return
+
+    if not args.video:
+        parser.print_help()
+        return
+
+    extractor = BdSLVideoV3Extractor(fps_override=60)
     schema = extractor.extract_from_video(
         video_path=args.video,
         gloss_bn=args.gloss_bn,

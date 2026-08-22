@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from core_engine.nlp.advanced_grammar_engine import AdvancedBdSLGrammarEngine
 from core_engine.nlp.bengali_inflection import BengaliMorphologicalInflector
+from core_engine.nlp.bdsl_syntax_engine import BdSLSyntaxEngine
 from core_engine.nlp.temporal_debouncer import TemporalGlossDebouncer
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class GlossToSentenceTranslator:
         )
         self.grammar_engine = AdvancedBdSLGrammarEngine()
         self.inflector = BengaliMorphologicalInflector()
+        self.syntax_engine = BdSLSyntaxEngine()
 
     def translate(self, glosses: List[str]) -> Dict[str, Any]:
         """Translates an array of isolated BdSL glosses into natural Bengali and English sentences.
@@ -68,7 +70,14 @@ class GlossToSentenceTranslator:
         english_text = grammar_res.get("english", "")
         confidence = grammar_res.get("confidence", 0.92)
 
-        # 2. Apply morphological inflector if verb root is present or rule-based fallback
+        # 2. Syntax engine reverse transformation if grammar engine is unconfident
+        if not bengali_text or confidence < 0.85:
+            syntax_res = self.syntax_engine.bdsl_gloss_to_text(cleaned)
+            if syntax_res.get("bengali"):
+                bengali_text = syntax_res["bengali"]
+                confidence = max(confidence, syntax_res.get("confidence", 0.90))
+
+        # 3. Apply morphological inflector if verb root is present or rule-based fallback
         has_verb_root = any(g in self.inflector.VERB_CONJUGATIONS for g in cleaned)
         if has_verb_root or not bengali_text or confidence < 0.90:
             bengali_text = self.inflector.inflect_tokens(cleaned)

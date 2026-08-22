@@ -17,6 +17,8 @@ import numpy as np
 from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
 from core_engine.inference.predictor import RealTimePredictor
+from core_engine.inference.minimal_pair_discriminator import MinimalPairDiscriminator
+from core_engine.nlp.master_lexicon import master_lexicon
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +165,8 @@ class EnsemblePredictor:
         self.dtw_matcher = DTWMotionMatcher()
         self.neural_predictor = neural_predictor or RealTimePredictor()
         self.latch = PredictionLatch()
+        self.minimal_pair_discriminator = MinimalPairDiscriminator()
+        self.master_lexicon = master_lexicon
 
         self.geometric_threshold = geometric_threshold
         self.sensitivity = sensitivity
@@ -199,6 +203,8 @@ class EnsemblePredictor:
         target_sign: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Evaluates raw prediction without latch state processing."""
+        raw_res: Optional[Dict[str, Any]] = None
+
         # 1. Evaluate Rule-Augmented Geometric Engine
         geom_slug, geom_conf, finger_status = self.geometric_engine.evaluate_rules(
             left_landmarks, right_landmarks
@@ -216,67 +222,87 @@ class EnsemblePredictor:
             if raw_dtw_score is None or not isinstance(raw_dtw_score, (int, float)) or np.isnan(raw_dtw_score) or np.isinf(raw_dtw_score):
                 raw_dtw_score = 0.0
             if dtw_res.get("is_match", False) and raw_dtw_score >= (self.geometric_threshold * 100):
-                meta = SIGN_METADATA.get(candidate, {"bn": candidate, "en": candidate})
-                return {
-                    "label_bn": meta["bn"],
-                    "label_en": meta["en"],
+                meta = SIGN_METADATA.get(candidate) or self.master_lexicon.get_sign_by_gloss(candidate) or {"bn": candidate, "en": candidate}
+                raw_res = {
+                    "label_bn": meta.get("bn") or meta.get("label_bn", candidate),
+                    "label_en": meta.get("en") or meta.get("label_en", candidate),
                     "confidence": max(0.0, min(1.0, float(raw_dtw_score / 100.0))),
                     "is_stable": True,
                     "source": "dtw",
                     "finger_status": finger_status,
                     "checklist": finger_status.get("checklist", []),
-                    "dtw_score": raw_dtw_score
+                    "dtw_score": raw_dtw_score,
+                    "slug": candidate
                 }
 
         # 3. Fast-Path: Unambiguous Static Geometric Pose
-        if geom_slug is not None and geom_conf >= self.geometric_threshold:
-            meta = SIGN_METADATA.get(geom_slug, {"bn": geom_slug, "en": geom_slug})
-            return {
-                "label_bn": meta["bn"],
-                "label_en": meta["en"],
+        if raw_res is None and geom_slug is not None and geom_conf >= self.geometric_threshold:
+            meta = SIGN_METADATA.get(geom_slug) or self.master_lexicon.get_sign_by_gloss(geom_slug) or {"bn": geom_slug, "en": geom_slug}
+            raw_res = {
+                "label_bn": meta.get("bn") or meta.get("label_bn", geom_slug),
+                "label_en": meta.get("en") or meta.get("label_en", geom_slug),
                 "confidence": geom_conf,
                 "is_stable": True,
                 "source": "geometric",
                 "finger_status": finger_status,
-                "checklist": finger_status.get("checklist", [])
+                "checklist": finger_status.get("checklist", []),
+                "slug": geom_slug
             }
 
         # 4. Neural ONNX Classifier Processing
-        neural_pred = None
-        if feature_vector is not None and self.neural_predictor is not None:
+        if raw_res is None and feature_vector is not None and self.neural_predictor is not None:
+            neural_pred = None
             try:
                 neural_pred = self.neural_predictor.process_frame(feature_vector)
             except Exception as e:
                 logger.debug("Neural predictor inference step: %s", e)
 
-        if neural_pred is not None:
-            # Sanitize confidence in neural_pred
-            if "confidence" in neural_pred:
-                n_conf = neural_pred["confidence"]
-                if n_conf is None or not isinstance(n_conf, (int, float)) or np.isnan(n_conf) or np.isinf(n_conf):
-                    neural_pred["confidence"] = 0.0
-                else:
-                    neural_pred["confidence"] = max(0.0, min(1.0, float(n_conf)))
-            # Attach live geometric finger checklist & status to neural prediction
-            neural_pred["source"] = "neural"
-            neural_pred["finger_status"] = finger_status
-            neural_pred["checklist"] = finger_status.get("checklist", [])
-            return neural_pred
+            if neural_pred is not None:
+                if "confidence" in neural_pred:
+                    n_conf = neural_pred["confidence"]
+                    if n_conf is None or not isinstance(n_conf, (int, float)) or np.isnan(n_conf) or np.isinf(n_conf):
+                        neural_pred["confidence"] = 0.0
+                    else:
+                        neural_pred["confidence"] = max(0.0, min(1.0, float(n_conf)))
+                neural_pred["source"] = "neural"
+                neural_pred["finger_status"] = finger_status
+                neural_pred["checklist"] = finger_status.get("checklist", [])
+                raw_res = neural_pred
 
-        # 5. Soft Geometric Fallback (if any geometric pose was partially matched)
-        if geom_slug is not None and geom_conf >= (self.geometric_threshold - 0.15):
-            meta = SIGN_METADATA.get(geom_slug, {"bn": geom_slug, "en": geom_slug})
-            return {
-                "label_bn": meta["bn"],
-                "label_en": meta["en"],
+        # 5. Soft Geometric Fallback
+        if raw_res is None and geom_slug is not None and geom_conf >= (self.geometric_threshold - 0.15):
+            meta = SIGN_METADATA.get(geom_slug) or self.master_lexicon.get_sign_by_gloss(geom_slug) or {"bn": geom_slug, "en": geom_slug}
+            raw_res = {
+                "label_bn": meta.get("bn") or meta.get("label_bn", geom_slug),
+                "label_en": meta.get("en") or meta.get("label_en", geom_slug),
                 "confidence": geom_conf,
                 "is_stable": False,
                 "source": "geometric_tentative",
                 "finger_status": finger_status,
-                "checklist": finger_status.get("checklist", [])
+                "checklist": finger_status.get("checklist", []),
+                "slug": geom_slug
             }
 
-        return None
+        if raw_res is None:
+            return None
+
+        # 6. Fine-Grained Minimal Pair Disambiguation
+        active_slug = raw_res.get("slug") or raw_res.get("label_bn") or raw_res.get("label_en", "")
+        if active_slug and self.minimal_pair_discriminator.identify_cluster([active_slug]):
+            dis_res = self.minimal_pair_discriminator.disambiguate(
+                candidate_slug=active_slug,
+                trajectory_3d=temporal_buffer,
+                left_landmarks=left_landmarks,
+                right_landmarks=right_landmarks
+            )
+            if dis_res:
+                raw_res["label_bn"] = dis_res["resolved_bn"]
+                raw_res["slug"] = dis_res["resolved_slug"]
+                raw_res["confidence"] = max(raw_res["confidence"], dis_res["confidence"])
+                raw_res["minimal_pair_rationale"] = dis_res.get("rationale", "")
+                raw_res["minimal_pair_resolved"] = True
+
+        return raw_res
 
     def predict(
         self,

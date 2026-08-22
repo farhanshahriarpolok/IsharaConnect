@@ -1,0 +1,898 @@
+{
+  "version": "2.8.0",
+  "name": "IsharaConnect Master BdSL Lexicon",
+  "total_signs": 52,
+  "categories": [
+    "Kinship",
+    "Greetings",
+    "Healthcare & Emergency",
+    "Public & Education",
+    "Disaster & Safety",
+    "Action Verbs",
+    "Pronouns & Adjectives"
+  ],
+  "signs": [
+    {
+      "slug": "ma",
+      "label_bn": "মা",
+      "label_en": "Mother",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "B_OPEN_PALM",
+      "stokoe_notation": "ᚢ√‿",
+      "bezier_anchors_3d": {
+        "P0": [0.25, 0.45, 0.15],
+        "P1": [0.15, 0.35, 0.12],
+        "P2": [0.12, 0.32, 0.08],
+        "P3": [0.15, 0.35, 0.12]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.3, "AU12": 0.6, "AU25": 0.2, "head_pitch": 2.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEEK", "touch_type": "DOUBLE_TAP"},
+      "timing_ms": {"prep": 100, "stroke": 300, "retract": 150, "total": 550}
+    },
+    {
+      "slug": "baba",
+      "label_bn": "বাবা",
+      "label_en": "Father",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "INDEX_BENT_HOOK",
+      "stokoe_notation": "ᚢ⌒✕",
+      "bezier_anchors_3d": {
+        "P0": [0.0, 0.38, 0.15],
+        "P1": [-0.08, 0.36, 0.10],
+        "P2": [0.08, 0.36, 0.10],
+        "P3": [0.12, 0.38, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.1, "AU06": 0.0, "AU12": 0.4, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "LIP_UPPER", "touch_type": "MUSTACHE_SWIPE"},
+      "timing_ms": {"prep": 120, "stroke": 350, "retract": 150, "total": 620}
+    },
+    {
+      "slug": "bhai",
+      "label_bn": "ভাই",
+      "label_en": "Brother",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "FIST_A_THUMB_EXTENDED",
+      "stokoe_notation": "ᚢᚦ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.50, 0.20],
+        "P1": [0.15, 0.45, 0.15],
+        "P2": [0.15, 0.42, 0.12],
+        "P3": [0.15, 0.45, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 1.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "CHEST", "touch_type": "TAP"},
+      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+    },
+    {
+      "slug": "bon",
+      "label_bn": "বোন",
+      "label_en": "Sister",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "L_SHAPE",
+      "stokoe_notation": "ᚢᒪ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.45, 0.15],
+        "P1": [0.15, 0.38, 0.12],
+        "P2": [0.15, 0.35, 0.10],
+        "P3": [0.15, 0.38, 0.12]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.5, "AU25": 0.0, "head_pitch": 2.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHIN", "touch_type": "TAP"},
+      "timing_ms": {"prep": 110, "stroke": 300, "retract": 150, "total": 560}
+    },
+    {
+      "slug": "bondhu",
+      "label_bn": "বন্ধু",
+      "label_en": "Friend",
+      "category": "Kinship",
+      "handedness": "dual",
+      "handshape": "INDEX_INTERLOCK",
+      "stokoe_notation": "ᚢ✕⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.0, 0.55, 0.25],
+        "P1": [0.0, 0.50, 0.20],
+        "P2": [0.0, 0.48, 0.18],
+        "P3": [0.0, 0.52, 0.22]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.2, "head_pitch": 3.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INTERLOCK"},
+      "timing_ms": {"prep": 140, "stroke": 400, "retract": 160, "total": 700}
+    },
+    {
+      "slug": "chacha",
+      "label_bn": "চাচা",
+      "label_en": "Uncle",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "INDEX_BENT",
+      "stokoe_notation": "ᚢ⌒ᚦ",
+      "bezier_anchors_3d": {
+        "P0": [0.10, 0.40, 0.15],
+        "P1": [0.00, 0.36, 0.10],
+        "P2": [0.00, 0.36, 0.09],
+        "P3": [0.00, 0.36, 0.09]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "ACUTE_TOUCH"},
+      "timing_ms": {"prep": 100, "stroke": 260, "retract": 140, "total": 500}
+    },
+    {
+      "slug": "dada",
+      "label_bn": "দাদা",
+      "label_en": "Grandfather (Paternal)",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "C_CURVED_HAND",
+      "stokoe_notation": "ᚢᚯ↓",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.36, 0.10],
+        "P1": [0.00, 0.42, 0.12],
+        "P2": [0.00, 0.48, 0.15],
+        "P3": [0.00, 0.52, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "BEARD_LINE", "touch_type": "DOWNWARD_STROKE"},
+      "timing_ms": {"prep": 120, "stroke": 450, "retract": 180, "total": 750}
+    },
+    {
+      "slug": "nana",
+      "label_bn": "নানা",
+      "label_en": "Grandfather (Maternal)",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "C_CURVED_HAND",
+      "stokoe_notation": "ᚢᚯ↓",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.36, 0.10],
+        "P1": [0.00, 0.42, 0.12],
+        "P2": [0.00, 0.48, 0.15],
+        "P3": [0.00, 0.52, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "BEARD_LINE", "touch_type": "DOWNWARD_STROKE"},
+      "timing_ms": {"prep": 120, "stroke": 450, "retract": 180, "total": 750}
+    },
+    {
+      "slug": "debor",
+      "label_bn": "দেবর",
+      "label_en": "Brother-in-law",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "INDEX_EXTENDED_1",
+      "stokoe_notation": "ᚢ☝⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.10, 0.30, 0.12],
+        "P1": [0.00, 0.25, 0.08],
+        "P2": [0.00, 0.25, 0.08],
+        "P3": [0.00, 0.25, 0.08]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NASAL_BRIDGE", "touch_type": "SINGLE_POINT_TOUCH"},
+      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+    },
+    {
+      "slug": "dulabhai",
+      "label_bn": "দুলাভাই",
+      "label_en": "Elder Brother-in-law",
+      "category": "Kinship",
+      "handedness": "single",
+      "handshape": "V_INDEX_MIDDLE_OPEN",
+      "stokoe_notation": "ᚢ✌⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.12, 0.30, 0.12],
+        "P1": [0.00, 0.25, 0.08],
+        "P2": [0.00, 0.25, 0.08],
+        "P3": [0.00, 0.25, 0.08]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.4, "AU25": 0.0, "head_pitch": 1.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NASAL_BRIDGE", "touch_type": "V_SHAPE_TOUCH"},
+      "timing_ms": {"prep": 110, "stroke": 300, "retract": 150, "total": 560}
+    },
+    {
+      "slug": "dhonnobad",
+      "label_bn": "ধন্যবাদ",
+      "label_en": "Thank you",
+      "category": "Greetings",
+      "handedness": "single",
+      "handshape": "B_FLAT_PALM",
+      "stokoe_notation": "ᚢᚯ↗",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.38, 0.10],
+        "P1": [0.00, 0.45, 0.25],
+        "P2": [0.00, 0.50, 0.40],
+        "P3": [0.00, 0.52, 0.45]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.8, "AU25": 0.2, "head_pitch": 5.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "FORWARD_RELEASE"},
+      "timing_ms": {"prep": 120, "stroke": 400, "retract": 180, "total": 700}
+    },
+    {
+      "slug": "salam",
+      "label_bn": "সালাম",
+      "label_en": "Assalamu Alaikum / Peace",
+      "category": "Greetings",
+      "handedness": "single",
+      "handshape": "B_FLAT_OPEN",
+      "stokoe_notation": "ᚢᚯ↗",
+      "bezier_anchors_3d": {
+        "P0": [0.12, 0.22, 0.10],
+        "P1": [0.15, 0.30, 0.25],
+        "P2": [0.20, 0.38, 0.38],
+        "P3": [0.22, 0.40, 0.42]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.3, "AU12": 0.6, "AU25": 0.0, "head_pitch": 4.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "FOREHEAD", "touch_type": "SALUTE_RELEASE"},
+      "timing_ms": {"prep": 130, "stroke": 420, "retract": 180, "total": 730}
+    },
+    {
+      "slug": "nomoshkar",
+      "label_bn": "নমস্কার",
+      "label_en": "Namaskar",
+      "category": "Greetings",
+      "handedness": "dual",
+      "handshape": "ANJALI_DUAL_PALM",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.52, 0.25],
+        "P1": [0.00, 0.48, 0.20],
+        "P2": [0.00, 0.45, 0.18],
+        "P3": [0.00, 0.48, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.0, "head_pitch": 6.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST", "touch_type": "DUAL_PALM_CONTACT"},
+      "timing_ms": {"prep": 140, "stroke": 420, "retract": 160, "total": 720}
+    },
+    {
+      "slug": "kemon_acho",
+      "label_bn": "কেমন আছেন?",
+      "label_en": "How are you?",
+      "category": "Greetings",
+      "handedness": "dual",
+      "handshape": "CUPPED_PALMS_UP",
+      "stokoe_notation": "ᚢᚯ⟳",
+      "bezier_anchors_3d": {
+        "P0": [-0.15, 0.55, 0.20],
+        "P1": [-0.20, 0.52, 0.25],
+        "P2": [0.20, 0.52, 0.25],
+        "P3": [0.25, 0.55, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.3, "head_pitch": -4.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "PALM_UP_ROTATION"},
+      "timing_ms": {"prep": 150, "stroke": 450, "retract": 200, "total": 800}
+    },
+    {
+      "slug": "bhalo",
+      "label_bn": "ভালো",
+      "label_en": "Good / Fine",
+      "category": "Greetings",
+      "handedness": "single",
+      "handshape": "THUMBS_UP",
+      "stokoe_notation": "ᚢᚦ↑",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.55, 0.20],
+        "P1": [0.15, 0.48, 0.22],
+        "P2": [0.15, 0.42, 0.25],
+        "P3": [0.15, 0.45, 0.22]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.5, "AU12": 0.8, "AU25": 0.2, "head_pitch": 3.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "UPWARD_THRUST"},
+      "timing_ms": {"prep": 100, "stroke": 300, "retract": 150, "total": 550}
+    },
+    {
+      "slug": "daktar",
+      "label_bn": "ডাক্তার",
+      "label_en": "Doctor",
+      "category": "Healthcare & Emergency",
+      "handedness": "dual",
+      "handshape": "TWO_FINGERS_ON_WRIST",
+      "stokoe_notation": "ᚢ✌⫤",
+      "bezier_anchors_3d": {
+        "P0": [-0.15, 0.55, 0.20],
+        "P1": [-0.10, 0.52, 0.18],
+        "P2": [-0.10, 0.52, 0.18],
+        "P3": [-0.10, 0.52, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "WRIST_RADIAL", "touch_type": "PULSE_TAP"},
+      "timing_ms": {"prep": 120, "stroke": 360, "retract": 160, "total": 640}
+    },
+    {
+      "slug": "haspatal",
+      "label_bn": "হাসপাতাল",
+      "label_en": "Hospital",
+      "category": "Healthcare & Emergency",
+      "handedness": "single",
+      "handshape": "INDEX_CROSS_DRAW",
+      "stokoe_notation": "ᚢ☝✕",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.42, 0.15],
+        "P1": [0.00, 0.52, 0.15],
+        "P2": [-0.05, 0.47, 0.15],
+        "P3": [0.05, 0.47, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST", "touch_type": "CROSS_DRAW"},
+      "timing_ms": {"prep": 130, "stroke": 450, "retract": 170, "total": 750}
+    },
+    {
+      "slug": "oshukh",
+      "label_bn": "অসুস্থ",
+      "label_en": "Sick / Ill",
+      "category": "Healthcare & Emergency",
+      "handedness": "dual",
+      "handshape": "MIDDLE_FINGER_BENT",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.22, 0.10],
+        "P1": [0.00, 0.55, 0.15],
+        "P2": [0.00, 0.22, 0.10],
+        "P3": [0.00, 0.55, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.3, "AU02": 0.0, "AU04": 0.7, "AU06": 0.2, "AU12": 0.0, "AU25": 0.2, "head_pitch": -5.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "FOREHEAD_AND_STOMACH", "touch_type": "DUAL_POINT_TOUCH"},
+      "timing_ms": {"prep": 140, "stroke": 400, "retract": 180, "total": 720}
+    },
+    {
+      "slug": "byatha",
+      "label_bn": "ব্যথা",
+      "label_en": "Pain / Ache",
+      "category": "Healthcare & Emergency",
+      "handedness": "dual",
+      "handshape": "INDEX_FINGERS_POINTING_TWIST",
+      "stokoe_notation": "ᚢ☝⟲",
+      "bezier_anchors_3d": {
+        "P0": [-0.08, 0.45, 0.20],
+        "P1": [0.08, 0.45, 0.20],
+        "P2": [-0.04, 0.45, 0.18],
+        "P3": [0.04, 0.45, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.8, "AU06": 0.5, "AU12": 0.0, "AU25": 0.3, "head_pitch": -3.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "PAIN_LOCUS", "touch_type": "OPPOSING_TWIST"},
+      "timing_ms": {"prep": 120, "stroke": 380, "retract": 160, "total": 660}
+    },
+    {
+      "slug": "oushodh",
+      "label_bn": "ওষুধ",
+      "label_en": "Medicine",
+      "category": "Healthcare & Emergency",
+      "handedness": "dual",
+      "handshape": "MIDDLE_FINGER_GRIND_PALM",
+      "stokoe_notation": "ᚢᚯ⟳",
+      "bezier_anchors_3d": {
+        "P0": [-0.05, 0.52, 0.20],
+        "P1": [-0.05, 0.50, 0.18],
+        "P2": [-0.05, 0.50, 0.18],
+        "P3": [-0.05, 0.50, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.1, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NON_DOMINANT_PALM", "touch_type": "CIRCULAR_GRIND"},
+      "timing_ms": {"prep": 110, "stroke": 350, "retract": 150, "total": 610}
+    },
+    {
+      "slug": "sahajjo",
+      "label_bn": "সাহায্য",
+      "label_en": "Help / Assist",
+      "category": "Healthcare & Emergency",
+      "handedness": "dual",
+      "handshape": "FIST_ON_OPEN_PALM_LIFT",
+      "stokoe_notation": "ᚢᚦ↑",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.58, 0.22],
+        "P1": [0.00, 0.50, 0.25],
+        "P2": [0.00, 0.42, 0.28],
+        "P3": [0.00, 0.38, 0.30]
+      },
+      "facs_action_units": {"AU01": 0.3, "AU02": 0.3, "AU04": 0.0, "AU06": 0.0, "AU12": 0.0, "AU25": 0.3, "head_pitch": 2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "UPWARD_SUPPORT_LIFT"},
+      "timing_ms": {"prep": 130, "stroke": 420, "retract": 180, "total": 730}
+    },
+    {
+      "slug": "joruri",
+      "label_bn": "জরুরি",
+      "label_en": "Emergency",
+      "category": "Healthcare & Emergency",
+      "handedness": "single",
+      "handshape": "E_SHAKE",
+      "stokoe_notation": "ᚢᚦ⟲",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.45, 0.20],
+        "P1": [0.12, 0.45, 0.20],
+        "P2": [0.18, 0.45, 0.20],
+        "P3": [0.15, 0.45, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.4, "head_pitch": 0.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_VIBRATION"},
+      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+    },
+    {
+      "slug": "ambulance",
+      "label_bn": "অ্যাম্বুলেন্স",
+      "label_en": "Ambulance",
+      "category": "Healthcare & Emergency",
+      "handedness": "single",
+      "handshape": "CUPPED_SIREN_ROTATE",
+      "stokoe_notation": "ᚢᚯ⟳",
+      "bezier_anchors_3d": {
+        "P0": [0.10, 0.20, 0.15],
+        "P1": [0.12, 0.18, 0.15],
+        "P2": [0.08, 0.22, 0.15],
+        "P3": [0.10, 0.20, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.0, "AU12": 0.0, "AU25": 0.3, "head_pitch": 0.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "HEAD_TOP", "touch_type": "SIREN_ROTATION"},
+      "timing_ms": {"prep": 120, "stroke": 450, "retract": 160, "total": 730}
+    },
+    {
+      "slug": "school",
+      "label_bn": "স্কুল",
+      "label_en": "School",
+      "category": "Public & Education",
+      "handedness": "dual",
+      "handshape": "DOUBLE_CLAP_HORIZONTAL",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.48, 0.20],
+        "P1": [0.00, 0.48, 0.18],
+        "P2": [0.00, 0.48, 0.20],
+        "P3": [0.00, 0.48, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 1.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DOUBLE_PALM_CLAP"},
+      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+    },
+    {
+      "slug": "shikkhok",
+      "label_bn": "শিক্ষক",
+      "label_en": "Teacher",
+      "category": "Public & Education",
+      "handedness": "dual",
+      "handshape": "O_PINCH_TO_OPEN_AGENT",
+      "stokoe_notation": "ᚢᚯ↗",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.25, 0.15],
+        "P1": [0.10, 0.25, 0.15],
+        "P2": [-0.15, 0.45, 0.25],
+        "P3": [0.15, 0.45, 0.25]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "TEMPLES_TO_SPACE", "touch_type": "TEACH_AND_PERSON_SUFFIX"},
+      "timing_ms": {"prep": 140, "stroke": 480, "retract": 180, "total": 800}
+    },
+    {
+      "slug": "taka",
+      "label_bn": "টাকা",
+      "label_en": "Money",
+      "category": "Public & Education",
+      "handedness": "single",
+      "handshape": "THUMB_INDEX_RUB",
+      "stokoe_notation": "ᚢᚦ⟳",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.50, 0.20],
+        "P1": [0.15, 0.48, 0.20],
+        "P2": [0.15, 0.50, 0.20],
+        "P3": [0.15, 0.48, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.3, "AU12": 0.5, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "PINCH_RUB"},
+      "timing_ms": {"prep": 100, "stroke": 300, "retract": 140, "total": 540}
+    },
+    {
+      "slug": "police",
+      "label_bn": "পুলিশ",
+      "label_en": "Police",
+      "category": "Public & Education",
+      "handedness": "single",
+      "handshape": "C_SHAPE_BADGE",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [-0.15, 0.40, 0.15],
+        "P1": [-0.15, 0.40, 0.10],
+        "P2": [-0.15, 0.40, 0.10],
+        "P3": [-0.15, 0.40, 0.10]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST_LEFT", "touch_type": "BADGE_TAP"},
+      "timing_ms": {"prep": 110, "stroke": 290, "retract": 150, "total": 550}
+    },
+    {
+      "slug": "bank",
+      "label_bn": "ব্যাংক",
+      "label_en": "Bank",
+      "category": "Public & Education",
+      "handedness": "dual",
+      "handshape": "B_MONEY_DEPOSIT",
+      "stokoe_notation": "ᚢᚯ↓",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.42, 0.20],
+        "P1": [0.00, 0.52, 0.20],
+        "P2": [0.00, 0.52, 0.18],
+        "P3": [0.00, 0.52, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.1, "AU12": 0.3, "AU25": 0.0, "head_pitch": 1.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "SLOT_INSERTION"},
+      "timing_ms": {"prep": 120, "stroke": 350, "retract": 160, "total": 630}
+    },
+    {
+      "slug": "nid",
+      "label_bn": "জাতীয় পরিচয়পত্র",
+      "label_en": "National ID Card",
+      "category": "Public & Education",
+      "handedness": "dual",
+      "handshape": "L_SHAPE_RECTANGLE_FRAME",
+      "stokoe_notation": "ᚢᒪ✕",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.45, 0.20],
+        "P1": [0.10, 0.45, 0.20],
+        "P2": [0.10, 0.55, 0.20],
+        "P3": [-0.10, 0.55, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FRAME_RECTANGLE"},
+      "timing_ms": {"prep": 130, "stroke": 420, "retract": 170, "total": 720}
+    },
+    {
+      "slug": "bhumikompo",
+      "label_bn": "ভূমিকম্প",
+      "label_en": "Earthquake",
+      "category": "Disaster & Safety",
+      "handedness": "dual",
+      "handshape": "B_FLAT_PARALLEL_VIBRATE",
+      "stokoe_notation": "ᚢᚯ⫤⟲",
+      "bezier_anchors_3d": {
+        "P0": [-0.15, 0.50, 0.22],
+        "P1": [0.15, 0.50, 0.22],
+        "P2": [-0.15, 0.50, 0.22],
+        "P3": [0.15, 0.50, 0.22]
+      },
+      "facs_action_units": {"AU01": 0.6, "AU02": 0.6, "AU04": 0.0, "AU06": 0.4, "AU12": 0.0, "AU25": 0.5, "head_pitch": 0.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "SYNCHRONOUS_IN_PHASE_VIBRATION"},
+      "timing_ms": {"prep": 120, "stroke": 500, "retract": 180, "total": 800}
+    },
+    {
+      "slug": "janjot",
+      "label_bn": "যানজট",
+      "label_en": "Traffic Jam",
+      "category": "Disaster & Safety",
+      "handedness": "dual",
+      "handshape": "B_FLAT_ALTERNATING_CARS",
+      "stokoe_notation": "ᚢᚯ⫤⇄",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.52, 0.25],
+        "P1": [0.10, 0.52, 0.18],
+        "P2": [-0.10, 0.52, 0.18],
+        "P3": [0.10, 0.52, 0.25]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.6, "AU06": 0.0, "AU12": 0.0, "AU25": 0.2, "head_pitch": -2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "ALTERNATING_OUT_OF_PHASE_TRANSLATION"},
+      "timing_ms": {"prep": 130, "stroke": 480, "retract": 180, "total": 790}
+    },
+    {
+      "slug": "agun",
+      "label_bn": "আগুন",
+      "label_en": "Fire",
+      "category": "Disaster & Safety",
+      "handedness": "dual",
+      "handshape": "FIVE_FINGERS_FLICKER_UP",
+      "stokoe_notation": "ᚢᚯ↑⟳",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.60, 0.20],
+        "P1": [0.10, 0.60, 0.20],
+        "P2": [-0.12, 0.40, 0.25],
+        "P3": [0.12, 0.35, 0.25]
+      },
+      "facs_action_units": {"AU01": 0.5, "AU02": 0.5, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.5, "head_pitch": -4.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FLICKER_ASCENT"},
+      "timing_ms": {"prep": 120, "stroke": 460, "retract": 180, "total": 760}
+    },
+    {
+      "slug": "bonna",
+      "label_bn": "বন্যা",
+      "label_en": "Flood",
+      "category": "Disaster & Safety",
+      "handedness": "dual",
+      "handshape": "B_PALMS_DOWN_RISE",
+      "stokoe_notation": "ᚢᚯ↑",
+      "bezier_anchors_3d": {
+        "P0": [-0.15, 0.65, 0.25],
+        "P1": [0.15, 0.65, 0.25],
+        "P2": [-0.15, 0.35, 0.25],
+        "P3": [0.15, 0.35, 0.25]
+      },
+      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.4, "head_pitch": -2.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "WATER_LEVEL_ASCENT"},
+      "timing_ms": {"prep": 130, "stroke": 480, "retract": 190, "total": 800}
+    },
+    {
+      "slug": "pani",
+      "label_bn": "পানি",
+      "label_en": "Water",
+      "category": "Disaster & Safety",
+      "handedness": "single",
+      "handshape": "W_SHAPE_INDEX_MIDDLE_RING",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.00, 0.40, 0.15],
+        "P1": [0.00, 0.38, 0.10],
+        "P2": [0.00, 0.38, 0.10],
+        "P3": [0.00, 0.38, 0.10]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "CHIN_TAP"},
+      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+    },
+    {
+      "slug": "shabdhan",
+      "label_bn": "সাবধান",
+      "label_en": "Caution / Alert",
+      "category": "Disaster & Safety",
+      "handedness": "single",
+      "handshape": "INDEX_UP_WAG",
+      "stokoe_notation": "ᚢ☝⇄",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.35, 0.20],
+        "P1": [0.10, 0.35, 0.20],
+        "P2": [0.20, 0.35, 0.20],
+        "P3": [0.15, 0.35, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.7, "AU06": 0.0, "AU12": 0.0, "AU25": 0.1, "head_pitch": -2.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INDEX_WAG"},
+      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+    },
+    {
+      "slug": "khawa",
+      "label_bn": "খাওয়া",
+      "label_en": "Eat",
+      "category": "Action Verbs",
+      "handedness": "single",
+      "handshape": "O_PINCH_TO_MOUTH",
+      "stokoe_notation": "ᚢᚦ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.10, 0.45, 0.20],
+        "P1": [0.00, 0.38, 0.10],
+        "P2": [0.00, 0.38, 0.10],
+        "P3": [0.00, 0.38, 0.10]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.4, "head_pitch": 2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "MOUTH", "touch_type": "REPEATED_PINCH_TAP"},
+      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+    },
+    {
+      "slug": "jawa",
+      "label_bn": "যাওয়া",
+      "label_en": "Go",
+      "category": "Action Verbs",
+      "handedness": "single",
+      "handshape": "INDEX_FORWARD_SWIPE",
+      "stokoe_notation": "ᚢ☝↗",
+      "bezier_anchors_3d": {
+        "P0": [0.10, 0.45, 0.15],
+        "P1": [0.15, 0.42, 0.30],
+        "P2": [0.20, 0.40, 0.42],
+        "P3": [0.25, 0.38, 0.50]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FORWARD_ARREST"},
+      "timing_ms": {"prep": 110, "stroke": 350, "retract": 150, "total": 610}
+    },
+    {
+      "slug": "asha",
+      "label_bn": "আসা",
+      "label_en": "Come",
+      "category": "Action Verbs",
+      "handedness": "single",
+      "handshape": "B_OPEN_PALM_INWARD",
+      "stokoe_notation": "ᚢᚯ↙",
+      "bezier_anchors_3d": {
+        "P0": [0.20, 0.40, 0.45],
+        "P1": [0.15, 0.45, 0.30],
+        "P2": [0.10, 0.50, 0.20],
+        "P3": [0.05, 0.52, 0.15]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INWARD_SWEEP"},
+      "timing_ms": {"prep": 110, "stroke": 360, "retract": 150, "total": 620}
+    },
+    {
+      "slug": "ghumano",
+      "label_bn": "ঘুমানো",
+      "label_en": "Sleep",
+      "category": "Action Verbs",
+      "handedness": "single",
+      "handshape": "B_FLAT_CHEEK_PILLOW",
+      "stokoe_notation": "ᚢᚯ⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.20, 0.35, 0.12],
+        "P1": [0.18, 0.32, 0.08],
+        "P2": [0.18, 0.32, 0.08],
+        "P3": [0.18, 0.32, 0.08]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.5, "AU12": 0.3, "AU25": 0.0, "head_pitch": 15.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEEK_TILT", "touch_type": "HEAD_TILT_REST"},
+      "timing_ms": {"prep": 130, "stroke": 450, "retract": 180, "total": 760}
+    },
+    {
+      "slug": "pora",
+      "label_bn": "পড়া",
+      "label_en": "Read / Study",
+      "category": "Action Verbs",
+      "handedness": "dual",
+      "handshape": "V_SCAN_ACROSS_BOOK_PALM",
+      "stokoe_notation": "ᚢ✌⫤",
+      "bezier_anchors_3d": {
+        "P0": [-0.05, 0.50, 0.20],
+        "P1": [0.05, 0.50, 0.20],
+        "P2": [-0.05, 0.52, 0.20],
+        "P3": [0.05, 0.52, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 8.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NON_DOMINANT_PALM", "touch_type": "EYE_SCAN_SWEEP"},
+      "timing_ms": {"prep": 120, "stroke": 400, "retract": 160, "total": 680}
+    },
+    {
+      "slug": "taratari",
+      "label_bn": "তাড়াতাড়ি",
+      "label_en": "Hurry / Fast",
+      "category": "Action Verbs",
+      "handedness": "dual",
+      "handshape": "B_FLAT_ALTERNATING_FLUTTER",
+      "stokoe_notation": "ᚢᚯ↑⇄",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.55, 0.20],
+        "P1": [0.10, 0.42, 0.22],
+        "P2": [-0.10, 0.38, 0.25],
+        "P3": [0.10, 0.45, 0.22]
+      },
+      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.4, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "HIGH_ACCELERATION_VERTICAL_FLUTTER"},
+      "timing_ms": {"prep": 80, "stroke": 250, "retract": 100, "total": 430}
+    },
+    {
+      "slug": "chure_mara",
+      "label_bn": "ছুড়ে মারা",
+      "label_en": "Throw",
+      "category": "Action Verbs",
+      "handedness": "single",
+      "handshape": "FIST_TO_OPEN_BALLISTIC",
+      "stokoe_notation": "ᚢᚦ↗",
+      "bezier_anchors_3d": {
+        "P0": [0.20, 0.30, 0.10],
+        "P1": [0.20, 0.35, 0.30],
+        "P2": [0.18, 0.40, 0.50],
+        "P3": [0.15, 0.45, 0.60]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.5, "AU06": 0.2, "AU12": 0.0, "AU25": 0.3, "head_pitch": -2.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "ANTERIOR_BALLISTIC_THRUST"},
+      "timing_ms": {"prep": 90, "stroke": 260, "retract": 120, "total": 470}
+    },
+    {
+      "slug": "ami",
+      "label_bn": "আমি",
+      "label_en": "I / Me",
+      "category": "Pronouns & Adjectives",
+      "handedness": "single",
+      "handshape": "INDEX_POINT_CHEST",
+      "stokoe_notation": "ᚢ☝⫤",
+      "bezier_anchors_3d": {
+        "P0": [0.15, 0.50, 0.20],
+        "P1": [0.00, 0.45, 0.10],
+        "P2": [0.00, 0.45, 0.08],
+        "P3": [0.00, 0.45, 0.08]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHEST", "touch_type": "CHEST_TAP"},
+      "timing_ms": {"prep": 90, "stroke": 240, "retract": 120, "total": 450}
+    },
+    {
+      "slug": "apni",
+      "label_bn": "আপনি",
+      "label_en": "You (Formal)",
+      "category": "Pronouns & Adjectives",
+      "handedness": "single",
+      "handshape": "B_FLAT_OPEN_PALM_FORWARD",
+      "stokoe_notation": "ᚢᚯ↗",
+      "bezier_anchors_3d": {
+        "P0": [0.05, 0.48, 0.18],
+        "P1": [0.05, 0.45, 0.30],
+        "P2": [0.05, 0.45, 0.40],
+        "P3": [0.05, 0.45, 0.45]
+      },
+      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.3, "AU12": 0.5, "AU25": 0.0, "head_pitch": 3.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FORWARD_RESPECT_GESTURE"},
+      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+    },
+    {
+      "slug": "tumi",
+      "label_bn": "তুমি",
+      "label_en": "You (Informal)",
+      "category": "Pronouns & Adjectives",
+      "handedness": "single",
+      "handshape": "INDEX_POINT_FORWARD",
+      "stokoe_notation": "ᚢ☝↗",
+      "bezier_anchors_3d": {
+        "P0": [0.05, 0.48, 0.18],
+        "P1": [0.05, 0.45, 0.30],
+        "P2": [0.05, 0.45, 0.40],
+        "P3": [0.05, 0.45, 0.45]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
+      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DIRECT_POINT"},
+      "timing_ms": {"prep": 90, "stroke": 280, "retract": 130, "total": 500}
+    },
+    {
+      "slug": "shundor",
+      "label_bn": "সুন্দর",
+      "label_en": "Beautiful / Nice",
+      "category": "Pronouns & Adjectives",
+      "handedness": "single",
+      "handshape": "FIVE_FINGERS_OPEN_TO_PINCH_ACROSS_FACE",
+      "stokoe_notation": "ᚢᚯ⟳",
+      "bezier_anchors_3d": {
+        "P0": [-0.10, 0.30, 0.12],
+        "P1": [0.10, 0.32, 0.12],
+        "P2": [0.00, 0.35, 0.15],
+        "P3": [0.00, 0.40, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.5, "AU12": 0.8, "AU25": 0.2, "head_pitch": 4.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "FACE_CIRCLE", "touch_type": "FACE_CIRCLE_SWIPE"},
+      "timing_ms": {"prep": 120, "stroke": 420, "retract": 170, "total": 710}
+    },
+    {
+      "slug": "boro",
+      "label_bn": "বড়",
+      "label_en": "Big / Large",
+      "category": "Pronouns & Adjectives",
+      "handedness": "dual",
+      "handshape": "CUPPED_EXPAND_OUTWARD",
+      "stokoe_notation": "ᚢᚯ⇄",
+      "bezier_anchors_3d": {
+        "P0": [-0.05, 0.45, 0.20],
+        "P1": [0.05, 0.45, 0.20],
+        "P2": [-0.30, 0.45, 0.25],
+        "P3": [0.30, 0.45, 0.25]
+      },
+      "facs_action_units": {"AU01": 0.3, "AU02": 0.3, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.3, "head_pitch": -2.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_EXPANSION"},
+      "timing_ms": {"prep": 110, "stroke": 400, "retract": 160, "total": 670}
+    },
+    {
+      "slug": "choto",
+      "label_bn": "ছোট",
+      "label_en": "Small / Little",
+      "category": "Pronouns & Adjectives",
+      "handedness": "dual",
+      "handshape": "FLAT_HANDS_APPROACH",
+      "stokoe_notation": "ᚢᚯ→←",
+      "bezier_anchors_3d": {
+        "P0": [-0.20, 0.45, 0.20],
+        "P1": [0.20, 0.45, 0.20],
+        "P2": [-0.04, 0.45, 0.20],
+        "P3": [0.04, 0.45, 0.20]
+      },
+      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.4, "AU06": 0.3, "AU12": 0.0, "AU25": 0.0, "head_pitch": 2.0},
+      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_CONTRACTION"},
+      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+    },
+    {
+      "slug": "shagotom",
+      "label_bn": "স্বাগতম",
+      "label_en": "Welcome",
+      "category": "Greetings",
+      "handedness": "dual",
+      "handshape": "B_OPEN_INWARD_INVITE",
+      "stokoe_notation": "ᚢᚯ↙",
+      "bezier_anchors_3d": {
+        "P0": [-0.25, 0.45, 0.30],
+        "P1": [0.25, 0.45, 0.30],
+        "P2": [-0.08, 0.50, 0.18],
+        "P3": [0.08, 0.50, 0.18]
+      },
+      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.1, "head_pitch": 4.0},
+      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DUAL_INVITATION_SWEEP"},
+      "timing_ms": {"prep": 130, "stroke": 440, "retract": 170, "total": 740}
+    }
+  ]
+}

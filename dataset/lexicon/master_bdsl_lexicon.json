@@ -1,5 +1,5 @@
 {
-  "version": "2.8.0",
+  "version": "3.1.0",
   "name": "IsharaConnect Master BdSL Lexicon",
   "total_signs": 52,
   "categories": [
@@ -21,14 +21,47 @@
       "handshape": "B_OPEN_PALM",
       "stokoe_notation": "ᚢ√‿",
       "bezier_anchors_3d": {
-        "P0": [0.25, 0.45, 0.15],
-        "P1": [0.15, 0.35, 0.12],
-        "P2": [0.12, 0.32, 0.08],
-        "P3": [0.15, 0.35, 0.12]
+        "P0": [
+          0.25,
+          0.45,
+          0.15
+        ],
+        "P1": [
+          0.15,
+          0.35,
+          0.12
+        ],
+        "P2": [
+          0.12,
+          0.32,
+          0.08
+        ],
+        "P3": [
+          0.15,
+          0.35,
+          0.12
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.3, "AU12": 0.6, "AU25": 0.2, "head_pitch": 2.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEEK", "touch_type": "DOUBLE_TAP"},
-      "timing_ms": {"prep": 100, "stroke": 300, "retract": 150, "total": 550}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.3,
+        "AU12": 0.6,
+        "AU25": 0.2,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEEK",
+        "touch_type": "DOUBLE_TAP"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 300,
+        "retract": 150,
+        "total": 550
+      }
     },
     {
       "slug": "baba",
@@ -39,14 +72,47 @@
       "handshape": "INDEX_BENT_HOOK",
       "stokoe_notation": "ᚢ⌒✕",
       "bezier_anchors_3d": {
-        "P0": [0.0, 0.38, 0.15],
-        "P1": [-0.08, 0.36, 0.10],
-        "P2": [0.08, 0.36, 0.10],
-        "P3": [0.12, 0.38, 0.15]
+        "P0": [
+          0.0,
+          0.38,
+          0.15
+        ],
+        "P1": [
+          -0.08,
+          0.36,
+          0.1
+        ],
+        "P2": [
+          0.08,
+          0.36,
+          0.1
+        ],
+        "P3": [
+          0.12,
+          0.38,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.1, "AU06": 0.0, "AU12": 0.4, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "LIP_UPPER", "touch_type": "MUSTACHE_SWIPE"},
-      "timing_ms": {"prep": 120, "stroke": 350, "retract": 150, "total": 620}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.1,
+        "AU06": 0.0,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "LIP_UPPER",
+        "touch_type": "MUSTACHE_SWIPE"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 350,
+        "retract": 150,
+        "total": 620
+      }
     },
     {
       "slug": "bhai",
@@ -57,14 +123,47 @@
       "handshape": "FIST_A_THUMB_EXTENDED",
       "stokoe_notation": "ᚢᚦ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.50, 0.20],
-        "P1": [0.15, 0.45, 0.15],
-        "P2": [0.15, 0.42, 0.12],
-        "P3": [0.15, 0.45, 0.15]
+        "P0": [
+          0.15,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.15,
+          0.45,
+          0.15
+        ],
+        "P2": [
+          0.15,
+          0.42,
+          0.12
+        ],
+        "P3": [
+          0.15,
+          0.45,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 1.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "CHEST", "touch_type": "TAP"},
-      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 1.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "CHEST",
+        "touch_type": "TAP"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 280,
+        "retract": 140,
+        "total": 520
+      }
     },
     {
       "slug": "bon",
@@ -75,14 +174,47 @@
       "handshape": "L_SHAPE",
       "stokoe_notation": "ᚢᒪ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.45, 0.15],
-        "P1": [0.15, 0.38, 0.12],
-        "P2": [0.15, 0.35, 0.10],
-        "P3": [0.15, 0.38, 0.12]
+        "P0": [
+          0.15,
+          0.45,
+          0.15
+        ],
+        "P1": [
+          0.15,
+          0.38,
+          0.12
+        ],
+        "P2": [
+          0.15,
+          0.35,
+          0.1
+        ],
+        "P3": [
+          0.15,
+          0.38,
+          0.12
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.5, "AU25": 0.0, "head_pitch": 2.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHIN", "touch_type": "TAP"},
-      "timing_ms": {"prep": 110, "stroke": 300, "retract": 150, "total": 560}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.5,
+        "AU25": 0.0,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHIN",
+        "touch_type": "TAP"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 300,
+        "retract": 150,
+        "total": 560
+      }
     },
     {
       "slug": "bondhu",
@@ -93,14 +225,47 @@
       "handshape": "INDEX_INTERLOCK",
       "stokoe_notation": "ᚢ✕⫤",
       "bezier_anchors_3d": {
-        "P0": [0.0, 0.55, 0.25],
-        "P1": [0.0, 0.50, 0.20],
-        "P2": [0.0, 0.48, 0.18],
-        "P3": [0.0, 0.52, 0.22]
+        "P0": [
+          0.0,
+          0.55,
+          0.25
+        ],
+        "P1": [
+          0.0,
+          0.5,
+          0.2
+        ],
+        "P2": [
+          0.0,
+          0.48,
+          0.18
+        ],
+        "P3": [
+          0.0,
+          0.52,
+          0.22
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.2, "head_pitch": 3.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INTERLOCK"},
-      "timing_ms": {"prep": 140, "stroke": 400, "retract": 160, "total": 700}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.4,
+        "AU12": 0.7,
+        "AU25": 0.2,
+        "head_pitch": 3.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "INTERLOCK"
+      },
+      "timing_ms": {
+        "prep": 140,
+        "stroke": 400,
+        "retract": 160,
+        "total": 700
+      }
     },
     {
       "slug": "chacha",
@@ -111,14 +276,47 @@
       "handshape": "INDEX_BENT",
       "stokoe_notation": "ᚢ⌒ᚦ",
       "bezier_anchors_3d": {
-        "P0": [0.10, 0.40, 0.15],
-        "P1": [0.00, 0.36, 0.10],
-        "P2": [0.00, 0.36, 0.09],
-        "P3": [0.00, 0.36, 0.09]
+        "P0": [
+          0.1,
+          0.4,
+          0.15
+        ],
+        "P1": [
+          0.0,
+          0.36,
+          0.1
+        ],
+        "P2": [
+          0.0,
+          0.36,
+          0.09
+        ],
+        "P3": [
+          0.0,
+          0.36,
+          0.09
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "ACUTE_TOUCH"},
-      "timing_ms": {"prep": 100, "stroke": 260, "retract": 140, "total": 500}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "CHIN",
+        "touch_type": "ACUTE_TOUCH"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 260,
+        "retract": 140,
+        "total": 500
+      }
     },
     {
       "slug": "dada",
@@ -129,14 +327,47 @@
       "handshape": "C_CURVED_HAND",
       "stokoe_notation": "ᚢᚯ↓",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.36, 0.10],
-        "P1": [0.00, 0.42, 0.12],
-        "P2": [0.00, 0.48, 0.15],
-        "P3": [0.00, 0.52, 0.18]
+        "P0": [
+          0.0,
+          0.36,
+          0.1
+        ],
+        "P1": [
+          0.0,
+          0.42,
+          0.12
+        ],
+        "P2": [
+          0.0,
+          0.48,
+          0.15
+        ],
+        "P3": [
+          0.0,
+          0.52,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "BEARD_LINE", "touch_type": "DOWNWARD_STROKE"},
-      "timing_ms": {"prep": 120, "stroke": 450, "retract": 180, "total": 750}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "BEARD_LINE",
+        "touch_type": "DOWNWARD_STROKE"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 450,
+        "retract": 180,
+        "total": 750
+      }
     },
     {
       "slug": "nana",
@@ -147,14 +378,47 @@
       "handshape": "C_CURVED_HAND",
       "stokoe_notation": "ᚢᚯ↓",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.36, 0.10],
-        "P1": [0.00, 0.42, 0.12],
-        "P2": [0.00, 0.48, 0.15],
-        "P3": [0.00, 0.52, 0.18]
+        "P0": [
+          0.0,
+          0.36,
+          0.1
+        ],
+        "P1": [
+          0.0,
+          0.42,
+          0.12
+        ],
+        "P2": [
+          0.0,
+          0.48,
+          0.15
+        ],
+        "P3": [
+          0.0,
+          0.52,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "BEARD_LINE", "touch_type": "DOWNWARD_STROKE"},
-      "timing_ms": {"prep": 120, "stroke": 450, "retract": 180, "total": 750}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "BEARD_LINE",
+        "touch_type": "DOWNWARD_STROKE"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 450,
+        "retract": 180,
+        "total": 750
+      }
     },
     {
       "slug": "debor",
@@ -165,14 +429,47 @@
       "handshape": "INDEX_EXTENDED_1",
       "stokoe_notation": "ᚢ☝⫤",
       "bezier_anchors_3d": {
-        "P0": [0.10, 0.30, 0.12],
-        "P1": [0.00, 0.25, 0.08],
-        "P2": [0.00, 0.25, 0.08],
-        "P3": [0.00, 0.25, 0.08]
+        "P0": [
+          0.1,
+          0.3,
+          0.12
+        ],
+        "P1": [
+          0.0,
+          0.25,
+          0.08
+        ],
+        "P2": [
+          0.0,
+          0.25,
+          0.08
+        ],
+        "P3": [
+          0.0,
+          0.25,
+          0.08
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NASAL_BRIDGE", "touch_type": "SINGLE_POINT_TOUCH"},
-      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NASAL_BRIDGE",
+        "touch_type": "SINGLE_POINT_TOUCH"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 280,
+        "retract": 140,
+        "total": 520
+      }
     },
     {
       "slug": "dulabhai",
@@ -183,14 +480,47 @@
       "handshape": "V_INDEX_MIDDLE_OPEN",
       "stokoe_notation": "ᚢ✌⫤",
       "bezier_anchors_3d": {
-        "P0": [0.12, 0.30, 0.12],
-        "P1": [0.00, 0.25, 0.08],
-        "P2": [0.00, 0.25, 0.08],
-        "P3": [0.00, 0.25, 0.08]
+        "P0": [
+          0.12,
+          0.3,
+          0.12
+        ],
+        "P1": [
+          0.0,
+          0.25,
+          0.08
+        ],
+        "P2": [
+          0.0,
+          0.25,
+          0.08
+        ],
+        "P3": [
+          0.0,
+          0.25,
+          0.08
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.4, "AU25": 0.0, "head_pitch": 1.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NASAL_BRIDGE", "touch_type": "V_SHAPE_TOUCH"},
-      "timing_ms": {"prep": 110, "stroke": 300, "retract": 150, "total": 560}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 1.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NASAL_BRIDGE",
+        "touch_type": "V_SHAPE_TOUCH"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 300,
+        "retract": 150,
+        "total": 560
+      }
     },
     {
       "slug": "dhonnobad",
@@ -201,14 +531,47 @@
       "handshape": "B_FLAT_PALM",
       "stokoe_notation": "ᚢᚯ↗",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.38, 0.10],
-        "P1": [0.00, 0.45, 0.25],
-        "P2": [0.00, 0.50, 0.40],
-        "P3": [0.00, 0.52, 0.45]
+        "P0": [
+          0.0,
+          0.38,
+          0.1
+        ],
+        "P1": [
+          0.0,
+          0.45,
+          0.25
+        ],
+        "P2": [
+          0.0,
+          0.5,
+          0.4
+        ],
+        "P3": [
+          0.0,
+          0.52,
+          0.45
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.8, "AU25": 0.2, "head_pitch": 5.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "FORWARD_RELEASE"},
-      "timing_ms": {"prep": 120, "stroke": 400, "retract": 180, "total": 700}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.4,
+        "AU12": 0.8,
+        "AU25": 0.2,
+        "head_pitch": 5.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "CHIN",
+        "touch_type": "FORWARD_RELEASE"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 400,
+        "retract": 180,
+        "total": 700
+      }
     },
     {
       "slug": "salam",
@@ -219,14 +582,47 @@
       "handshape": "B_FLAT_OPEN",
       "stokoe_notation": "ᚢᚯ↗",
       "bezier_anchors_3d": {
-        "P0": [0.12, 0.22, 0.10],
-        "P1": [0.15, 0.30, 0.25],
-        "P2": [0.20, 0.38, 0.38],
-        "P3": [0.22, 0.40, 0.42]
+        "P0": [
+          0.12,
+          0.22,
+          0.1
+        ],
+        "P1": [
+          0.15,
+          0.3,
+          0.25
+        ],
+        "P2": [
+          0.2,
+          0.38,
+          0.38
+        ],
+        "P3": [
+          0.22,
+          0.4,
+          0.42
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.3, "AU12": 0.6, "AU25": 0.0, "head_pitch": 4.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "FOREHEAD", "touch_type": "SALUTE_RELEASE"},
-      "timing_ms": {"prep": 130, "stroke": 420, "retract": 180, "total": 730}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.3,
+        "AU12": 0.6,
+        "AU25": 0.0,
+        "head_pitch": 4.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "FOREHEAD",
+        "touch_type": "SALUTE_RELEASE"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 420,
+        "retract": 180,
+        "total": 730
+      }
     },
     {
       "slug": "nomoshkar",
@@ -237,14 +633,47 @@
       "handshape": "ANJALI_DUAL_PALM",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.52, 0.25],
-        "P1": [0.00, 0.48, 0.20],
-        "P2": [0.00, 0.45, 0.18],
-        "P3": [0.00, 0.48, 0.20]
+        "P0": [
+          0.0,
+          0.52,
+          0.25
+        ],
+        "P1": [
+          0.0,
+          0.48,
+          0.2
+        ],
+        "P2": [
+          0.0,
+          0.45,
+          0.18
+        ],
+        "P3": [
+          0.0,
+          0.48,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.0, "head_pitch": 6.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST", "touch_type": "DUAL_PALM_CONTACT"},
-      "timing_ms": {"prep": 140, "stroke": 420, "retract": 160, "total": 720}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.4,
+        "AU12": 0.7,
+        "AU25": 0.0,
+        "head_pitch": 6.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEST",
+        "touch_type": "DUAL_PALM_CONTACT"
+      },
+      "timing_ms": {
+        "prep": 140,
+        "stroke": 420,
+        "retract": 160,
+        "total": 720
+      }
     },
     {
       "slug": "kemon_acho",
@@ -255,14 +684,47 @@
       "handshape": "CUPPED_PALMS_UP",
       "stokoe_notation": "ᚢᚯ⟳",
       "bezier_anchors_3d": {
-        "P0": [-0.15, 0.55, 0.20],
-        "P1": [-0.20, 0.52, 0.25],
-        "P2": [0.20, 0.52, 0.25],
-        "P3": [0.25, 0.55, 0.20]
+        "P0": [
+          -0.15,
+          0.55,
+          0.2
+        ],
+        "P1": [
+          -0.2,
+          0.52,
+          0.25
+        ],
+        "P2": [
+          0.2,
+          0.52,
+          0.25
+        ],
+        "P3": [
+          0.25,
+          0.55,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.3, "head_pitch": -4.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "PALM_UP_ROTATION"},
-      "timing_ms": {"prep": 150, "stroke": 450, "retract": 200, "total": 800}
+      "facs_action_units": {
+        "AU01": 0.4,
+        "AU02": 0.4,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.2,
+        "AU25": 0.3,
+        "head_pitch": -4.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "PALM_UP_ROTATION"
+      },
+      "timing_ms": {
+        "prep": 150,
+        "stroke": 450,
+        "retract": 200,
+        "total": 800
+      }
     },
     {
       "slug": "bhalo",
@@ -273,14 +735,47 @@
       "handshape": "THUMBS_UP",
       "stokoe_notation": "ᚢᚦ↑",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.55, 0.20],
-        "P1": [0.15, 0.48, 0.22],
-        "P2": [0.15, 0.42, 0.25],
-        "P3": [0.15, 0.45, 0.22]
+        "P0": [
+          0.15,
+          0.55,
+          0.2
+        ],
+        "P1": [
+          0.15,
+          0.48,
+          0.22
+        ],
+        "P2": [
+          0.15,
+          0.42,
+          0.25
+        ],
+        "P3": [
+          0.15,
+          0.45,
+          0.22
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.5, "AU12": 0.8, "AU25": 0.2, "head_pitch": 3.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "UPWARD_THRUST"},
-      "timing_ms": {"prep": 100, "stroke": 300, "retract": 150, "total": 550}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.5,
+        "AU12": 0.8,
+        "AU25": 0.2,
+        "head_pitch": 3.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "UPWARD_THRUST"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 300,
+        "retract": 150,
+        "total": 550
+      }
     },
     {
       "slug": "daktar",
@@ -291,14 +786,47 @@
       "handshape": "TWO_FINGERS_ON_WRIST",
       "stokoe_notation": "ᚢ✌⫤",
       "bezier_anchors_3d": {
-        "P0": [-0.15, 0.55, 0.20],
-        "P1": [-0.10, 0.52, 0.18],
-        "P2": [-0.10, 0.52, 0.18],
-        "P3": [-0.10, 0.52, 0.18]
+        "P0": [
+          -0.15,
+          0.55,
+          0.2
+        ],
+        "P1": [
+          -0.1,
+          0.52,
+          0.18
+        ],
+        "P2": [
+          -0.1,
+          0.52,
+          0.18
+        ],
+        "P3": [
+          -0.1,
+          0.52,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "WRIST_RADIAL", "touch_type": "PULSE_TAP"},
-      "timing_ms": {"prep": 120, "stroke": 360, "retract": 160, "total": 640}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.2,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "WRIST_RADIAL",
+        "touch_type": "PULSE_TAP"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 360,
+        "retract": 160,
+        "total": 640
+      }
     },
     {
       "slug": "haspatal",
@@ -309,14 +837,47 @@
       "handshape": "INDEX_CROSS_DRAW",
       "stokoe_notation": "ᚢ☝✕",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.42, 0.15],
-        "P1": [0.00, 0.52, 0.15],
-        "P2": [-0.05, 0.47, 0.15],
-        "P3": [0.05, 0.47, 0.15]
+        "P0": [
+          0.0,
+          0.42,
+          0.15
+        ],
+        "P1": [
+          0.0,
+          0.52,
+          0.15
+        ],
+        "P2": [
+          -0.05,
+          0.47,
+          0.15
+        ],
+        "P3": [
+          0.05,
+          0.47,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST", "touch_type": "CROSS_DRAW"},
-      "timing_ms": {"prep": 130, "stroke": 450, "retract": 170, "total": 750}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.2,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEST",
+        "touch_type": "CROSS_DRAW"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 450,
+        "retract": 170,
+        "total": 750
+      }
     },
     {
       "slug": "oshukh",
@@ -327,14 +888,47 @@
       "handshape": "MIDDLE_FINGER_BENT",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.22, 0.10],
-        "P1": [0.00, 0.55, 0.15],
-        "P2": [0.00, 0.22, 0.10],
-        "P3": [0.00, 0.55, 0.15]
+        "P0": [
+          0.0,
+          0.22,
+          0.1
+        ],
+        "P1": [
+          0.0,
+          0.55,
+          0.15
+        ],
+        "P2": [
+          0.0,
+          0.22,
+          0.1
+        ],
+        "P3": [
+          0.0,
+          0.55,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.3, "AU02": 0.0, "AU04": 0.7, "AU06": 0.2, "AU12": 0.0, "AU25": 0.2, "head_pitch": -5.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "FOREHEAD_AND_STOMACH", "touch_type": "DUAL_POINT_TOUCH"},
-      "timing_ms": {"prep": 140, "stroke": 400, "retract": 180, "total": 720}
+      "facs_action_units": {
+        "AU01": 0.3,
+        "AU02": 0.0,
+        "AU04": 0.7,
+        "AU06": 0.2,
+        "AU12": 0.0,
+        "AU25": 0.2,
+        "head_pitch": -5.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "FOREHEAD_AND_STOMACH",
+        "touch_type": "DUAL_POINT_TOUCH"
+      },
+      "timing_ms": {
+        "prep": 140,
+        "stroke": 400,
+        "retract": 180,
+        "total": 720
+      }
     },
     {
       "slug": "byatha",
@@ -345,14 +939,47 @@
       "handshape": "INDEX_FINGERS_POINTING_TWIST",
       "stokoe_notation": "ᚢ☝⟲",
       "bezier_anchors_3d": {
-        "P0": [-0.08, 0.45, 0.20],
-        "P1": [0.08, 0.45, 0.20],
-        "P2": [-0.04, 0.45, 0.18],
-        "P3": [0.04, 0.45, 0.18]
+        "P0": [
+          -0.08,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.08,
+          0.45,
+          0.2
+        ],
+        "P2": [
+          -0.04,
+          0.45,
+          0.18
+        ],
+        "P3": [
+          0.04,
+          0.45,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.8, "AU06": 0.5, "AU12": 0.0, "AU25": 0.3, "head_pitch": -3.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "PAIN_LOCUS", "touch_type": "OPPOSING_TWIST"},
-      "timing_ms": {"prep": 120, "stroke": 380, "retract": 160, "total": 660}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.0,
+        "AU04": 0.8,
+        "AU06": 0.5,
+        "AU12": 0.0,
+        "AU25": 0.3,
+        "head_pitch": -3.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "PAIN_LOCUS",
+        "touch_type": "OPPOSING_TWIST"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 380,
+        "retract": 160,
+        "total": 660
+      }
     },
     {
       "slug": "oushodh",
@@ -363,14 +990,47 @@
       "handshape": "MIDDLE_FINGER_GRIND_PALM",
       "stokoe_notation": "ᚢᚯ⟳",
       "bezier_anchors_3d": {
-        "P0": [-0.05, 0.52, 0.20],
-        "P1": [-0.05, 0.50, 0.18],
-        "P2": [-0.05, 0.50, 0.18],
-        "P3": [-0.05, 0.50, 0.18]
+        "P0": [
+          -0.05,
+          0.52,
+          0.2
+        ],
+        "P1": [
+          -0.05,
+          0.5,
+          0.18
+        ],
+        "P2": [
+          -0.05,
+          0.5,
+          0.18
+        ],
+        "P3": [
+          -0.05,
+          0.5,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.1, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NON_DOMINANT_PALM", "touch_type": "CIRCULAR_GRIND"},
-      "timing_ms": {"prep": 110, "stroke": 350, "retract": 150, "total": 610}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.1,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NON_DOMINANT_PALM",
+        "touch_type": "CIRCULAR_GRIND"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 350,
+        "retract": 150,
+        "total": 610
+      }
     },
     {
       "slug": "sahajjo",
@@ -381,14 +1041,47 @@
       "handshape": "FIST_ON_OPEN_PALM_LIFT",
       "stokoe_notation": "ᚢᚦ↑",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.58, 0.22],
-        "P1": [0.00, 0.50, 0.25],
-        "P2": [0.00, 0.42, 0.28],
-        "P3": [0.00, 0.38, 0.30]
+        "P0": [
+          0.0,
+          0.58,
+          0.22
+        ],
+        "P1": [
+          0.0,
+          0.5,
+          0.25
+        ],
+        "P2": [
+          0.0,
+          0.42,
+          0.28
+        ],
+        "P3": [
+          0.0,
+          0.38,
+          0.3
+        ]
       },
-      "facs_action_units": {"AU01": 0.3, "AU02": 0.3, "AU04": 0.0, "AU06": 0.0, "AU12": 0.0, "AU25": 0.3, "head_pitch": 2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "UPWARD_SUPPORT_LIFT"},
-      "timing_ms": {"prep": 130, "stroke": 420, "retract": 180, "total": 730}
+      "facs_action_units": {
+        "AU01": 0.3,
+        "AU02": 0.3,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.3,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "UPWARD_SUPPORT_LIFT"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 420,
+        "retract": 180,
+        "total": 730
+      }
     },
     {
       "slug": "joruri",
@@ -399,14 +1092,47 @@
       "handshape": "E_SHAKE",
       "stokoe_notation": "ᚢᚦ⟲",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.45, 0.20],
-        "P1": [0.12, 0.45, 0.20],
-        "P2": [0.18, 0.45, 0.20],
-        "P3": [0.15, 0.45, 0.20]
+        "P0": [
+          0.15,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.12,
+          0.45,
+          0.2
+        ],
+        "P2": [
+          0.18,
+          0.45,
+          0.2
+        ],
+        "P3": [
+          0.15,
+          0.45,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.4, "head_pitch": 0.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_VIBRATION"},
-      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+      "facs_action_units": {
+        "AU01": 0.4,
+        "AU02": 0.4,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.0,
+        "AU25": 0.4,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "LATERAL_VIBRATION"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 320,
+        "retract": 140,
+        "total": 560
+      }
     },
     {
       "slug": "ambulance",
@@ -417,14 +1143,47 @@
       "handshape": "CUPPED_SIREN_ROTATE",
       "stokoe_notation": "ᚢᚯ⟳",
       "bezier_anchors_3d": {
-        "P0": [0.10, 0.20, 0.15],
-        "P1": [0.12, 0.18, 0.15],
-        "P2": [0.08, 0.22, 0.15],
-        "P3": [0.10, 0.20, 0.15]
+        "P0": [
+          0.1,
+          0.2,
+          0.15
+        ],
+        "P1": [
+          0.12,
+          0.18,
+          0.15
+        ],
+        "P2": [
+          0.08,
+          0.22,
+          0.15
+        ],
+        "P3": [
+          0.1,
+          0.2,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.0, "AU12": 0.0, "AU25": 0.3, "head_pitch": 0.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "HEAD_TOP", "touch_type": "SIREN_ROTATION"},
-      "timing_ms": {"prep": 120, "stroke": 450, "retract": 160, "total": 730}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.2,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.3,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "HEAD_TOP",
+        "touch_type": "SIREN_ROTATION"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 450,
+        "retract": 160,
+        "total": 730
+      }
     },
     {
       "slug": "school",
@@ -435,14 +1194,47 @@
       "handshape": "DOUBLE_CLAP_HORIZONTAL",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.48, 0.20],
-        "P1": [0.00, 0.48, 0.18],
-        "P2": [0.00, 0.48, 0.20],
-        "P3": [0.00, 0.48, 0.18]
+        "P0": [
+          0.0,
+          0.48,
+          0.2
+        ],
+        "P1": [
+          0.0,
+          0.48,
+          0.18
+        ],
+        "P2": [
+          0.0,
+          0.48,
+          0.2
+        ],
+        "P3": [
+          0.0,
+          0.48,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 1.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DOUBLE_PALM_CLAP"},
-      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 1.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "DOUBLE_PALM_CLAP"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 340,
+        "retract": 150,
+        "total": 600
+      }
     },
     {
       "slug": "shikkhok",
@@ -453,14 +1245,47 @@
       "handshape": "O_PINCH_TO_OPEN_AGENT",
       "stokoe_notation": "ᚢᚯ↗",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.25, 0.15],
-        "P1": [0.10, 0.25, 0.15],
-        "P2": [-0.15, 0.45, 0.25],
-        "P3": [0.15, 0.45, 0.25]
+        "P0": [
+          -0.1,
+          0.25,
+          0.15
+        ],
+        "P1": [
+          0.1,
+          0.25,
+          0.15
+        ],
+        "P2": [
+          -0.15,
+          0.45,
+          0.25
+        ],
+        "P3": [
+          0.15,
+          0.45,
+          0.25
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "TEMPLES_TO_SPACE", "touch_type": "TEACH_AND_PERSON_SUFFIX"},
-      "timing_ms": {"prep": 140, "stroke": 480, "retract": 180, "total": 800}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "TEMPLES_TO_SPACE",
+        "touch_type": "TEACH_AND_PERSON_SUFFIX"
+      },
+      "timing_ms": {
+        "prep": 140,
+        "stroke": 480,
+        "retract": 180,
+        "total": 800
+      }
     },
     {
       "slug": "taka",
@@ -471,14 +1296,47 @@
       "handshape": "THUMB_INDEX_RUB",
       "stokoe_notation": "ᚢᚦ⟳",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.50, 0.20],
-        "P1": [0.15, 0.48, 0.20],
-        "P2": [0.15, 0.50, 0.20],
-        "P3": [0.15, 0.48, 0.20]
+        "P0": [
+          0.15,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.15,
+          0.48,
+          0.2
+        ],
+        "P2": [
+          0.15,
+          0.5,
+          0.2
+        ],
+        "P3": [
+          0.15,
+          0.48,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.3, "AU12": 0.5, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "PINCH_RUB"},
-      "timing_ms": {"prep": 100, "stroke": 300, "retract": 140, "total": 540}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.3,
+        "AU12": 0.5,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "PINCH_RUB"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 300,
+        "retract": 140,
+        "total": 540
+      }
     },
     {
       "slug": "police",
@@ -489,14 +1347,47 @@
       "handshape": "C_SHAPE_BADGE",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [-0.15, 0.40, 0.15],
-        "P1": [-0.15, 0.40, 0.10],
-        "P2": [-0.15, 0.40, 0.10],
-        "P3": [-0.15, 0.40, 0.10]
+        "P0": [
+          -0.15,
+          0.4,
+          0.15
+        ],
+        "P1": [
+          -0.15,
+          0.4,
+          0.1
+        ],
+        "P2": [
+          -0.15,
+          0.4,
+          0.1
+        ],
+        "P3": [
+          -0.15,
+          0.4,
+          0.1
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEST_LEFT", "touch_type": "BADGE_TAP"},
-      "timing_ms": {"prep": 110, "stroke": 290, "retract": 150, "total": 550}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.2,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEST_LEFT",
+        "touch_type": "BADGE_TAP"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 290,
+        "retract": 150,
+        "total": 550
+      }
     },
     {
       "slug": "bank",
@@ -507,14 +1398,47 @@
       "handshape": "B_MONEY_DEPOSIT",
       "stokoe_notation": "ᚢᚯ↓",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.42, 0.20],
-        "P1": [0.00, 0.52, 0.20],
-        "P2": [0.00, 0.52, 0.18],
-        "P3": [0.00, 0.52, 0.18]
+        "P0": [
+          0.0,
+          0.42,
+          0.2
+        ],
+        "P1": [
+          0.0,
+          0.52,
+          0.2
+        ],
+        "P2": [
+          0.0,
+          0.52,
+          0.18
+        ],
+        "P3": [
+          0.0,
+          0.52,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.1, "AU12": 0.3, "AU25": 0.0, "head_pitch": 1.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "SLOT_INSERTION"},
-      "timing_ms": {"prep": 120, "stroke": 350, "retract": 160, "total": 630}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.1,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 1.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "SLOT_INSERTION"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 350,
+        "retract": 160,
+        "total": 630
+      }
     },
     {
       "slug": "nid",
@@ -525,14 +1449,47 @@
       "handshape": "L_SHAPE_RECTANGLE_FRAME",
       "stokoe_notation": "ᚢᒪ✕",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.45, 0.20],
-        "P1": [0.10, 0.45, 0.20],
-        "P2": [0.10, 0.55, 0.20],
-        "P3": [-0.10, 0.55, 0.20]
+        "P0": [
+          -0.1,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.1,
+          0.45,
+          0.2
+        ],
+        "P2": [
+          0.1,
+          0.55,
+          0.2
+        ],
+        "P3": [
+          -0.1,
+          0.55,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FRAME_RECTANGLE"},
-      "timing_ms": {"prep": 130, "stroke": 420, "retract": 170, "total": 720}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.2,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "FRAME_RECTANGLE"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 420,
+        "retract": 170,
+        "total": 720
+      }
     },
     {
       "slug": "bhumikompo",
@@ -543,14 +1500,47 @@
       "handshape": "B_FLAT_PARALLEL_VIBRATE",
       "stokoe_notation": "ᚢᚯ⫤⟲",
       "bezier_anchors_3d": {
-        "P0": [-0.15, 0.50, 0.22],
-        "P1": [0.15, 0.50, 0.22],
-        "P2": [-0.15, 0.50, 0.22],
-        "P3": [0.15, 0.50, 0.22]
+        "P0": [
+          -0.15,
+          0.5,
+          0.22
+        ],
+        "P1": [
+          0.15,
+          0.5,
+          0.22
+        ],
+        "P2": [
+          -0.15,
+          0.5,
+          0.22
+        ],
+        "P3": [
+          0.15,
+          0.5,
+          0.22
+        ]
       },
-      "facs_action_units": {"AU01": 0.6, "AU02": 0.6, "AU04": 0.0, "AU06": 0.4, "AU12": 0.0, "AU25": 0.5, "head_pitch": 0.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "SYNCHRONOUS_IN_PHASE_VIBRATION"},
-      "timing_ms": {"prep": 120, "stroke": 500, "retract": 180, "total": 800}
+      "facs_action_units": {
+        "AU01": 0.6,
+        "AU02": 0.6,
+        "AU04": 0.0,
+        "AU06": 0.4,
+        "AU12": 0.0,
+        "AU25": 0.5,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "SYNCHRONOUS_IN_PHASE_VIBRATION"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 500,
+        "retract": 180,
+        "total": 800
+      }
     },
     {
       "slug": "janjot",
@@ -561,14 +1551,47 @@
       "handshape": "B_FLAT_ALTERNATING_CARS",
       "stokoe_notation": "ᚢᚯ⫤⇄",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.52, 0.25],
-        "P1": [0.10, 0.52, 0.18],
-        "P2": [-0.10, 0.52, 0.18],
-        "P3": [0.10, 0.52, 0.25]
+        "P0": [
+          -0.1,
+          0.52,
+          0.25
+        ],
+        "P1": [
+          0.1,
+          0.52,
+          0.18
+        ],
+        "P2": [
+          -0.1,
+          0.52,
+          0.18
+        ],
+        "P3": [
+          0.1,
+          0.52,
+          0.25
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.6, "AU06": 0.0, "AU12": 0.0, "AU25": 0.2, "head_pitch": -2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "ALTERNATING_OUT_OF_PHASE_TRANSLATION"},
-      "timing_ms": {"prep": 130, "stroke": 480, "retract": 180, "total": 790}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.0,
+        "AU04": 0.6,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.2,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "ALTERNATING_OUT_OF_PHASE_TRANSLATION"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 480,
+        "retract": 180,
+        "total": 790
+      }
     },
     {
       "slug": "agun",
@@ -579,14 +1602,47 @@
       "handshape": "FIVE_FINGERS_FLICKER_UP",
       "stokoe_notation": "ᚢᚯ↑⟳",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.60, 0.20],
-        "P1": [0.10, 0.60, 0.20],
-        "P2": [-0.12, 0.40, 0.25],
-        "P3": [0.12, 0.35, 0.25]
+        "P0": [
+          -0.1,
+          0.6,
+          0.2
+        ],
+        "P1": [
+          0.1,
+          0.6,
+          0.2
+        ],
+        "P2": [
+          -0.12,
+          0.4,
+          0.25
+        ],
+        "P3": [
+          0.12,
+          0.35,
+          0.25
+        ]
       },
-      "facs_action_units": {"AU01": 0.5, "AU02": 0.5, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.5, "head_pitch": -4.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FLICKER_ASCENT"},
-      "timing_ms": {"prep": 120, "stroke": 460, "retract": 180, "total": 760}
+      "facs_action_units": {
+        "AU01": 0.5,
+        "AU02": 0.5,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.0,
+        "AU25": 0.5,
+        "head_pitch": -4.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "FLICKER_ASCENT"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 460,
+        "retract": 180,
+        "total": 760
+      }
     },
     {
       "slug": "bonna",
@@ -597,14 +1653,47 @@
       "handshape": "B_PALMS_DOWN_RISE",
       "stokoe_notation": "ᚢᚯ↑",
       "bezier_anchors_3d": {
-        "P0": [-0.15, 0.65, 0.25],
-        "P1": [0.15, 0.65, 0.25],
-        "P2": [-0.15, 0.35, 0.25],
-        "P3": [0.15, 0.35, 0.25]
+        "P0": [
+          -0.15,
+          0.65,
+          0.25
+        ],
+        "P1": [
+          0.15,
+          0.65,
+          0.25
+        ],
+        "P2": [
+          -0.15,
+          0.35,
+          0.25
+        ],
+        "P3": [
+          0.15,
+          0.35,
+          0.25
+        ]
       },
-      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.4, "head_pitch": -2.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "WATER_LEVEL_ASCENT"},
-      "timing_ms": {"prep": 130, "stroke": 480, "retract": 190, "total": 800}
+      "facs_action_units": {
+        "AU01": 0.4,
+        "AU02": 0.4,
+        "AU04": 0.2,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.4,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "WATER_LEVEL_ASCENT"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 480,
+        "retract": 190,
+        "total": 800
+      }
     },
     {
       "slug": "pani",
@@ -615,14 +1704,47 @@
       "handshape": "W_SHAPE_INDEX_MIDDLE_RING",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.00, 0.40, 0.15],
-        "P1": [0.00, 0.38, 0.10],
-        "P2": [0.00, 0.38, 0.10],
-        "P3": [0.00, 0.38, 0.10]
+        "P0": [
+          0.0,
+          0.4,
+          0.15
+        ],
+        "P1": [
+          0.0,
+          0.38,
+          0.1
+        ],
+        "P2": [
+          0.0,
+          0.38,
+          0.1
+        ],
+        "P3": [
+          0.0,
+          0.38,
+          0.1
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHIN", "touch_type": "CHIN_TAP"},
-      "timing_ms": {"prep": 100, "stroke": 280, "retract": 140, "total": 520}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.2,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "CHIN",
+        "touch_type": "CHIN_TAP"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 280,
+        "retract": 140,
+        "total": 520
+      }
     },
     {
       "slug": "shabdhan",
@@ -633,14 +1755,47 @@
       "handshape": "INDEX_UP_WAG",
       "stokoe_notation": "ᚢ☝⇄",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.35, 0.20],
-        "P1": [0.10, 0.35, 0.20],
-        "P2": [0.20, 0.35, 0.20],
-        "P3": [0.15, 0.35, 0.20]
+        "P0": [
+          0.15,
+          0.35,
+          0.2
+        ],
+        "P1": [
+          0.1,
+          0.35,
+          0.2
+        ],
+        "P2": [
+          0.2,
+          0.35,
+          0.2
+        ],
+        "P3": [
+          0.15,
+          0.35,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.0, "AU04": 0.7, "AU06": 0.0, "AU12": 0.0, "AU25": 0.1, "head_pitch": -2.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INDEX_WAG"},
-      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.0,
+        "AU04": 0.7,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.1,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "INDEX_WAG"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 340,
+        "retract": 150,
+        "total": 600
+      }
     },
     {
       "slug": "khawa",
@@ -651,14 +1806,47 @@
       "handshape": "O_PINCH_TO_MOUTH",
       "stokoe_notation": "ᚢᚦ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.10, 0.45, 0.20],
-        "P1": [0.00, 0.38, 0.10],
-        "P2": [0.00, 0.38, 0.10],
-        "P3": [0.00, 0.38, 0.10]
+        "P0": [
+          0.1,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.0,
+          0.38,
+          0.1
+        ],
+        "P2": [
+          0.0,
+          0.38,
+          0.1
+        ],
+        "P3": [
+          0.0,
+          0.38,
+          0.1
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.4, "head_pitch": 2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "MOUTH", "touch_type": "REPEATED_PINCH_TAP"},
-      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.4,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "MOUTH",
+        "touch_type": "REPEATED_PINCH_TAP"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 320,
+        "retract": 140,
+        "total": 560
+      }
     },
     {
       "slug": "jawa",
@@ -669,14 +1857,47 @@
       "handshape": "INDEX_FORWARD_SWIPE",
       "stokoe_notation": "ᚢ☝↗",
       "bezier_anchors_3d": {
-        "P0": [0.10, 0.45, 0.15],
-        "P1": [0.15, 0.42, 0.30],
-        "P2": [0.20, 0.40, 0.42],
-        "P3": [0.25, 0.38, 0.50]
+        "P0": [
+          0.1,
+          0.45,
+          0.15
+        ],
+        "P1": [
+          0.15,
+          0.42,
+          0.3
+        ],
+        "P2": [
+          0.2,
+          0.4,
+          0.42
+        ],
+        "P3": [
+          0.25,
+          0.38,
+          0.5
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FORWARD_ARREST"},
-      "timing_ms": {"prep": 110, "stroke": 350, "retract": 150, "total": 610}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.2,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "FORWARD_ARREST"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 350,
+        "retract": 150,
+        "total": 610
+      }
     },
     {
       "slug": "asha",
@@ -687,14 +1908,47 @@
       "handshape": "B_OPEN_PALM_INWARD",
       "stokoe_notation": "ᚢᚯ↙",
       "bezier_anchors_3d": {
-        "P0": [0.20, 0.40, 0.45],
-        "P1": [0.15, 0.45, 0.30],
-        "P2": [0.10, 0.50, 0.20],
-        "P3": [0.05, 0.52, 0.15]
+        "P0": [
+          0.2,
+          0.4,
+          0.45
+        ],
+        "P1": [
+          0.15,
+          0.45,
+          0.3
+        ],
+        "P2": [
+          0.1,
+          0.5,
+          0.2
+        ],
+        "P3": [
+          0.05,
+          0.52,
+          0.15
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.2, "AU12": 0.4, "AU25": 0.0, "head_pitch": 2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "INWARD_SWEEP"},
-      "timing_ms": {"prep": 110, "stroke": 360, "retract": 150, "total": 620}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.4,
+        "AU25": 0.0,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "INWARD_SWEEP"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 360,
+        "retract": 150,
+        "total": 620
+      }
     },
     {
       "slug": "ghumano",
@@ -705,14 +1959,47 @@
       "handshape": "B_FLAT_CHEEK_PILLOW",
       "stokoe_notation": "ᚢᚯ⫤",
       "bezier_anchors_3d": {
-        "P0": [0.20, 0.35, 0.12],
-        "P1": [0.18, 0.32, 0.08],
-        "P2": [0.18, 0.32, 0.08],
-        "P3": [0.18, 0.32, 0.08]
+        "P0": [
+          0.2,
+          0.35,
+          0.12
+        ],
+        "P1": [
+          0.18,
+          0.32,
+          0.08
+        ],
+        "P2": [
+          0.18,
+          0.32,
+          0.08
+        ],
+        "P3": [
+          0.18,
+          0.32,
+          0.08
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.5, "AU12": 0.3, "AU25": 0.0, "head_pitch": 15.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "CHEEK_TILT", "touch_type": "HEAD_TILT_REST"},
-      "timing_ms": {"prep": 130, "stroke": 450, "retract": 180, "total": 760}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.5,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 15.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEEK_TILT",
+        "touch_type": "HEAD_TILT_REST"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 450,
+        "retract": 180,
+        "total": 760
+      }
     },
     {
       "slug": "pora",
@@ -723,14 +2010,47 @@
       "handshape": "V_SCAN_ACROSS_BOOK_PALM",
       "stokoe_notation": "ᚢ✌⫤",
       "bezier_anchors_3d": {
-        "P0": [-0.05, 0.50, 0.20],
-        "P1": [0.05, 0.50, 0.20],
-        "P2": [-0.05, 0.52, 0.20],
-        "P3": [0.05, 0.52, 0.20]
+        "P0": [
+          -0.05,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.05,
+          0.5,
+          0.2
+        ],
+        "P2": [
+          -0.05,
+          0.52,
+          0.2
+        ],
+        "P3": [
+          0.05,
+          0.52,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.2, "AU06": 0.0, "AU12": 0.0, "AU25": 0.0, "head_pitch": 8.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NON_DOMINANT_PALM", "touch_type": "EYE_SCAN_SWEEP"},
-      "timing_ms": {"prep": 120, "stroke": 400, "retract": 160, "total": 680}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.2,
+        "AU06": 0.0,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 8.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NON_DOMINANT_PALM",
+        "touch_type": "EYE_SCAN_SWEEP"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 400,
+        "retract": 160,
+        "total": 680
+      }
     },
     {
       "slug": "taratari",
@@ -741,14 +2061,47 @@
       "handshape": "B_FLAT_ALTERNATING_FLUTTER",
       "stokoe_notation": "ᚢᚯ↑⇄",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.55, 0.20],
-        "P1": [0.10, 0.42, 0.22],
-        "P2": [-0.10, 0.38, 0.25],
-        "P3": [0.10, 0.45, 0.22]
+        "P0": [
+          -0.1,
+          0.55,
+          0.2
+        ],
+        "P1": [
+          0.1,
+          0.42,
+          0.22
+        ],
+        "P2": [
+          -0.1,
+          0.38,
+          0.25
+        ],
+        "P3": [
+          0.1,
+          0.45,
+          0.22
+        ]
       },
-      "facs_action_units": {"AU01": 0.4, "AU02": 0.4, "AU04": 0.0, "AU06": 0.2, "AU12": 0.0, "AU25": 0.4, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "HIGH_ACCELERATION_VERTICAL_FLUTTER"},
-      "timing_ms": {"prep": 80, "stroke": 250, "retract": 100, "total": 430}
+      "facs_action_units": {
+        "AU01": 0.4,
+        "AU02": 0.4,
+        "AU04": 0.0,
+        "AU06": 0.2,
+        "AU12": 0.0,
+        "AU25": 0.4,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "HIGH_ACCELERATION_VERTICAL_FLUTTER"
+      },
+      "timing_ms": {
+        "prep": 80,
+        "stroke": 250,
+        "retract": 100,
+        "total": 430
+      }
     },
     {
       "slug": "chure_mara",
@@ -759,14 +2112,47 @@
       "handshape": "FIST_TO_OPEN_BALLISTIC",
       "stokoe_notation": "ᚢᚦ↗",
       "bezier_anchors_3d": {
-        "P0": [0.20, 0.30, 0.10],
-        "P1": [0.20, 0.35, 0.30],
-        "P2": [0.18, 0.40, 0.50],
-        "P3": [0.15, 0.45, 0.60]
+        "P0": [
+          0.2,
+          0.3,
+          0.1
+        ],
+        "P1": [
+          0.2,
+          0.35,
+          0.3
+        ],
+        "P2": [
+          0.18,
+          0.4,
+          0.5
+        ],
+        "P3": [
+          0.15,
+          0.45,
+          0.6
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.5, "AU06": 0.2, "AU12": 0.0, "AU25": 0.3, "head_pitch": -2.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "ANTERIOR_BALLISTIC_THRUST"},
-      "timing_ms": {"prep": 90, "stroke": 260, "retract": 120, "total": 470}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.5,
+        "AU06": 0.2,
+        "AU12": 0.0,
+        "AU25": 0.3,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "ANTERIOR_BALLISTIC_THRUST"
+      },
+      "timing_ms": {
+        "prep": 90,
+        "stroke": 260,
+        "retract": 120,
+        "total": 470
+      }
     },
     {
       "slug": "ami",
@@ -777,14 +2163,47 @@
       "handshape": "INDEX_POINT_CHEST",
       "stokoe_notation": "ᚢ☝⫤",
       "bezier_anchors_3d": {
-        "P0": [0.15, 0.50, 0.20],
-        "P1": [0.00, 0.45, 0.10],
-        "P2": [0.00, 0.45, 0.08],
-        "P3": [0.00, 0.45, 0.08]
+        "P0": [
+          0.15,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.0,
+          0.45,
+          0.1
+        ],
+        "P2": [
+          0.0,
+          0.45,
+          0.08
+        ],
+        "P3": [
+          0.0,
+          0.45,
+          0.08
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.2, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "CHEST", "touch_type": "CHEST_TAP"},
-      "timing_ms": {"prep": 90, "stroke": 240, "retract": 120, "total": 450}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.2,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "CHEST",
+        "touch_type": "CHEST_TAP"
+      },
+      "timing_ms": {
+        "prep": 90,
+        "stroke": 240,
+        "retract": 120,
+        "total": 450
+      }
     },
     {
       "slug": "apni",
@@ -795,14 +2214,47 @@
       "handshape": "B_FLAT_OPEN_PALM_FORWARD",
       "stokoe_notation": "ᚢᚯ↗",
       "bezier_anchors_3d": {
-        "P0": [0.05, 0.48, 0.18],
-        "P1": [0.05, 0.45, 0.30],
-        "P2": [0.05, 0.45, 0.40],
-        "P3": [0.05, 0.45, 0.45]
+        "P0": [
+          0.05,
+          0.48,
+          0.18
+        ],
+        "P1": [
+          0.05,
+          0.45,
+          0.3
+        ],
+        "P2": [
+          0.05,
+          0.45,
+          0.4
+        ],
+        "P3": [
+          0.05,
+          0.45,
+          0.45
+        ]
       },
-      "facs_action_units": {"AU01": 0.1, "AU02": 0.1, "AU04": 0.0, "AU06": 0.3, "AU12": 0.5, "AU25": 0.0, "head_pitch": 3.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "FORWARD_RESPECT_GESTURE"},
-      "timing_ms": {"prep": 110, "stroke": 340, "retract": 150, "total": 600}
+      "facs_action_units": {
+        "AU01": 0.1,
+        "AU02": 0.1,
+        "AU04": 0.0,
+        "AU06": 0.3,
+        "AU12": 0.5,
+        "AU25": 0.0,
+        "head_pitch": 3.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "FORWARD_RESPECT_GESTURE"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 340,
+        "retract": 150,
+        "total": 600
+      }
     },
     {
       "slug": "tumi",
@@ -813,14 +2265,47 @@
       "handshape": "INDEX_POINT_FORWARD",
       "stokoe_notation": "ᚢ☝↗",
       "bezier_anchors_3d": {
-        "P0": [0.05, 0.48, 0.18],
-        "P1": [0.05, 0.45, 0.30],
-        "P2": [0.05, 0.45, 0.40],
-        "P3": [0.05, 0.45, 0.45]
+        "P0": [
+          0.05,
+          0.48,
+          0.18
+        ],
+        "P1": [
+          0.05,
+          0.45,
+          0.3
+        ],
+        "P2": [
+          0.05,
+          0.45,
+          0.4
+        ],
+        "P3": [
+          0.05,
+          0.45,
+          0.45
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.0, "head_pitch": 0.0},
-      "contact_physics": {"plane": "SAGITTAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DIRECT_POINT"},
-      "timing_ms": {"prep": 90, "stroke": 280, "retract": 130, "total": 500}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.3,
+        "AU25": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "DIRECT_POINT"
+      },
+      "timing_ms": {
+        "prep": 90,
+        "stroke": 280,
+        "retract": 130,
+        "total": 500
+      }
     },
     {
       "slug": "shundor",
@@ -831,14 +2316,47 @@
       "handshape": "FIVE_FINGERS_OPEN_TO_PINCH_ACROSS_FACE",
       "stokoe_notation": "ᚢᚯ⟳",
       "bezier_anchors_3d": {
-        "P0": [-0.10, 0.30, 0.12],
-        "P1": [0.10, 0.32, 0.12],
-        "P2": [0.00, 0.35, 0.15],
-        "P3": [0.00, 0.40, 0.20]
+        "P0": [
+          -0.1,
+          0.3,
+          0.12
+        ],
+        "P1": [
+          0.1,
+          0.32,
+          0.12
+        ],
+        "P2": [
+          0.0,
+          0.35,
+          0.15
+        ],
+        "P3": [
+          0.0,
+          0.4,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.5, "AU12": 0.8, "AU25": 0.2, "head_pitch": 4.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "FACE_CIRCLE", "touch_type": "FACE_CIRCLE_SWIPE"},
-      "timing_ms": {"prep": 120, "stroke": 420, "retract": 170, "total": 710}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.2,
+        "AU04": 0.0,
+        "AU06": 0.5,
+        "AU12": 0.8,
+        "AU25": 0.2,
+        "head_pitch": 4.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "FACE_CIRCLE",
+        "touch_type": "FACE_CIRCLE_SWIPE"
+      },
+      "timing_ms": {
+        "prep": 120,
+        "stroke": 420,
+        "retract": 170,
+        "total": 710
+      }
     },
     {
       "slug": "boro",
@@ -849,14 +2367,47 @@
       "handshape": "CUPPED_EXPAND_OUTWARD",
       "stokoe_notation": "ᚢᚯ⇄",
       "bezier_anchors_3d": {
-        "P0": [-0.05, 0.45, 0.20],
-        "P1": [0.05, 0.45, 0.20],
-        "P2": [-0.30, 0.45, 0.25],
-        "P3": [0.30, 0.45, 0.25]
+        "P0": [
+          -0.05,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.05,
+          0.45,
+          0.2
+        ],
+        "P2": [
+          -0.3,
+          0.45,
+          0.25
+        ],
+        "P3": [
+          0.3,
+          0.45,
+          0.25
+        ]
       },
-      "facs_action_units": {"AU01": 0.3, "AU02": 0.3, "AU04": 0.0, "AU06": 0.0, "AU12": 0.3, "AU25": 0.3, "head_pitch": -2.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_EXPANSION"},
-      "timing_ms": {"prep": 110, "stroke": 400, "retract": 160, "total": 670}
+      "facs_action_units": {
+        "AU01": 0.3,
+        "AU02": 0.3,
+        "AU04": 0.0,
+        "AU06": 0.0,
+        "AU12": 0.3,
+        "AU25": 0.3,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "LATERAL_EXPANSION"
+      },
+      "timing_ms": {
+        "prep": 110,
+        "stroke": 400,
+        "retract": 160,
+        "total": 670
+      }
     },
     {
       "slug": "choto",
@@ -867,14 +2418,47 @@
       "handshape": "FLAT_HANDS_APPROACH",
       "stokoe_notation": "ᚢᚯ→←",
       "bezier_anchors_3d": {
-        "P0": [-0.20, 0.45, 0.20],
-        "P1": [0.20, 0.45, 0.20],
-        "P2": [-0.04, 0.45, 0.20],
-        "P3": [0.04, 0.45, 0.20]
+        "P0": [
+          -0.2,
+          0.45,
+          0.2
+        ],
+        "P1": [
+          0.2,
+          0.45,
+          0.2
+        ],
+        "P2": [
+          -0.04,
+          0.45,
+          0.2
+        ],
+        "P3": [
+          0.04,
+          0.45,
+          0.2
+        ]
       },
-      "facs_action_units": {"AU01": 0.0, "AU02": 0.0, "AU04": 0.4, "AU06": 0.3, "AU12": 0.0, "AU25": 0.0, "head_pitch": 2.0},
-      "contact_physics": {"plane": "CORONAL", "body_anchor": "NEUTRAL_SPACE", "touch_type": "LATERAL_CONTRACTION"},
-      "timing_ms": {"prep": 100, "stroke": 320, "retract": 140, "total": 560}
+      "facs_action_units": {
+        "AU01": 0.0,
+        "AU02": 0.0,
+        "AU04": 0.4,
+        "AU06": 0.3,
+        "AU12": 0.0,
+        "AU25": 0.0,
+        "head_pitch": 2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "LATERAL_CONTRACTION"
+      },
+      "timing_ms": {
+        "prep": 100,
+        "stroke": 320,
+        "retract": 140,
+        "total": 560
+      }
     },
     {
       "slug": "shagotom",
@@ -885,14 +2469,394 @@
       "handshape": "B_OPEN_INWARD_INVITE",
       "stokoe_notation": "ᚢᚯ↙",
       "bezier_anchors_3d": {
-        "P0": [-0.25, 0.45, 0.30],
-        "P1": [0.25, 0.45, 0.30],
-        "P2": [-0.08, 0.50, 0.18],
-        "P3": [0.08, 0.50, 0.18]
+        "P0": [
+          -0.25,
+          0.45,
+          0.3
+        ],
+        "P1": [
+          0.25,
+          0.45,
+          0.3
+        ],
+        "P2": [
+          -0.08,
+          0.5,
+          0.18
+        ],
+        "P3": [
+          0.08,
+          0.5,
+          0.18
+        ]
       },
-      "facs_action_units": {"AU01": 0.2, "AU02": 0.2, "AU04": 0.0, "AU06": 0.4, "AU12": 0.7, "AU25": 0.1, "head_pitch": 4.0},
-      "contact_physics": {"plane": "TRANSVERSE", "body_anchor": "NEUTRAL_SPACE", "touch_type": "DUAL_INVITATION_SWEEP"},
-      "timing_ms": {"prep": 130, "stroke": 440, "retract": 170, "total": 740}
+      "facs_action_units": {
+        "AU01": 0.2,
+        "AU02": 0.2,
+        "AU04": 0.0,
+        "AU06": 0.4,
+        "AU12": 0.7,
+        "AU25": 0.1,
+        "head_pitch": 4.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "NEUTRAL_SPACE",
+        "touch_type": "DUAL_INVITATION_SWEEP"
+      },
+      "timing_ms": {
+        "prep": 130,
+        "stroke": 440,
+        "retract": 170,
+        "total": 740
+      }
+    },
+    {
+      "slug": "cha",
+      "sign_id": "BDSL_V3_00105",
+      "label_bn": "চা",
+      "label_en": "Tea",
+      "category": "Food & Daily Life",
+      "handedness": "dual",
+      "handshape": "HS_PINCH_CUP",
+      "stokoe_notation": "⫸𝄆√",
+      "bezier_anchors_3d": {
+        "P0": [
+          0.0,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.0,
+          0.45,
+          0.18
+        ],
+        "P2": [
+          0.0,
+          0.42,
+          0.15
+        ],
+        "P3": [
+          0.0,
+          0.45,
+          0.18
+        ]
+      },
+      "facs_action_units": {
+        "AU12": 0.3,
+        "head_pitch": -2.0
+      },
+      "contact_physics": {
+        "plane": "CORONAL",
+        "body_anchor": "CHEST_MID",
+        "touch_type": "VERTICAL_TEABAG_DIP"
+      },
+      "timing_ms": {
+        "prep": 140,
+        "stroke": 450,
+        "retract": 150,
+        "total": 740
+      },
+      "target_body_anchor": "CHEST_MID",
+      "articulator_type": "THUMB_INDEX_PINCH",
+      "motion_type": "TAP_TWICE",
+      "user_guide": "Hold left hand as a cup, dip right pinched fingers vertically into the cup twice like a teabag."
+    },
+    {
+      "slug": "coffee",
+      "sign_id": "BDSL_V3_00106",
+      "label_bn": "কফি",
+      "label_en": "Coffee",
+      "category": "Food & Daily Life",
+      "handedness": "dual",
+      "handshape": "HS_FIST_ON_FIST",
+      "stokoe_notation": "⫸⫷☍",
+      "bezier_anchors_3d": {
+        "P0": [
+          0.0,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.05,
+          0.5,
+          0.2
+        ],
+        "P2": [
+          0.0,
+          0.5,
+          0.25
+        ],
+        "P3": [
+          -0.05,
+          0.5,
+          0.2
+        ]
+      },
+      "facs_action_units": {
+        "AU12": 0.2,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "TRANSVERSE",
+        "body_anchor": "CHEST_MID",
+        "touch_type": "CIRCULAR_GRINDING_ORBIT"
+      },
+      "timing_ms": {
+        "prep": 160,
+        "stroke": 550,
+        "retract": 150,
+        "total": 860
+      },
+      "target_body_anchor": "CHEST_MID",
+      "articulator_type": "PALM_CLASP",
+      "motion_type": "CIRCULAR_ORBIT",
+      "user_guide": "Place right fist over left fist, rotate right fist in a horizontal grinding circle twice."
+    },
+    {
+      "slug": "dudh",
+      "sign_id": "BDSL_V3_00108",
+      "label_bn": "দুধ",
+      "label_en": "Milk",
+      "category": "Food & Daily Life",
+      "handedness": "dual",
+      "handshape": "HS_SQUEEZE_FIST",
+      "stokoe_notation": "⫸⫷∿",
+      "bezier_anchors_3d": {
+        "P0": [
+          -0.15,
+          0.5,
+          0.2
+        ],
+        "P1": [
+          0.15,
+          0.5,
+          0.2
+        ],
+        "P2": [
+          -0.15,
+          0.58,
+          0.2
+        ],
+        "P3": [
+          0.15,
+          0.58,
+          0.2
+        ]
+      },
+      "facs_action_units": {
+        "AU00": 0.0,
+        "head_pitch": 0.0
+      },
+      "contact_physics": {
+        "plane": "SAGITTAL",
+        "body_anchor": "CHEST_MID",
+        "touch_type": "ALTERNATING_PULL_DOWN"
+      },
+      "timing_ms": {
+        "prep": 150,
+        "stroke": 600,
+        "retract": 150,
+        "total": 900
+      },
+      "target_body_anchor": "CHEST_MID",
+      "articulator_type": "FINGERTIPS_FLAT",
+      "motion_type": "PULL_DOWN",
+      "user_guide": "Squeeze both fists alternately while pulling downward in chest space imitating milking."
+    }
+  ],
+  "dataset_metadata": {
+    "name": "IsharaConnect-HyperKinematic-Master-Corpus",
+    "version": "3.1.0",
+    "release_year": 2026,
+    "fps": 60,
+    "coordinate_system": "Normalized_3D_RightHanded",
+    "tiers_covered": [
+      "Tier_1_Dactylology",
+      "Tier_2_Lexicon",
+      "Tier_3_CSLR",
+      "Tier_4_SLT",
+      "Tier_5_HyperKinematics"
+    ]
+  },
+  "tier_1_complete_dactylology": {
+    "VOWELS": {
+      "অ": {
+        "handshape": "H_O_SHAPE",
+        "loc": "L_CHEST",
+        "ori": "O_OUT",
+        "mov": "M_STILL",
+        "trigger": "T0_DEFAULT_KAR",
+        "user_guide": "Form an open circular 'O' shape with thumb and fingers touching at tips facing camera."
+      },
+      "আ": {
+        "handshape": "H_PALM_OPEN_THUMB_OUT",
+        "loc": "L_CHEST",
+        "ori": "O_OUT",
+        "mov": "M_SLIGHT_UP",
+        "trigger": "T1_AA_KAR",
+        "user_guide": "Extend 4 fingers up, thumb 90° out; elevate forearm 3 cm vertically."
+      },
+      "ই": {
+        "handshape": "H_INDEX_CURVED",
+        "loc": "L_CHIN",
+        "ori": "O_IN",
+        "mov": "M_STILL",
+        "trigger": "T1_I_KAR",
+        "user_guide": "Hook index finger into arc pointing to right chin line."
+      },
+      "ঈ": {
+        "handshape": "H_INDEX_CURVED_EXT",
+        "loc": "L_CHIN",
+        "ori": "O_IN",
+        "mov": "M_PULL_RIGHT",
+        "trigger": "T2_EE_KAR",
+        "user_guide": "Hooked index finger gliding 8 cm horizontally right across chin."
+      },
+      "উ": {
+        "handshape": "H_V_BENT",
+        "loc": "L_CHEST",
+        "ori": "O_DOWN",
+        "mov": "M_PUSH_DOWN",
+        "trigger": "T1_U_KAR",
+        "user_guide": "Inverted 'V' index/middle fingers pushing 5 cm downward."
+      },
+      "ঊ": {
+        "handshape": "H_V_BENT_DOUBLE",
+        "loc": "L_CHEST",
+        "ori": "O_DOWN",
+        "mov": "M_PULL_DOWN",
+        "trigger": "T2_OO_KAR",
+        "user_guide": "Inverted 'V' descending in a 2-step pulse (2cm + 2cm)."
+      },
+      "ঋ": {
+        "handshape": "H_THREE_FINGERS_CURL",
+        "loc": "L_CHEST",
+        "ori": "O_OUT",
+        "mov": "M_STILL",
+        "trigger": "T3_RRI_KAR",
+        "user_guide": "Three clawed fingers directed forward at chest level."
+      },
+      "এ": {
+        "handshape": "H_TRIANGLE_INDEX_THUMB",
+        "loc": "L_CHEST",
+        "ori": "O_OUT",
+        "mov": "M_STILL",
+        "trigger": "T1_E_KAR",
+        "user_guide": "Triangular aperture between index and thumb held steadily."
+      },
+      "ঐ": {
+        "handshape": "H_INDEX_MIDDLE_CROSS",
+        "loc": "L_CHEST",
+        "ori": "O_OUT",
+        "mov": "M_WOBBLE",
+        "trigger": "T2_OI_KAR",
+        "user_guide": "Middle finger crossed behind index with gentle lateral wave."
+      },
+      "ও": {
+        "handshape": "H_O_CIRCULAR",
+        "loc": "L_NEUTRAL",
+        "ori": "O_OUT",
+        "mov": "M_STILL",
+        "trigger": "T1_O_KAR",
+        "user_guide": "All fingertips meeting thumb tip in compact circular aperture."
+      },
+      "ঔ": {
+        "handshape": "H_O_PLUS_HOOK",
+        "loc": "L_NEUTRAL",
+        "ori": "O_OUT",
+        "mov": "M_ARC_UP",
+        "trigger": "T2_OU_KAR",
+        "user_guide": "'O' shape transitioning into an upward flicking hook vector."
+      }
+    },
+    "CONJUNCTS_AND_SPECIAL": {
+      "ক্ষ": {
+        "base": "ক",
+        "trigger": "T4",
+        "components": [
+          "ক",
+          "ষ"
+        ],
+        "flow": [
+          "H_INDEX_BENT",
+          "H_THREE_FINGERS_CURV"
+        ],
+        "mov": "M_CROSS"
+      },
+      "জ্ঞ": {
+        "base": "গ",
+        "trigger": "T5",
+        "components": [
+          "জ",
+          "ঞ"
+        ],
+        "flow": [
+          "H_GUN_SHAPE_DOWN",
+          "H_THUMB_PINKY_TOUCH"
+        ],
+        "mov": "M_DOUBLE_TAP"
+      }
+    }
+  },
+  "tier_3_4_continuous_corpus": [
+    {
+      "sentence_id": "BDSL_SEN_001",
+      "spoken_bengali": "ভূমিকম্প হলে লিফট দিয়ে নামবেন না, সিঁড়ি দিয়ে সাবধানে নামুন।",
+      "syntactic_glosses": [
+        "ভূমিকম্প",
+        "ঘটলে",
+        "লিফট",
+        "উঠানামা",
+        "না",
+        "সিঁড়ি",
+        "সাবধান",
+        "নামা"
+      ],
+      "rules": [
+        "CONJUNCTION_DROPPING",
+        "COMPOUND_UNPACKING",
+        "TERMINAL_NEGATION",
+        "CONDITIONAL_ANTECEDENT"
+      ],
+      "nmm_facs": {
+        "antecedent": {
+          "AU01": 0.85,
+          "AU02": 0.8,
+          "pitch": 6.0
+        },
+        "negation": {
+          "AU04": 0.6,
+          "AU15": 0.7,
+          "yaw_osc": 18.0
+        }
+      },
+      "total_duration_ms": 6450
+    },
+    {
+      "sentence_id": "BDSL_SEN_002",
+      "spoken_bengali": "জরুরি সাহায্যের জন্য দ্রুত ডাক্তার এবং অ্যাম্বুলেন্স ডাকুন!",
+      "syntactic_glosses": [
+        "জরুরি",
+        "সাহায্য",
+        "ডাক্তার",
+        "হাসপাতাল-গাড়ি",
+        "ডাকুন",
+        "তাড়াতাড়ি"
+      ],
+      "rules": [
+        "COMPOUND_TRANSLATION",
+        "TERMINAL_VELOCITY_BOOSTER"
+      ],
+      "nmm_facs": {
+        "urgency": {
+          "AU01": 0.9,
+          "AU02": 0.9,
+          "AU25": 0.6,
+          "pitch": 5.0
+        }
+      },
+      "total_duration_ms": 4820
     }
   ]
 }

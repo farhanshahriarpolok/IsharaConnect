@@ -157,3 +157,37 @@ def test_dynamic_motion_trajectory_evaluation():
     score_pull, status_pull, _ = advisor._eval_motion_trajectory("PULL_RIGHT", None, pull_traj)
     assert score_pull >= 0.95
     assert status_pull == "ok"
+
+
+def test_tier1_dactylology_and_continuous_corpus():
+    """Verify Tier 1 dactylology inventory and Tier 3/4 continuous corpus sentences."""
+    lexicon = MasterBdSLLexicon()
+    vowels = lexicon.get_vowels_dactylology()
+    assert len(vowels) == 11
+    assert "অ" in vowels and vowels["অ"]["trigger"] == "T0_DEFAULT_KAR"
+    assert "আ" in vowels and vowels["আ"]["trigger"] == "T1_AA_KAR"
+    assert "ই" in vowels and vowels["ই"]["trigger"] == "T1_I_KAR"
+    assert "ঔ" in vowels and vowels["ঔ"]["trigger"] == "T2_OU_KAR"
+
+    corpus = lexicon.get_continuous_corpus()
+    assert len(corpus) >= 2
+    sen1 = corpus[0]
+    assert sen1["sentence_id"] == "BDSL_SEN_001"
+    assert "ভূমিকম্প" in sen1["spoken_bengali"]
+    assert "CONJUNCTION_DROPPING" in sen1["rules"]
+
+
+def test_newly_added_signs_cha_coffee_dudh():
+    """Verify newly added daily life signs (cha, coffee, dudh) in master lexicon."""
+    lexicon = MasterBdSLLexicon()
+    cha = lexicon.get_articulatory_spec("cha")
+    assert cha["label_bn"] == "চা"
+    assert cha["articulator_type"] == "THUMB_INDEX_PINCH"
+
+    coffee = lexicon.get_articulatory_spec("coffee")
+    assert coffee["label_bn"] == "কফি"
+    assert coffee["articulator_type"] == "PALM_CLASP"
+
+    dudh = lexicon.get_articulatory_spec("dudh")
+    assert dudh["label_bn"] == "দুধ"
+    assert dudh["motion_type"] == "PULL_DOWN"

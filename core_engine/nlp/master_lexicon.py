@@ -34,6 +34,9 @@ class MasterBdSLLexicon:
             with open(self.json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
+            self.dactylology = data.get("tier_1_complete_dactylology", {})
+            self.continuous_corpus = data.get("tier_3_4_continuous_corpus", [])
+
             for sign in data.get("signs", []):
                 slug = sign.get("slug", "")
                 bn = sign.get("label_bn", "").strip()
@@ -51,6 +54,14 @@ class MasterBdSLLexicon:
             logger.info("Loaded %d master BdSL signs from %s", len(self.signs_by_slug), self.json_path)
         except Exception as e:
             logger.error("Failed to load master BdSL lexicon: %s", e)
+
+    def get_vowels_dactylology(self) -> Dict[str, Any]:
+        """Returns Tier-1 complete vowel dactylology inventory with kar triggers."""
+        return getattr(self, "dactylology", {}).get("VOWELS", {})
+
+    def get_continuous_corpus(self) -> List[Dict[str, Any]]:
+        """Returns Tier-3/4 continuous syntactic BdSL corpus sentences."""
+        return getattr(self, "continuous_corpus", [])
 
     def get_sign_by_gloss(self, gloss: str) -> Optional[Dict[str, Any]]:
         """Resolves sign metadata by Bengali gloss, slug, or English label."""
@@ -142,6 +153,9 @@ class MasterBdSLLexicon:
             "bon": {"label_bn": "বোন", "label_en": "Sister", "handshape": "POINT", "anchor": "NOSE", "articulator_type": "INDEX_TIP", "motion_type": "TAP_ONCE", "finger_states": {"thumb": "CURL_FULL", "index": "EXTENDED", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}, "palm_facing": "FACING_CAMERA"},
             "bhumikompo": {"label_bn": "ভূমিকম্প", "label_en": "Earthquake", "handshape": "OPEN_PALM", "anchor": "NEUTRAL_SPACE", "articulator_type": "FINGERTIPS_FLAT", "motion_type": "HIGH_FREQ_VIBRATION", "handedness": "dual", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "palm_facing": "FACING_DOWN"},
             "sahajjo": {"label_bn": "সাহায্য", "label_en": "Help", "handshape": "OPEN_PALM", "anchor": "CHEST_MID", "articulator_type": "PALM_CLASP", "motion_type": "BOOST_UPWARD", "handedness": "dual", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "palm_facing": "FACING_UP"},
+            "cha": {"label_bn": "চা", "label_en": "Tea", "handshape": "HS_PINCH_CUP", "anchor": "CHEST_MID", "articulator_type": "THUMB_INDEX_PINCH", "motion_type": "TAP_TWICE", "handedness": "dual", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}, "palm_facing": "FACING_CAMERA"},
+            "coffee": {"label_bn": "কফি", "label_en": "Coffee", "handshape": "HS_FIST_ON_FIST", "anchor": "CHEST_MID", "articulator_type": "PALM_CLASP", "motion_type": "CIRCULAR_ORBIT", "handedness": "dual", "finger_states": {"thumb": "CURL_FULL", "index": "CURL_FULL", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}, "palm_facing": "FACING_DOWN"},
+            "dudh": {"label_bn": "দুধ", "label_en": "Milk", "handshape": "HS_SQUEEZE_FIST", "anchor": "CHEST_MID", "articulator_type": "FINGERTIPS_FLAT", "motion_type": "PULL_DOWN", "handedness": "dual", "finger_states": {"thumb": "CURL_FULL", "index": "CURL_FULL", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}, "palm_facing": "FACING_USER"},
             "kemon_achen": {"label_bn": "কেমন আছেন?", "label_en": "How are you?", "handshape": "OPEN_PALM", "anchor": "CHEST_MID", "articulator_type": "FINGERTIPS_FLAT", "motion_type": "STATIC_HOLD", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "facs_action_units": {"AU04": 0.6, "AU01": 0.3}, "facs_mandatory": True, "handedness": "dual"}
         }
         override = dactylology_specs.get(slug, dactylology_specs.get(gloss, {}))

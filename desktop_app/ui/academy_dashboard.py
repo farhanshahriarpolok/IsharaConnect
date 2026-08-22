@@ -644,6 +644,81 @@ class AcademyDashboard(QWidget):
 
         self.tree.expandAll()
 
+    def _render_4_card_instructions_html(
+        self,
+        slug: str,
+        channel_status: Optional[Dict[str, str]] = None,
+        touch_rule: str = ""
+    ) -> str:
+        """Renders 4 rich, dynamic instructional cards with real-time feedback status indicators."""
+        art_spec = self.master_lexicon.get_articulatory_spec(slug)
+        instr_map = art_spec.get("instructions_bn", {})
+
+        status_map = {
+            "ok": ("#10B981", "সঠিক ✅", "border-left: 3px solid #10B981; background: rgba(16, 185, 129, 0.08);"),
+            "warn": ("#F59E0B", "সংশোধন করুন ⚠️", "border-left: 3px solid #F59E0B; background: rgba(245, 158, 11, 0.12);"),
+            "error": ("#EF4444", "ভুল ❌", "border-left: 3px solid #EF4444; background: rgba(239, 68, 68, 0.15);")
+        }
+
+        ch = channel_status or {}
+        st_hand = ch.get("handedness", "ok")
+        st_pos = ch.get("position", "ok")
+        st_fingers = ch.get("fingers", "ok")
+        st_palm = ch.get("orientation", "ok")
+
+        s1_color, s1_tag, s1_style = status_map.get(st_hand, status_map["ok"])
+        s2_color, s2_tag, s2_style = status_map.get(st_pos, status_map["ok"])
+        s3_color, s3_tag, s3_style = status_map.get(st_fingers, status_map["ok"])
+        s4_color, s4_tag, s4_style = status_map.get(st_palm, status_map["ok"])
+
+        step_1 = instr_map.get("step_1_hand", "ডান হাত ব্যবহার করুন")
+        step_2 = instr_map.get("step_2_location", "ক্যামেরা ফ্রেমের ঠিক মাঝে হাত ও বাহু স্থির রাখুন।")
+        step_3 = instr_map.get("step_3_fingers", "হাতের আঙুলগুলো নির্দিষ্ট আকৃতিতে প্রস্তুত রাখুন")
+        step_4 = instr_map.get("step_4_palm_action", "তালু ক্যামেরার দিকে রেখে স্থির রাখুন")
+
+        if not touch_rule:
+            touch_rule = "উন্মুক্ত হাতের একক ভঙ্গি (কোনো স্পর্শ নেই)"
+
+        return f"""
+        <div style="font-family: 'Segoe UI', Arial; font-size: 12.5px; color: #E2E8F0; line-height: 1.4;">
+          <div style="margin-bottom: 6px; {s1_style} padding: 6px 10px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px;">
+              <span style="color: #38BDF8;">১. হাত নির্বাচন (Hand Selection)</span>
+              <span style="color: {s1_color}; font-size: 11px;">[{s1_tag}]</span>
+            </div>
+            <div style="color: #CBD5E1; font-size: 12px;">{step_1}</div>
+          </div>
+
+          <div style="margin-bottom: 6px; {s2_style} padding: 6px 10px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px;">
+              <span style="color: #38BDF8;">২. শারীরিক অবস্থান (Body Anchor)</span>
+              <span style="color: {s2_color}; font-size: 11px;">[{s2_tag}]</span>
+            </div>
+            <div style="color: #CBD5E1; font-size: 12px;">{step_2}</div>
+          </div>
+
+          <div style="margin-bottom: 6px; {s3_style} padding: 6px 10px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px;">
+              <span style="color: #38BDF8;">৩. আঙুলের বিন্যাস (Finger-by-Finger)</span>
+              <span style="color: {s3_color}; font-size: 11px;">[{s3_tag}]</span>
+            </div>
+            <div style="color: #CBD5E1; font-size: 12px;">{step_3}</div>
+          </div>
+
+          <div style="margin-bottom: 6px; {s4_style} padding: 6px 10px; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 2px;">
+              <span style="color: #38BDF8;">৪. তালুর অভিমুখ ও মুখাবয়ব (Palm & Face)</span>
+              <span style="color: {s4_color}; font-size: 11px;">[{s4_tag}]</span>
+            </div>
+            <div style="color: #CBD5E1; font-size: 12px;">{step_4}</div>
+          </div>
+
+          <div style="padding: 6px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 11.5px;">
+            ✨ <b>স্পর্শের নিয়ম:</b> {touch_rule}
+          </div>
+        </div>
+        """
+
     def _update_reference_card(self, sign_key: str):
         """Updates the Center Arena title and Right Sub-Panel with visual illustration and instructions."""
         meta = self.curriculum_data.get(sign_key, {})
@@ -693,26 +768,7 @@ class AcademyDashboard(QWidget):
         self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {handedness_color}; border-radius: 6px; padding: 4px 8px; font-size: 11.5px; font-weight: bold;")
 
         art_spec = self.master_lexicon.get_articulatory_spec(slug)
-        instr_map = art_spec.get("instructions_bn", {})
-        step_1 = instr_map.get("step_1_hand", "ডান হাত ব্যবহার করুন")
-        step_2 = instr_map.get("step_2_location", "ক্যামেরা ফ্রেমের ঠিক মাঝে হাত ও বাহু স্থির রাখুন।")
-        step_3 = instr_map.get("step_3_fingers", mnemonic)
-        step_4 = instr_map.get("step_4_palm_action", "স্থিতিশীল ভঙ্গিতে ২ সেকেন্ড ধরে রাখুন।")
-
-        instructions_html = f"""
-        <div style="font-family: 'Segoe UI', Arial; font-size: 13px; line-height: 1.5; color: #E2E8F0;">
-          <b style="color: #38BDF8; font-size: 14px;">🎯 ৪-ধাপের অঙ্গবিন্যাস নির্দেশিকা:</b>
-          <div style="margin-top: 6px; padding: 8px; background: rgba(15, 23, 42, 0.6); border-radius: 6px; font-size: 12.5px; line-height: 1.6;">
-            <b style="color: #38BDF8;">১. হাত (Hand):</b> {step_1}<br>
-            <b style="color: #38BDF8;">২. অবস্থান (Position):</b> {step_2}<br>
-            <b style="color: #38BDF8;">৩. আঙুল (Fingers):</b> {step_3}<br>
-            <b style="color: #38BDF8;">৪. তালু ও গতি (Action):</b> {step_4}
-          </div>
-          <div style="margin-top: 8px; padding: 8px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 12.5px;">
-            ✨ <b>স্পর্শের নিয়ম:</b> {touch_rule}
-          </div>
-        </div>
-        """
+        instructions_html = self._render_4_card_instructions_html(slug, touch_rule=touch_rule)
         self.ref_instructions.setHtml(instructions_html)
 
         # Reset coach banner
@@ -940,9 +996,12 @@ class AcademyDashboard(QWidget):
             ])
             self.posture_hud.setHtml(f"<b>ডায়াগনস্টিক চ্যানেল:</b> {items_html}")
 
-            if diag.is_match and pct >= 75.0:
+            # Dynamic Live 4-Card Status Highlighting
+            self.ref_instructions.setHtml(self._render_4_card_instructions_html(self.current_sign_slug, diag.channel_status))
+
+            if diag.is_match and pct >= 85.0:
                 self.sustained_match_frames += 1
-                if self.sustained_match_frames >= 5:  # Sustained accuracy
+                if self.sustained_match_frames >= 5:  # Sustained accuracy (>=85% for ~1.0s)
                     advice_str = "ভঙ্গি নিখুঁত ও সম্পূর্ণ! দুর্দান্ত অগ্রগতি!"
                     self.update_posture_coach(advice_str, state="perfect")
                     if self.practice_running:

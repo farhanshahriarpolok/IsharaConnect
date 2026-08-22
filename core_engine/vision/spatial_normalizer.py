@@ -115,6 +115,60 @@ class SpatialNormalizer:
         return np.array(angles, dtype=np.float32)
 
     @classmethod
+    def calculate_finger_angles(cls, landmarks: np.ndarray) -> np.ndarray:
+        """Alias for calculate_15_joint_angles returning continuous 3D interior degrees."""
+        return cls.calculate_15_joint_angles(landmarks)
+
+    @classmethod
+    def get_finger_angles_dict(cls, landmarks: np.ndarray) -> Dict[str, Dict[str, float]]:
+        """Returns structured dictionary of continuous degree angles for all 5 fingers.
+
+        Format:
+        {
+          "thumb": {"mcp": deg, "ip": deg, "tip": deg},
+          "index": {"mcp": deg, "pip": deg, "dip": deg},
+          "middle": {"mcp": deg, "pip": deg, "dip": deg},
+          "ring": {"mcp": deg, "pip": deg, "dip": deg},
+          "pinky": {"mcp": deg, "pip": deg, "dip": deg}
+        }
+        """
+        angles_15 = cls.calculate_15_joint_angles(landmarks)
+        return {
+            "thumb": {"mcp": float(angles_15[0]), "ip": float(angles_15[1]), "tip": float(angles_15[2])},
+            "index": {"mcp": float(angles_15[3]), "pip": float(angles_15[4]), "dip": float(angles_15[5])},
+            "middle": {"mcp": float(angles_15[6]), "pip": float(angles_15[7]), "dip": float(angles_15[8])},
+            "ring": {"mcp": float(angles_15[9]), "pip": float(angles_15[10]), "dip": float(angles_15[11])},
+            "pinky": {"mcp": float(angles_15[12]), "pip": float(angles_15[13]), "dip": float(angles_15[14])}
+        }
+
+    @staticmethod
+    def smooth_landmarks(
+        raw_landmarks: Optional[np.ndarray],
+        history: Optional[np.ndarray],
+        alpha: float = 0.65
+    ) -> np.ndarray:
+        """Applies Exponential Moving Average (EMA) smoothing to eliminate camera sensor jitter.
+
+        Args:
+            raw_landmarks: Current frame raw (21, 3) landmarks.
+            history: Previous frame smoothed (21, 3) landmarks.
+            alpha: Smoothing weight factor [0.0 - 1.0]. Higher = more responsive, Lower = smoother.
+
+        Returns:
+            Smoothed (21, 3) landmarks array.
+        """
+        if raw_landmarks is None or len(raw_landmarks) == 0:
+            return history if history is not None else np.zeros((21, 3), dtype=np.float32)
+
+        raw = np.array(raw_landmarks, dtype=np.float32)
+        if history is None or history.shape != raw.shape or np.isnan(history).any():
+            return raw
+
+        # EMA formula: L_t = alpha * raw + (1 - alpha) * history
+        smoothed = alpha * raw + (1.0 - alpha) * history
+        return smoothed.astype(np.float32)
+
+    @classmethod
     def detect_finger_states(
         cls,
         landmarks: np.ndarray,

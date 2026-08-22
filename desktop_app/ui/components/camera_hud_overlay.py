@@ -48,11 +48,15 @@ def _safe_conf(val: Optional[Union[float, int]]) -> float:
     return max(0.0, min(1.0, float(val)))
 
 
+from desktop_app.ui.components.ghost_skeleton_overlay import GhostSkeletonOverlay
+
+
 class CameraHUDOverlay:
     """Renders cybernetic futuristic HUD visual elements on raw video frames."""
 
     def __init__(self):
         self.pulse_phase = 0.0
+        self.ghost_overlay = GhostSkeletonOverlay()
 
     def draw_hud(
         self,
@@ -61,7 +65,9 @@ class CameraHUDOverlay:
         right_landmarks: Optional[np.ndarray] = None,
         prediction_payload: Optional[Dict[str, Any]] = None,
         fps: float = 30.0,
-        diagnostic_result: Optional[Any] = None
+        diagnostic_result: Optional[Any] = None,
+        ghost_target_slug: Optional[str] = None,
+        target_anchor: str = "NEUTRAL_SPACE"
     ) -> np.ndarray:
         """Draws glowing skeleton landmarks, HUD cards, and tracking telemetry.
 
@@ -72,6 +78,8 @@ class CameraHUDOverlay:
             prediction_payload: Optional active prediction dictionary.
             fps: Current FPS reading.
             diagnostic_result: Optional DiagnosticResult instance from SignCorrectionAdvisor.
+            ghost_target_slug: Optional target sign slug for rendering reference ghost skeleton.
+            target_anchor: Optional target anchor name.
 
         Returns:
             Annotated BGR frame.
@@ -99,11 +107,25 @@ class CameraHUDOverlay:
             and np.any(right_landmarks)
         )
 
-        # 1. Draw Multi-Colored Glowing Landmarks for Both Hands
-        if has_left:
-            self._draw_hand_skeleton(out_frame, left_landmarks, w, h, is_left=True)
-        if has_right:
-            self._draw_hand_skeleton(out_frame, right_landmarks, w, h, is_left=False)
+        # 1. Render Interactive Target Ghost Skeleton if enabled
+        active_target = ghost_target_slug or (getattr(diagnostic_result, "target_gloss", None) if diagnostic_result else None)
+        match_score = getattr(diagnostic_result, "match_score", 0.0) if diagnostic_result else 0.0
+        active_user_lm = right_landmarks if has_right else (left_landmarks if has_left else None)
+
+        if active_target:
+            out_frame = self.ghost_overlay.render_ghost_overlay(
+                out_frame,
+                active_target,
+                active_user_lm,
+                target_anchor,
+                match_score
+            )
+        else:
+            # Standard landmarks fallback
+            if has_left:
+                self._draw_hand_skeleton(out_frame, left_landmarks, w, h, is_left=True)
+            if has_right:
+                self._draw_hand_skeleton(out_frame, right_landmarks, w, h, is_left=False)
 
         # 2. Draw Dual-Hand Touch Contact Rings
         if has_left and has_right:

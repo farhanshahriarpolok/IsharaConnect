@@ -1,4 +1,80 @@
 {
+  "খাওয়া": {
+    "slug": "khabar",
+    "label_bn": "খাওয়া",
+    "label_en": "Eat / Food",
+    "tier": "action",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "bring_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1100
+    }
+  },
+  "khawa": {
+    "slug": "khabar",
+    "label_bn": "খাওয়া",
+    "label_en": "Eat / Food",
+    "tier": "action",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "bring_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1100
+    }
+  },
+  "খাবার": {
+    "slug": "khabar",
+    "label_bn": "খাবার",
+    "label_en": "Food / Eat",
+    "tier": "noun",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "bring_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1100
+    }
+  },
+  "khabar": {
+    "slug": "khabar",
+    "label_bn": "খাবার",
+    "label_en": "Food / Eat",
+    "tier": "noun",
+    "handedness": "single",
+    "motion_type": "dynamic",
+    "category": "dynamic",
+    "dsl": {
+      "hand": "right",
+      "handshape": "cupped_fingertips_together",
+      "orientation": "fingertips_towards_mouth",
+      "start_position": "chest_level",
+      "trajectory": "bring_to_mouth_twice",
+      "end_position": "mouth_proximity",
+      "facial_expression": "neutral",
+      "duration_ms": 1100
+    }
+  },
   "ধন্যবাদ": {
     "slug": "dhonnobad",
     "label_bn": "ধন্যবাদ",

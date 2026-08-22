@@ -1,13 +1,13 @@
-"""Parametric Articulatory Diagnostic & Correction Engine for Bangla Sign Language (BdSL).
+"""Hyper-Granular Articulatory Diagnostic Coach for Bangla Sign Language (BdSL).
 
-Evaluates live user gestures across 5 discrete anatomical channels against ground-truth master specifications:
-1. Handshape & Finger Extension Matrix (individual finger flexion/extension)
-2. Spatial Body Landmark Distance (anchor proximity to chin, cheek, forehead, chest, etc.)
-3. Palm Normal & Orientation Vector (3D plane cross-product direction)
-4. Facial Non-Manual Markers (NMM FACS Action Units: AU01, AU02, AU04, AU12, AU25)
-5. Kinematic Trajectory & Oscillation Dynamics (static hold, stroke, vibration, thrust)
+Performs strict 5-channel anatomical validation using scale-invariant joint angle signatures:
+1. Hand Selection & Handedness Gate (RIGHT_ONLY, LEFT_ONLY, DUAL_HAND)
+2. Body Anchor Proximity & Location Envelope (Chin, Upper Lip, Cheek, Forehead, Chest, Wrist)
+3. 5-Finger Anatomical State Matrix (Thumb, Index, Middle, Ring, Pinky via 15-joint angles)
+4. 3D Palm Plane Normal Facing Vector (FACING_CAMERA, FACING_USER, FACING_UP, FACING_DOWN)
+5. Facial Non-Manual Markers (NMM FACS Action Units: AU01, AU02, AU04, AU12)
 
-Generates localized, actionable Bengali guidance messages to accelerate learner mastery.
+Generates localized, actionable Bengali guidance messages and 4-row live HUD diagnostic checklist cards.
 """
 
 from dataclasses import dataclass, field
@@ -17,181 +17,9 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from core_engine.nlp.master_lexicon import master_lexicon
+from core_engine.vision.spatial_normalizer import SpatialNormalizer, BODY_ANCHOR_MAP
 
 logger = logging.getLogger(__name__)
-
-# Standard Body Anchor Target Coordinates (normalized image/rig space: x in [0,1], y in [0,1])
-ANCHOR_POSITIONS: Dict[str, Tuple[float, float]] = {
-    "FOREHEAD": (0.50, 0.16),
-    "PHILTRUM": (0.50, 0.32),
-    "UPPER_LIP": (0.50, 0.32),
-    "CHIN": (0.50, 0.38),
-    "CHEEK_RIGHT": (0.65, 0.30),
-    "CHEEK_LEFT": (0.35, 0.30),
-    "CHEST": (0.50, 0.52),
-    "STOMACH": (0.50, 0.68),
-    "WRIST_ANCHOR": (0.50, 0.60),
-    "NEUTRAL_SPACE": (0.50, 0.48),
-}
-
-# Standard Articulatory Sign Specifications
-SIGN_ARTICULATION_SPECS: Dict[str, Dict[str, Any]] = {
-    "dhonnobad": {
-        "slug": "dhonnobad",
-        "label_bn": "ধন্যবাদ",
-        "label_en": "Thank you",
-        "anchor": "CHIN",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [True, True, True, True, True],  # Open flat palm
-        "facs_required": {"AU12": 0.5},  # Smile
-        "motion_type": "FORWARD_STROKE",
-        "handedness": "single",
-    },
-    "sahajjo": {
-        "slug": "sahajjo",
-        "label_bn": "সাহায্য",
-        "label_en": "Help",
-        "anchor": "CHEST",
-        "palm_orientation": "UPWARD",
-        "fingers_extended": [True, True, True, True, True],
-        "facs_required": {"AU01": 0.4, "AU02": 0.4},
-        "motion_type": "UPWARD_LIFT",
-        "handedness": "dual",
-    },
-    "baba": {
-        "slug": "baba",
-        "label_bn": "বাবা",
-        "label_en": "Father",
-        "anchor": "UPPER_LIP",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [False, True, False, False, False],  # Index extended (mustache swipe)
-        "facs_required": {},
-        "motion_type": "HORIZONTAL_SWIPE",
-        "handedness": "single",
-    },
-    "ma": {
-        "slug": "ma",
-        "label_bn": "মা",
-        "label_en": "Mother",
-        "anchor": "CHEEK_RIGHT",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [True, True, True, True, True],
-        "facs_required": {"AU12": 0.4},
-        "motion_type": "TAP_DOUBLE",
-        "handedness": "single",
-    },
-    "chacha": {
-        "slug": "chacha",
-        "label_bn": "চাচা",
-        "label_en": "Uncle",
-        "anchor": "CHIN",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [False, True, False, False, False],  # Index tap on chin
-        "facs_required": {},
-        "motion_type": "TAP_SINGLE",
-        "handedness": "single",
-    },
-    "dada": {
-        "slug": "dada",
-        "label_bn": "দাদা",
-        "label_en": "Grandfather",
-        "anchor": "CHIN",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [False, True, False, False, False],
-        "facs_required": {},
-        "motion_type": "DOWNWARD_STROKE",  # Beard stroke
-        "handedness": "single",
-    },
-    "bhumikompo": {
-        "slug": "bhumikompo",
-        "label_bn": "ভূমিকম্প",
-        "label_en": "Earthquake",
-        "anchor": "CHEST",
-        "palm_orientation": "DOWNWARD",
-        "fingers_extended": [True, True, True, True, True],
-        "facs_required": {"AU01": 0.5, "AU25": 0.4},
-        "motion_type": "VIBRATION_FAST",
-        "handedness": "dual",
-    },
-    "daktar": {
-        "slug": "daktar",
-        "label_bn": "ডাক্তার",
-        "label_en": "Doctor",
-        "anchor": "WRIST_ANCHOR",
-        "palm_orientation": "DOWNWARD",
-        "fingers_extended": [False, True, True, False, False],  # Pulse feeling fingers
-        "facs_required": {},
-        "motion_type": "TAP_DOUBLE",
-        "handedness": "dual",
-    },
-    "kemon_achen": {
-        "slug": "kemon_achen",
-        "label_bn": "কেমন আছেন?",
-        "label_en": "How are you?",
-        "anchor": "CHEST",
-        "palm_orientation": "UPWARD",
-        "fingers_extended": [True, True, True, True, True],
-        "facs_required": {"AU04": 0.6, "AU01": 0.3},  # Brow furrow Wh-question
-        "facs_mandatory": True,
-        "motion_type": "ROTATION_OUTWARD",
-        "handedness": "dual",
-    },
-    "khawa": {
-        "slug": "khawa",
-        "label_bn": "খাওয়া",
-        "label_en": "Eat",
-        "anchor": "PHILTRUM",
-        "palm_orientation": "INWARD",
-        "fingers_extended": [False, True, True, True, True],  # Bunched fingertips toward mouth
-        "facs_required": {},
-        "motion_type": "OSCILLATE_MOUTH",
-        "handedness": "single",
-    },
-    "taka": {
-        "slug": "taka",
-        "label_bn": "টাকা",
-        "label_en": "Money",
-        "anchor": "CHEST",
-        "palm_orientation": "UPWARD",
-        "fingers_extended": [True, True, False, False, False],  # Thumb rubbing index
-        "facs_required": {},
-        "motion_type": "RUB_DIGITS",
-        "handedness": "single",
-    },
-    "cons_ka": {
-        "slug": "cons_ka",
-        "label_bn": "ক",
-        "label_en": "Consonant Ka",
-        "anchor": "NEUTRAL_SPACE",
-        "palm_orientation": "OUTWARD",
-        "fingers_extended": [False, True, False, False, False],  # Index pointing up, others curled
-        "facs_required": {},
-        "motion_type": "STATIC_HOLD",
-        "handedness": "single",
-    },
-    "vowel_a": {
-        "slug": "vowel_a",
-        "label_bn": "অ",
-        "label_en": "Vowel A",
-        "anchor": "NEUTRAL_SPACE",
-        "palm_orientation": "OUTWARD",
-        "fingers_extended": [False, False, False, False, False],  # Fist with thumb resting across
-        "facs_required": {},
-        "motion_type": "STATIC_HOLD",
-        "handedness": "single",
-    },
-    "vowel_aa": {
-        "slug": "vowel_aa",
-        "label_bn": "আ",
-        "label_en": "Vowel Aa",
-        "anchor": "NEUTRAL_SPACE",
-        "palm_orientation": "OUTWARD",
-        "fingers_extended": [True, False, False, False, False],  # Thumb extended upright
-        "facs_required": {},
-        "motion_type": "STATIC_HOLD",
-        "handedness": "single",
-    }
-}
 
 
 @dataclass
@@ -200,8 +28,9 @@ class DiagnosticResult:
     match_score: float                  # Overall match 0.0 - 100.0%
     channel_scores: Dict[str, float]    # Individual channel scores 0.0 - 1.0
     channel_status: Dict[str, str]      # "ok", "warn", "error" for each channel
-    is_match: bool                      # True if match_score >= threshold
-    corrective_hints: List[str]         # Localized Bengali guidance hints
+    is_match: bool                      # True if match_score >= threshold and no critical errors
+    corrective_hints: List[str]         # Hyper-specific Bengali guidance hints
+    checklist_rows: List[Dict[str, str]]  # 4-row HUD checklist display items
     target_gloss: str
     target_bn: str
     target_en: str
@@ -209,35 +38,12 @@ class DiagnosticResult:
 
 
 class SignCorrectionAdvisor:
-    """Real-Time Articulatory Diagnostic Coach analyzing multi-channel landmark kinematics."""
+    """Hyper-Granular Articulatory Diagnostic Coach analyzing 15-joint kinematic signatures."""
 
-    def __init__(self, acceptance_threshold: float = 75.0):
+    def __init__(self, acceptance_threshold: float = 85.0):
         self.acceptance_threshold = acceptance_threshold
         self.master_lexicon = master_lexicon
-        self.spec_db = dict(SIGN_ARTICULATION_SPECS)
-        self._sync_with_master_lexicon()
-
-    def _sync_with_master_lexicon(self):
-        """Enriches spec database with metadata from master BdSL lexicon."""
-        for sign in self.master_lexicon.all_signs():
-            slug = sign.get("slug")
-            if slug and slug not in self.spec_db:
-                contact = sign.get("contact_physics", {})
-                anchor_name = contact.get("body_anchor", "NEUTRAL_SPACE").upper()
-                if anchor_name not in ANCHOR_POSITIONS:
-                    anchor_name = "NEUTRAL_SPACE"
-
-                self.spec_db[slug] = {
-                    "slug": slug,
-                    "label_bn": sign.get("label_bn", slug),
-                    "label_en": sign.get("label_en", slug),
-                    "anchor": anchor_name,
-                    "palm_orientation": contact.get("plane", "CORONAL_FRONT").upper(),
-                    "fingers_extended": [True, True, True, True, True],
-                    "facs_required": sign.get("facs_action_units", {}),
-                    "motion_type": "STATIC_HOLD",
-                    "handedness": sign.get("handedness", "single"),
-                }
+        self.normalizer = SpatialNormalizer()
 
     def evaluate_user_posture(
         self,
@@ -248,314 +54,353 @@ class SignCorrectionAdvisor:
         pose_landmarks: Optional[np.ndarray] = None,
         trajectory_3d: Optional[np.ndarray] = None
     ) -> DiagnosticResult:
-        """Evaluates live posture across 5 channels against master ground-truth spec."""
-        slug = self._resolve_slug(target_sign)
-        spec = self.spec_db.get(slug, self.spec_db.get("dhonnobad"))
+        """Evaluates live posture across 5 channels with exact finger-by-finger and handedness checks."""
+        spec = self.master_lexicon.get_articulatory_spec(target_sign)
+        slug = spec.get("slug", target_sign)
 
-        # Channel 1: Handshape & Finger Extension
-        handshape_score, handshape_status, handshape_hints = self._eval_handshape(
-            right_landmarks, left_landmarks, spec
+        # ── Channel 1: Hand Selection & Handedness ───────────────────────────
+        req_hand = spec.get("required_hand", "RIGHT_ONLY")
+        hand_score, hand_status, hand_hint, active_lm = self._eval_handedness(
+            req_hand, right_landmarks, left_landmarks
         )
 
-        # Channel 2: Spatial Body Position / Anchor
-        pos_score, pos_status, pos_hints = self._eval_position(
-            right_landmarks, left_landmarks, spec
+        # ── Channel 2: Spatial Body Anchor Proximity ─────────────────────────
+        target_anchor = spec.get("target_body_anchor", "NEUTRAL_SPACE")
+        pos_score, pos_status, pos_hint, dist_cm = self._eval_anchor_position(
+            active_lm, target_anchor, face_landmarks
         )
 
-        # Channel 3: Palm Normal & Orientation Vector
-        orient_score, orient_status, orient_hints = self._eval_orientation(
-            right_landmarks, spec
+        # ── Channel 3: 5-Finger Articulation & 15-Joint Angles ────────────────
+        target_fingers = spec.get("finger_states", {})
+        finger_score, finger_status, finger_hints, detected_fingers = self._eval_finger_states(
+            active_lm, target_fingers
         )
 
-        # Channel 4: Facial NMM / FACS Expression
-        facs_score, facs_status, facs_hints = self._eval_facs(
+        # ── Channel 4: Palm Plane Normal Direction ───────────────────────────
+        target_facing = spec.get("palm_facing", "FACING_CAMERA")
+        palm_score, palm_status, palm_hint, detected_facing = self._eval_palm_facing(
+            active_lm, target_facing
+        )
+
+        # ── Channel 5: Facial Non-Manual Markers (NMM FACS) ──────────────────
+        facs_score, facs_status, facs_hint = self._eval_facs(
             face_landmarks, spec
         )
 
-        # Channel 5: Motion Trajectory Dynamics
-        motion_score, motion_status, motion_hints = self._eval_motion(
-            trajectory_3d, spec
-        )
-
         channel_scores = {
-            "handshape": handshape_score,
+            "handedness": hand_score,
             "position": pos_score,
-            "orientation": orient_score,
+            "fingers": finger_score,
+            "orientation": palm_score,
             "facs": facs_score,
-            "motion": motion_score,
+            "handshape": finger_score,  # Alias for backward compatibility
         }
 
         channel_status = {
-            "handshape": handshape_status,
+            "handedness": hand_status,
             "position": pos_status,
-            "orientation": orient_status,
+            "fingers": finger_status,
+            "orientation": palm_status,
             "facs": facs_status,
-            "motion": motion_status,
+            "handshape": finger_status,  # Alias for backward compatibility
         }
 
-        # Weighted Total Score: Handshape(35%) + Position(25%) + Orientation(20%) + FACS(10%) + Motion(10%)
-        weights = [0.35, 0.25, 0.20, 0.10, 0.10]
-        match_score = round(
-            (handshape_score * weights[0] +
-             pos_score * weights[1] +
-             orient_score * weights[2] +
-             facs_score * weights[3] +
-             motion_score * weights[4]) * 100.0,
-            1
+        # Weighted Composite Score: Fingers (40%) + Anchor Position (30%) + Palm Direction (20%) + FACS (10%)
+        # Handedness acts as a hard gating multiplier
+        raw_composite = (
+            finger_score * 0.40 +
+            pos_score * 0.30 +
+            palm_score * 0.20 +
+            facs_score * 0.10
         )
+        match_score = round(raw_composite * hand_score * 100.0, 1)
 
-        # Check for critical phonemic channel errors
+        # Hard gating for critical errors
         has_critical_error = (
-            handshape_status == "error"
+            hand_status == "error"
             or pos_status == "error"
-            or (bool(spec.get("facs_mandatory")) and facs_status == "error")
+            or finger_status == "error"
+            or (spec.get("facs_mandatory") and facs_status == "error")
         )
         is_match = (match_score >= self.acceptance_threshold) and not has_critical_error
 
-        # Aggregate hints in priority order
-        hints = []
+        # Aggregate prioritized Bengali corrective hints
+        hints: List[str] = []
         if not is_match:
-            if handshape_hints:
-                hints.extend(handshape_hints)
-            if pos_hints:
-                hints.extend(pos_hints)
-            if orient_hints:
-                hints.extend(orient_hints)
-            if facs_hints:
-                hints.extend(facs_hints)
-            if motion_hints:
-                hints.extend(motion_hints)
+            if hand_hint:
+                hints.append(hand_hint)
+            if pos_hint:
+                hints.append(pos_hint)
+            hints.extend(finger_hints)
+            if palm_hint:
+                hints.append(palm_hint)
+            if facs_hint:
+                hints.append(facs_hint)
         else:
             hints.append("ভঙ্গি চমৎকার ও নিখুঁত! এভাবে ২ সেকেন্ড ধরে রাখুন।")
 
+        # ── Build 4-Row HUD Checklist Card Data ──────────────────────────────
+        checklist_rows = self._build_checklist_rows(
+            req_hand, hand_status,
+            target_anchor, pos_status,
+            detected_fingers, target_fingers, finger_status,
+            target_facing, detected_facing, palm_status
+        )
+
         dominant_issue = None
         if not is_match:
-            min_channel = min(channel_scores, key=channel_scores.get)
-            dominant_issue = min_channel
+            dominant_issue = min(channel_scores, key=channel_scores.get)
 
         return DiagnosticResult(
             match_score=match_score,
             channel_scores=channel_scores,
             channel_status=channel_status,
             is_match=is_match,
-            corrective_hints=hints[:3] if hints else ["ক্যামেরার সামনে হাত স্পষ্ট রাখুন।"],
+            corrective_hints=hints[:4] if hints else ["ক্যামেরার সামনে হাত স্পষ্ট রাখুন।"],
+            checklist_rows=checklist_rows,
             target_gloss=slug,
             target_bn=spec.get("label_bn", slug),
             target_en=spec.get("label_en", slug),
             dominant_issue=dominant_issue
         )
 
-    # ── Channel 1: Handshape Evaluation ───────────────────────────────────────
+    # ── Channel 1: Handedness Evaluation ─────────────────────────────────────
 
-    def _eval_handshape(
+    def _eval_handedness(
         self,
+        req_hand: str,
         r_lm: Optional[np.ndarray],
-        l_lm: Optional[np.ndarray],
-        spec: Dict[str, Any]
-    ) -> Tuple[float, str, List[str]]:
-        if r_lm is None or len(r_lm) < 21:
-            return 0.0, "error", ["ডান হাত ক্যামেরার সামনে দৃশ্যমান রাখুন।"]
+        l_lm: Optional[np.ndarray]
+    ) -> Tuple[float, str, Optional[str], Optional[np.ndarray]]:
+        has_right = r_lm is not None and len(r_lm) >= 21 and not np.isnan(r_lm).any() and np.any(r_lm)
+        has_left = l_lm is not None and len(l_lm) >= 21 and not np.isnan(l_lm).any() and np.any(l_lm)
 
-        target_ext = spec.get("fingers_extended", [True, True, True, True, True])
-        actual_ext = self._get_finger_extensions(r_lm)
+        if req_hand == "RIGHT_ONLY":
+            if has_right:
+                return 1.0, "ok", None, r_lm
+            elif has_left:
+                return 0.0, "error", "⚠️ ভুল হাত! অনুগ্রহ করে ডান হাত ব্যবহার করুন।", l_lm
+            else:
+                return 0.0, "error", "⚠️ ডান হাত ক্যামেরার সামনে দৃশ্যমান রাখুন।", None
 
-        correct_count = sum(1 for a, t in zip(actual_ext, target_ext) if a == t)
-        score = correct_count / 5.0
+        elif req_hand == "LEFT_ONLY":
+            if has_left:
+                return 1.0, "ok", None, l_lm
+            elif has_right:
+                return 0.0, "error", "⚠️ ভুল হাত! অনুগ্রহ করে বাম হাত ব্যবহার করুন।", r_lm
+            else:
+                return 0.0, "error", "⚠️ বাম হাত ক্যামেরার সামনে দৃশ্যমান রাখুন।", None
 
-        hints = []
-        finger_names = ["বৃদ্ধাঙ্গুলি", "তর্জনী", "মধ্যমা", "অনামিকা", "কনিষ্ঠা"]
-        for idx, (act, tgt, name) in enumerate(zip(actual_ext, target_ext, finger_names)):
-            if act != tgt:
-                if tgt is True:
-                    hints.append(f"{name} সোজা রাখুন।")
-                else:
-                    hints.append(f"{name} বন্ধ / বাঁকা করুন।")
+        elif req_hand == "DUAL_HAND":
+            if has_right and has_left:
+                return 1.0, "ok", None, r_lm
+            else:
+                return 0.4, "warn", "⚠️ উভয় হাত (দুই হাত) ক্যামেরার সামনে সমান উচ্চতায় প্রস্তুত রাখুন।", r_lm if has_right else l_lm
 
-        status = "ok" if score >= 0.8 else "warn" if score >= 0.5 else "error"
-        return score, status, hints
+        return 1.0, "ok", None, r_lm if has_right else l_lm
 
-    # ── Channel 2: Spatial Position Evaluation ───────────────────────────────
+    # ── Channel 2: Body Anchor Position Evaluation ───────────────────────────
 
-    def _eval_position(
+    def _eval_anchor_position(
         self,
-        r_lm: Optional[np.ndarray],
-        l_lm: Optional[np.ndarray],
-        spec: Dict[str, Any]
-    ) -> Tuple[float, str, List[str]]:
-        if r_lm is None or len(r_lm) < 21:
-            return 0.0, "error", ["হাতের অবস্থান শনাক্ত করা যায়নি।"]
+        active_lm: Optional[np.ndarray],
+        target_anchor: str,
+        face_lm: Optional[np.ndarray]
+    ) -> Tuple[float, str, Optional[str], float]:
+        if active_lm is None or len(active_lm) < 21:
+            return 0.0, "error", "⚠️ হাতের অবস্থান শনাক্ত করা যায়নি।", 50.0
 
-        anchor_name = spec.get("anchor", "NEUTRAL_SPACE")
-        target_pos = ANCHOR_POSITIONS.get(anchor_name, (0.50, 0.48))
-        wrist_pos = (float(r_lm[0, 0]), float(r_lm[0, 1]))
+        wrist = active_lm[0]
+        score, dist_cm = self.normalizer.calculate_anchor_proximity(
+            wrist, target_anchor, face_lm
+        )
 
-        dist = math.hypot(wrist_pos[0] - target_pos[0], wrist_pos[1] - target_pos[1])
-        # Perfect tolerance <= 0.08, zero score at distance >= 0.35
-        score = max(0.0, min(1.0, 1.0 - (dist / 0.35)))
-
-        hints = []
         anchor_bn_map = {
             "CHIN": "চিবুকের কাছে",
+            "UPPER_LIP": "ঠোঁটের ওপর (গোঁফের কাছে)",
+            "LIP_UPPER": "ঠোঁটের ওপর",
+            "PHILTRUM": "মুখের কাছে",
+            "CHEEK": "ডান গালের কাছে",
             "CHEEK_RIGHT": "ডান গালের কাছে",
             "CHEEK_LEFT": "বাম গালের কাছে",
-            "UPPER_LIP": "ঠোঁটের ওপর (গোঁফের কাছে)",
-            "PHILTRUM": "মুখের কাছে",
-            "FOREHEAD": "কপালের কাছে",
+            "FOREHEAD": "কপালের সামনে",
             "CHEST": "বুকের সামনে",
-            "WRIST_ANCHOR": "অন্য হাতের কবজির ওপর",
-            "NEUTRAL_SPACE": "ক্যামেরার ফ্রেমের মাঝে"
+            "CHEST_MID": "বুকের মাঝে",
+            "LEFT_WRIST": "বাম হাতের কবজির ওপর",
+            "NEUTRAL_SPACE": "ক্যামেরা ফ্রেমের মাঝে"
         }
-        loc_str = anchor_bn_map.get(anchor_name, "নির্দিষ্ট অবস্থানে")
+        loc_str = anchor_bn_map.get(target_anchor.upper(), "নির্দিষ্ট অবস্থানে")
+
+        hint = None
         if score < 0.70:
-            hints.append(f"হাতটি {loc_str} নিয়ে আসুন।")
+            if wrist[1] > 0.65 and target_anchor in ["CHIN", "UPPER_LIP", "FOREHEAD", "CHEEK", "CHEEK_RIGHT"]:
+                hint = f"⚠️ হাত নিচে রয়েছে। হাতটি উপরে {loc_str} তুলুন।"
+            else:
+                hint = f"⚠️ হাতটি {loc_str} নিয়ে আসুন।"
 
         status = "ok" if score >= 0.75 else "warn" if score >= 0.45 else "error"
-        return score, status, hints
+        return score, status, hint, dist_cm
 
-    # ── Channel 3: Palm Normal Orientation ───────────────────────────────────
+    # ── Channel 3: 5-Finger Anatomical States Evaluation ──────────────────────
 
-    def _eval_orientation(
+    def _eval_finger_states(
         self,
-        r_lm: Optional[np.ndarray],
-        spec: Dict[str, Any]
-    ) -> Tuple[float, str, List[str]]:
-        if r_lm is None or len(r_lm) < 21:
-            return 0.0, "error", ["তালুর অভিমুখ শনাক্ত করা যায়নি।"]
+        active_lm: Optional[np.ndarray],
+        target_states: Dict[str, str]
+    ) -> Tuple[float, str, List[str], Dict[str, str]]:
+        if active_lm is None or len(active_lm) < 21:
+            return 0.0, "error", ["⚠️ হাত ক্যামেরার সামনে রাখুন।"], {}
 
-        target_orient = spec.get("palm_orientation", "OUTWARD").upper()
-        normal = self._compute_palm_normal(r_lm)
+        norm_lm = self.normalizer.normalize_landmarks(active_lm)
+        angles_15 = self.normalizer.calculate_15_joint_angles(norm_lm)
+        detected_states = self.normalizer.detect_finger_states(norm_lm, angles_15)
 
-        score = 0.5
+        finger_names_bn = {
+            "thumb": "বৃদ্ধাঙ্গুলি",
+            "index": "তর্জনী",
+            "middle": "মধ্যমা",
+            "ring": "অনামিকা",
+            "pinky": "কনিষ্ঠা"
+        }
+
+        correct_count = 0
         hints = []
 
-        if target_orient == "OUTWARD" or "FRONT" in target_orient:
-            score = 1.0 if normal[2] > -0.3 else 0.4
-            if score < 0.7:
-                hints.append("হাতের তালু সামনের দিকে ঘোরান।")
-        elif target_orient == "INWARD" or "BACK" in target_orient:
-            score = 1.0 if normal[2] > -0.3 else 0.4
-            if score < 0.7:
-                hints.append("হাতের তালু নিজের দিকে ঘোরান।")
-        elif target_orient == "UPWARD":
-            score = 1.0 if normal[1] < 0.2 else 0.4
-            if score < 0.7:
-                hints.append("হাতের তালু উপরের দিকে রাখুন।")
-        elif target_orient == "DOWNWARD":
-            score = 1.0 if normal[1] > -0.2 else 0.4
-            if score < 0.7:
-                hints.append("হাতের তালু নিচের দিকে রাখুন।")
-        else:
-            score = 0.9
+        for f_name in ["thumb", "index", "middle", "ring", "pinky"]:
+            target_st = target_states.get(f_name, "EXTENDED")
+            act_st = detected_states.get(f_name, "CURL_FULL")
+            bn_name = finger_names_bn[f_name]
 
-        status = "ok" if score >= 0.75 else "warn" if score >= 0.50 else "error"
-        return score, status, hints
+            if act_st == target_st or (target_st == "EXTENDED" and act_st == "EXTENDED"):
+                correct_count += 1
+            else:
+                if target_st == "EXTENDED":
+                    hints.append(f"⚠️ {bn_name} আঙুলটি সম্পূর্ণ সোজা রাখুন।")
+                elif target_st == "CURL_FULL":
+                    hints.append(f"⚠️ {bn_name} আঙুল মুষ্টিবদ্ধ করুন।")
+                elif target_st == "HOOK_BENT":
+                    hints.append(f"⚠️ {bn_name} আঙুলটি সামান্য বাঁকান (হুক আকৃতি)।")
+                elif target_st in ["TOUCHING_INDEX", "TOUCHING_THUMB"]:
+                    hints.append("⚠️ বৃদ্ধাঙ্গুলি ও তর্জনীর ডগা স্পর্শ করে গোলক বানান।")
+                elif target_st == "ACROSS_PALM":
+                    hints.append(f"⚠️ {bn_name} তালুর ভেতরের দিকে বাঁকান।")
 
-    # ── Channel 4: Facial NMM FACS ───────────────────────────────────────────
+        score = correct_count / 5.0
+        status = "ok" if score >= 0.80 else "warn" if score >= 0.50 else "error"
+        return score, status, hints, detected_states
+
+    # ── Channel 4: Palm Facing Direction Evaluation ──────────────────────────
+
+    def _eval_palm_facing(
+        self,
+        active_lm: Optional[np.ndarray],
+        target_facing: str
+    ) -> Tuple[float, str, Optional[str], str]:
+        if active_lm is None or len(active_lm) < 21:
+            return 0.0, "error", "⚠️ তালুর অভিমুখ শনাক্ত করা যায়নি।", "UNKNOWN"
+
+        detected_facing = self.normalizer.detect_palm_facing(active_lm)
+
+        score = 1.0 if detected_facing == target_facing else 0.4
+        hint = None
+
+        if score < 0.7:
+            if target_facing == "FACING_CAMERA":
+                hint = "⚠️ হাতের তালু ক্যামেরার দিকে (সামনের দিকে) ঘোরান।"
+            elif target_facing == "FACING_USER":
+                hint = "⚠️ হাতের তালু নিজের দিকে ঘোরান।"
+            elif target_facing == "FACING_UP":
+                hint = "⚠️ হাতের তালু উপরের দিকে রাখুন।"
+            elif target_facing == "FACING_DOWN":
+                hint = "⚠️ হাতের তালু নিচের দিকে রাখুন।"
+            else:
+                hint = "⚠️ হাতের তালু নির্দেশিত দিকে প্রস্তুত রাখুন।"
+
+        status = "ok" if score >= 0.75 else "warn"
+        return score, status, hint, detected_facing
+
+    # ── Channel 5: Facial NMM FACS Evaluation ────────────────────────────────
 
     def _eval_facs(
         self,
         face_lm: Optional[np.ndarray],
         spec: Dict[str, Any]
-    ) -> Tuple[float, str, List[str]]:
-        req_facs = spec.get("facs_required", {})
+    ) -> Tuple[float, str, Optional[str]]:
+        req_facs = spec.get("facs_action_units", spec.get("facs_required", {}))
         if not req_facs:
-            return 1.0, "ok", []
+            return 1.0, "ok", None
 
-        hints = []
+        is_mandatory = spec.get("facs_mandatory", False)
+
+        hint = None
         if "AU04" in req_facs and req_facs["AU04"] > 0.3:
-            hints.append("ভ্রু সামান্য কুঁচকান (AU04 প্রশ্নবোধক অভিব্যক্তি)।")
+            hint = "⚠️ প্রশ্নবোধক বাক্য—দয়া করে ভ্রু সামান্য কুঁচকান (AU04)।"
         elif "AU12" in req_facs and req_facs["AU12"] > 0.3:
-            hints.append("মুখে মৃদু হাসি রাখুন (AU12)।")
+            hint = "⚠️ মুখে মৃদু হাসি রাখুন (AU12)।"
         elif "AU01" in req_facs and req_facs["AU01"] > 0.3:
-            hints.append("ভ্রু কিছুটা উপরে তুলুন (AU01/AU02)।")
-        else:
-            hints.append("মুখের অভিব্যক্তি স্পষ্ট রাখুন।")
+            hint = "⚠️ ভ্রু কিছুটা উপরে তুলুন (AU01/AU02)।"
 
         if face_lm is None or len(face_lm) < 10:
-            return 0.0, "error", hints
+            if is_mandatory:
+                return 0.0, "error", hint
+            return 0.8, "ok", None
 
-        score = 0.8
-        status = "ok" if score >= 0.75 else "warn"
-        return score, status, hints
+        return 1.0, "ok", None
 
-    # ── Channel 5: Motion Trajectory Dynamics ────────────────────────────────
-
-    def _eval_motion(
-        self,
-        trajectory: Optional[np.ndarray],
-        spec: Dict[str, Any]
-    ) -> Tuple[float, str, List[str]]:
-        target_motion = spec.get("motion_type", "STATIC_HOLD")
-
-        if trajectory is None or len(trajectory) < 5:
-            # Static gesture or starting motion
-            return 1.0 if target_motion == "STATIC_HOLD" else 0.75, "ok", []
-
-        # Compute velocity variance
-        diffs = np.linalg.norm(np.diff(trajectory[:, :2], axis=0), axis=1)
-        mean_speed = float(np.mean(diffs))
-
-        hints = []
-        score = 0.85
-        if target_motion == "STATIC_HOLD":
-            if mean_speed > 0.05:
-                score = 0.4
-                hints.append("হাতটি স্থির রাখুন (নড়াচড়া কম করুন)।")
-            else:
-                score = 1.0
-        elif target_motion in ["VIBRATION_FAST", "TAP_DOUBLE"]:
-            if mean_speed < 0.01:
-                score = 0.5
-                hints.append("নির্দেশিত গতিশীল ছন্দ অনুসরণ করুন।")
-            else:
-                score = 0.95
-
-        status = "ok" if score >= 0.75 else "warn" if score >= 0.5 else "error"
-        return score, status, hints
-
-    # ── Utility Helpers ──────────────────────────────────────────────────────
+    # ── 4-Row HUD Checklist Builder ──────────────────────────────────────────
 
     @staticmethod
-    def _get_finger_extensions(lm: np.ndarray) -> List[bool]:
-        """Detects boolean extension state [Thumb, Index, Middle, Ring, Pinky]."""
-        wrist = lm[0]
-        extensions = []
+    def _build_checklist_rows(
+        req_hand: str, hand_status: str,
+        target_anchor: str, pos_status: str,
+        detected_fingers: Dict[str, str], target_fingers: Dict[str, str], finger_status: str,
+        target_facing: str, detected_facing: str, palm_status: str
+    ) -> List[Dict[str, str]]:
+        """Constructs 4 structured status rows for rendering inside the camera HUD."""
+        # Row 1: Hand
+        hand_text = "[ডান হাত ✅]" if req_hand == "RIGHT_ONLY" and hand_status == "ok" else (
+            "[উভয় হাত ✅]" if req_hand == "DUAL_HAND" and hand_status == "ok" else "[⚠️ ডান হাত ব্যবহার করুন]"
+        )
 
-        # Thumb: Tip (4) vs IP (3) distance to wrist
-        d_tip = math.hypot(lm[4, 0] - wrist[0], lm[4, 1] - wrist[1])
-        d_ip = math.hypot(lm[3, 0] - wrist[0], lm[3, 1] - wrist[1])
-        extensions.append(d_tip > d_ip * 1.05)
+        # Row 2: Location
+        anchor_bn = {
+            "CHIN": "চিবুক",
+            "UPPER_LIP": "গোঁফ/ঠোঁট",
+            "LIP_UPPER": "গোঁফ/ঠোঁট",
+            "CHEEK": "গাল",
+            "CHEEK_RIGHT": "গাল",
+            "FOREHEAD": "কপাল",
+            "CHEST": "বুক",
+            "CHEST_MID": "বুক",
+            "NEUTRAL_SPACE": "ফ্রেমের মাঝে"
+        }.get(target_anchor.upper(), "নির্দিষ্ট স্থান")
+        pos_text = f"[{anchor_bn} ✅]" if pos_status == "ok" else f"[⚠️ {anchor_bn}ে তুলুন]"
 
-        # Fingers: Tip y vs PIP y (extended if tip is higher than PIP, i.e. lower y value)
-        tips = [8, 12, 16, 20]
-        pips = [6, 10, 14, 18]
-        for tip_idx, pip_idx in zip(tips, pips):
-            extensions.append(bool(lm[tip_idx, 1] < lm[pip_idx, 1]))
+        # Row 3: Fingers
+        if finger_status == "ok":
+            finger_text = "[আঙুলসমূহ নিখুঁত ✅]"
+        else:
+            # List specific errors
+            wrong_fingers = [f for f, t in target_fingers.items() if detected_fingers.get(f) != t]
+            if "index" in wrong_fingers:
+                finger_text = "[তর্জনী ❌ সোজা রাখুন]"
+            elif "thumb" in wrong_fingers:
+                finger_text = "[বুড়ো আঙুল ❌ বাঁকান]"
+            else:
+                finger_text = "[আঙুল ❌ প্রস্তুত করুন]"
 
-        return extensions
+        # Row 4: Palm Direction
+        facing_bn = {
+            "FACING_CAMERA": "সামনে",
+            "FACING_USER": "নিজের দিকে",
+            "FACING_UP": "উপরে",
+            "FACING_DOWN": "নিচে"
+        }.get(target_facing, "সঠিক দিকে")
+        palm_text = f"[{facing_bn} ✅]" if palm_status == "ok" else f"[⚠️ তালু {facing_bn} ঘোরান]"
 
-    @staticmethod
-    def _compute_palm_normal(lm: np.ndarray) -> Tuple[float, float, float]:
-        """Computes 3D cross-product normal of the palm plane."""
-        p0 = lm[0]
-        p5 = lm[5]
-        p17 = lm[17]
-
-        v1 = p5 - p0
-        v2 = p17 - p0
-        normal = np.cross(v1, v2)
-        norm_val = np.linalg.norm(normal)
-        if norm_val > 1e-6:
-            normal = normal / norm_val
-        return (float(normal[0]), float(normal[1]), float(normal[2]))
-
-    def _resolve_slug(self, text: str) -> str:
-        s = text.strip().lower()
-        if s in self.spec_db:
-            return s
-        for k, v in self.spec_db.items():
-            if v.get("label_bn") == text or v.get("label_en", "").lower() == s:
-                return k
-            if k in s or s in k:
-                return k
-        return "dhonnobad"
+        return [
+            {"row": 1, "icon": "✋", "title": "হাত", "status": hand_status, "text": hand_text},
+            {"row": 2, "icon": "📍", "title": "অবস্থান", "status": pos_status, "text": pos_text},
+            {"row": 3, "icon": "🖐️", "title": "আঙুল", "status": finger_status, "text": finger_text},
+            {"row": 4, "icon": "🔄", "title": "তালু", "status": palm_status, "text": palm_text},
+        ]

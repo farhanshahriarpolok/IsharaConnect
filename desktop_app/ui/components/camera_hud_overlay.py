@@ -139,20 +139,65 @@ class CameraHUDOverlay:
         w: int,
         h: int
     ):
-        """Draws 4-channel diagnostic telemetry chips and corrective guidance."""
+        """Draws 4-channel diagnostic telemetry chips and 4-row status card."""
         channel_status = getattr(diag, "channel_status", {}) or {}
         hints = getattr(diag, "corrective_hints", []) or []
         match_score = getattr(diag, "match_score", 0.0)
+        checklist_rows = getattr(diag, "checklist_rows", []) or []
 
-        # Status chip definitions: (label, key)
+        # 1. Top-Left 4-Row Diagnostic HUD Status Card
+        if checklist_rows:
+            card_x = 12
+            card_y = 52
+            card_w = 175
+            card_h = len(checklist_rows) * 20 + 26
+
+            # Draw background overlay card
+            sub_roi = frame[max(0, card_y): min(h, card_y + card_h), max(0, card_x): min(w, card_x + card_w)]
+            if sub_roi.size > 0:
+                dark_card = np.full_like(sub_roi, (15, 23, 42), dtype=np.uint8)
+                cv2.addWeighted(sub_roi, 0.20, dark_card, 0.80, 0, sub_roi)
+                cv2.rectangle(frame, (card_x, card_y), (card_x + card_w, card_y + card_h), (51, 65, 85), 1)
+
+                # Card Header
+                cv2.putText(
+                    frame,
+                    f"DIAGNOSTIC COACH ({int(match_score)}%)",
+                    (card_x + 8, card_y + 14),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.34,
+                    (6, 182, 212),
+                    1,
+                    cv2.LINE_AA
+                )
+
+                for idx, row in enumerate(checklist_rows):
+                    ry = card_y + 32 + idx * 19
+                    st = row.get("status", "ok")
+                    color = (16, 185, 129) if st == "ok" else ((11, 158, 245) if st == "warn" else (94, 63, 244))
+                    icon = "OK" if st == "ok" else ("!" if st == "warn" else "X")
+                    title = row.get("title", "")
+                    text = f"{row.get('icon', '')} {title}: {icon}"
+                    cv2.putText(
+                        frame,
+                        text,
+                        (card_x + 8, ry),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.36,
+                        color,
+                        1,
+                        cv2.LINE_AA
+                    )
+
+        # 2. Bottom 4-Channel Horizontal Chip Bar
         chips = [
-            ("Shape", "handshape"),
+            ("Hand", "handedness"),
             ("Pos", "position"),
-            ("Palm", "orientation"),
-            ("Face", "facs")
+            ("Fingers", "fingers"),
+            ("Palm", "orientation")
         ]
 
-        chip_w = 68
+        chip_w = 70
         chip_h = 22
         start_x = 12
         y = h - chip_h - 12

@@ -116,5 +116,96 @@ class MasterBdSLLexicon:
         return results
 
 
+    def get_articulatory_spec(self, gloss: str) -> Dict[str, Any]:
+        """Returns hyper-granular articulatory specification and step-by-step instructions for a sign."""
+        sign = self.get_sign_by_gloss(gloss) or {}
+        slug = sign.get("slug", gloss)
+
+        # Built-in Special Dactylology & Core Sign Overrides
+        dactylology_specs = {
+            "cons_ka": {"label_bn": "ক", "label_en": "Consonant Ka", "handshape": "INDEX_EXTENDED", "anchor": "NEUTRAL_SPACE", "finger_states": {"thumb": "CURL_FULL", "index": "EXTENDED", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}},
+            "vowel_a": {"label_bn": "অ", "label_en": "Vowel A", "handshape": "FIST", "anchor": "NEUTRAL_SPACE", "finger_states": {"thumb": "CURL_FULL", "index": "CURL_FULL", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}},
+            "vowel_aa": {"label_bn": "আ", "label_en": "Vowel Aa", "handshape": "THUMB_UP", "anchor": "NEUTRAL_SPACE", "finger_states": {"thumb": "EXTENDED", "index": "CURL_FULL", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}},
+            "dhonnobad": {"label_bn": "ধন্যবাদ", "label_en": "Thank you", "handshape": "OPEN_PALM", "anchor": "CHIN", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "palm_facing": "FACING_CAMERA"},
+            "baba": {"label_bn": "বাবা", "label_en": "Father", "handshape": "INDEX_HOOK", "anchor": "UPPER_LIP", "finger_states": {"thumb": "CURL_FULL", "index": "EXTENDED", "middle": "CURL_FULL", "ring": "CURL_FULL", "pinky": "CURL_FULL"}, "palm_facing": "FACING_CAMERA"},
+            "ma": {"label_bn": "মা", "label_en": "Mother", "handshape": "OPEN_PALM", "anchor": "CHEEK_RIGHT", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "palm_facing": "FACING_CAMERA"},
+            "kemon_achen": {"label_bn": "কেমন আছেন?", "label_en": "How are you?", "handshape": "OPEN_PALM", "anchor": "CHEST_MID", "finger_states": {"thumb": "EXTENDED", "index": "EXTENDED", "middle": "EXTENDED", "ring": "EXTENDED", "pinky": "EXTENDED"}, "facs_action_units": {"AU04": 0.6, "AU01": 0.3}, "facs_mandatory": True, "handedness": "dual"}
+        }
+        override = dactylology_specs.get(slug, dactylology_specs.get(gloss, {}))
+
+        handedness = str(override.get("handedness", sign.get("handedness", "single"))).lower()
+        is_dual = handedness in ["dual", "both", "2"]
+        req_hand = "DUAL_HAND" if is_dual else "RIGHT_ONLY"
+
+        contact = sign.get("contact_physics", {})
+        anchor = override.get("anchor", contact.get("body_anchor", "NEUTRAL_SPACE")).upper()
+        if anchor == "LIP_UPPER":
+            anchor = "UPPER_LIP"
+
+        plane = str(contact.get("plane", "CORONAL")).upper()
+        palm_facing = override.get("palm_facing", "FACING_CAMERA" if "FRONT" in plane or "CORONAL" in plane else ("FACING_USER" if "SAGITTAL" in plane else "FACING_DOWN"))
+
+        handshape = str(override.get("handshape", sign.get("handshape", "OPEN_PALM"))).upper()
+        default_finger_states = {
+            "thumb": "EXTENDED" if "OPEN" in handshape or "THUMB" in handshape else "CURL_FULL",
+            "index": "EXTENDED" if "OPEN" in handshape or "INDEX" in handshape or "POINT" in handshape else "CURL_FULL",
+            "middle": "EXTENDED" if "OPEN" in handshape or "V_" in handshape else "CURL_FULL",
+            "ring": "EXTENDED" if "OPEN" in handshape else "CURL_FULL",
+            "pinky": "EXTENDED" if "OPEN" in handshape or "I_" in handshape else "CURL_FULL",
+        }
+        finger_states = override.get("finger_states", sign.get("finger_states", default_finger_states))
+
+        motion = contact.get("touch_type", "STATIC_HOLD").upper()
+        if "TAP" in motion:
+            motion_type = "TAP_TWICE"
+        elif "SWIPE" in motion or "STROKE" in motion:
+            motion_type = "DOWNWARD_STROKE"
+        elif "VIBRAT" in motion:
+            motion_type = "HIGH_FREQ_VIBRATION"
+        else:
+            motion_type = "STATIC_HOLD"
+
+        label_bn = override.get("label_bn", sign.get("label_bn", slug))
+        label_en = override.get("label_en", sign.get("label_en", slug))
+        step_1 = "উভয় হাত সমান উচ্চতায় প্রস্তুত করুন" if is_dual else "ডান হাত ব্যবহার করুন"
+        anchor_bn = {
+            "CHIN": "চিবুকের কাছে",
+            "UPPER_LIP": "ঠোঁটের ওপর (গোঁফের কাছে)",
+            "CHEEK": "ডান গালের কাছে",
+            "CHEEK_RIGHT": "ডান গালের কাছে",
+            "FOREHEAD": "কপালের সামনে",
+            "CHEST": "বুকের সামনে",
+            "CHEST_MID": "বুকের মাঝে",
+            "NEUTRAL_SPACE": "ক্যামেরা ফ্রেমের মাঝে"
+        }.get(anchor, "নির্দিষ্ট স্থানে")
+        step_2 = f"হাতটি {anchor_bn} নিয়ে আসুন"
+        step_3 = f"হাতের আঙুলগুলো '{label_bn}' এর নির্দেশিত আকৃতিতে প্রস্তুত রাখুন"
+        step_4 = "তালু ক্যামেরার দিকে রেখে স্থির রাখুন" if palm_facing == "FACING_CAMERA" else "তালু নিজের দিকে রেখে নির্দিষ্ট গতিশীল পথ অনুসরণ করুন"
+
+        facs_units = override.get("facs_action_units", sign.get("facs_action_units", {}))
+        facs_mandatory = override.get("facs_mandatory", sign.get("facs_mandatory", False))
+
+        return {
+            "slug": slug,
+            "label_bn": label_bn,
+            "label_en": label_en,
+            "required_hand": override.get("required_hand", sign.get("required_hand", req_hand)),
+            "target_body_anchor": override.get("target_body_anchor", sign.get("target_body_anchor", anchor)),
+            "target_anchor_tolerance_cm": sign.get("target_anchor_tolerance_cm", 6.0),
+            "palm_facing": palm_facing,
+            "finger_states": finger_states,
+            "facs_action_units": facs_units,
+            "facs_mandatory": facs_mandatory,
+            "motion_type": sign.get("motion_type", motion_type),
+            "instructions_bn": sign.get("instructions_bn", {
+                "step_1_hand": step_1,
+                "step_2_location": step_2,
+                "step_3_fingers": step_3,
+                "step_4_palm_action": step_4
+            })
+        }
+
+
 # Module-level singleton
 master_lexicon = MasterBdSLLexicon()
+

@@ -90,6 +90,8 @@ class AcademyDashboard(QWidget):
         self.streak = 0
         self.exam_signs = []
         self.current_exam_index = 0
+        self.sustained_match_frames = 0
+        self.master_lexicon = master_lexicon
         self.rule_engine = BdSLGeometricRuleEngine()
         self.correction_advisor = SignCorrectionAdvisor()
 
@@ -690,17 +692,21 @@ class AcademyDashboard(QWidget):
         self.ref_badge.setText(f"ক্যাটাগরি: {cat} | {handedness_badge}")
         self.ref_badge.setStyleSheet(f"background-color: {SURFACE_COLOR}; color: {handedness_color}; border-radius: 6px; padding: 4px 8px; font-size: 11.5px; font-weight: bold;")
 
-        pos_desc = "ক্যামেরা ফ্রেমের ঠিক মাঝে হাত ও বাহু স্থির রাখুন।" if not is_dual else "উভয় হাত সমান উচ্চতায় বুকের সামনে আনুন।"
-        fingers_desc = mnemonic
-        action_desc = "স্থিতিশীল ভঙ্গিতে ২ সেকেন্ড ধরে রাখুন।" if not self.is_dynamic_sign else "ধীর ও মসৃণ গতিতে নির্দেশিত পথ অনুসরণ করুন।"
+        art_spec = self.master_lexicon.get_articulatory_spec(slug)
+        instr_map = art_spec.get("instructions_bn", {})
+        step_1 = instr_map.get("step_1_hand", "ডান হাত ব্যবহার করুন")
+        step_2 = instr_map.get("step_2_location", "ক্যামেরা ফ্রেমের ঠিক মাঝে হাত ও বাহু স্থির রাখুন।")
+        step_3 = instr_map.get("step_3_fingers", mnemonic)
+        step_4 = instr_map.get("step_4_palm_action", "স্থিতিশীল ভঙ্গিতে ২ সেকেন্ড ধরে রাখুন।")
 
         instructions_html = f"""
         <div style="font-family: 'Segoe UI', Arial; font-size: 13px; line-height: 1.5; color: #E2E8F0;">
-          <b style="color: #38BDF8; font-size: 14px;">🎯 ধাপ ও কৌশল (Steps & Technique):</b>
+          <b style="color: #38BDF8; font-size: 14px;">🎯 ৪-ধাপের অঙ্গবিন্যাস নির্দেশিকা:</b>
           <div style="margin-top: 6px; padding: 8px; background: rgba(15, 23, 42, 0.6); border-radius: 6px; font-size: 12.5px; line-height: 1.6;">
-            <b style="color: #38BDF8;">১. অবস্থান (Position):</b> {pos_desc}<br>
-            <b style="color: #38BDF8;">২. আঙুল (Fingers):</b> {fingers_desc}<br>
-            <b style="color: #38BDF8;">৩. কৌশল (Action):</b> {action_desc}
+            <b style="color: #38BDF8;">১. হাত (Hand):</b> {step_1}<br>
+            <b style="color: #38BDF8;">২. অবস্থান (Position):</b> {step_2}<br>
+            <b style="color: #38BDF8;">৩. আঙুল (Fingers):</b> {step_3}<br>
+            <b style="color: #38BDF8;">৪. তালু ও গতি (Action):</b> {step_4}
           </div>
           <div style="margin-top: 8px; padding: 8px 10px; background: rgba(16, 185, 129, 0.12); border-left: 3px solid #10B981; border-radius: 6px; color: #34D399; font-weight: 600; font-size: 12.5px;">
             ✨ <b>স্পর্শের নিয়ম:</b> {touch_rule}
@@ -711,6 +717,7 @@ class AcademyDashboard(QWidget):
 
         # Reset coach banner
         self.update_posture_coach(f"ক্যামেরার সামনে '{bn}' এর ভঙ্গি প্রদর্শন করুন...", state="idle")
+        self.sustained_match_frames = 0
 
         # Load Visual Card via bulletproof SignCardViewer
         self.sign_card_viewer.load_sign(slug, bn, en)
@@ -922,10 +929,10 @@ class AcademyDashboard(QWidget):
                 "error": ("#F43F5E", "✗")
             }
             channel_labels = [
-                ("আকৃতি", diag.channel_status.get("handshape", "ok")),
+                ("হাত", diag.channel_status.get("handedness", "ok")),
                 ("অবস্থান", diag.channel_status.get("position", "ok")),
-                ("তালুর দিক", diag.channel_status.get("orientation", "ok")),
-                ("অভিব্যক্তি", diag.channel_status.get("facs", "ok")),
+                ("আঙুল", diag.channel_status.get("fingers", "ok")),
+                ("তালু", diag.channel_status.get("orientation", "ok")),
             ]
             items_html = " ".join([
                 f"<span style='color: {status_map[st][0]}; font-weight: bold;'>[{status_map[st][1]} {lbl}]</span>"
@@ -933,16 +940,22 @@ class AcademyDashboard(QWidget):
             ])
             self.posture_hud.setHtml(f"<b>ডায়াগনস্টিক চ্যানেল:</b> {items_html}")
 
-            if diag.is_match:
-                advice_str = diag.corrective_hints[0] if diag.corrective_hints else "ভঙ্গি নিখুঁত!"
-                self.update_posture_coach(advice_str, state="perfect")
-                if self.practice_running:
-                    self.xp_score += 5
-                    self.streak += 1
-                    self.xp_label.setText(f"XP: {self.xp_score}")
-                    self.streak_label.setText(f"Streak: {self.streak} 🔥")
-                    self.xp_header_lbl.setText(f"XP: {self.xp_score} ⭐")
+            if diag.is_match and pct >= 75.0:
+                self.sustained_match_frames += 1
+                if self.sustained_match_frames >= 5:  # Sustained accuracy
+                    advice_str = "ভঙ্গি নিখুঁত ও সম্পূর্ণ! দুর্দান্ত অগ্রগতি!"
+                    self.update_posture_coach(advice_str, state="perfect")
+                    if self.practice_running:
+                        self.xp_score += 10
+                        self.streak += 1
+                        self.xp_label.setText(f"XP: {self.xp_score}")
+                        self.streak_label.setText(f"Streak: {self.streak} 🔥")
+                        self.xp_header_lbl.setText(f"XP: {self.xp_score} ⭐")
+                        self.sustained_match_frames = 0
+                else:
+                    self.update_posture_coach("ভঙ্গি চমৎকার! হাত স্থির রাখুন...", state="perfect")
             else:
+                self.sustained_match_frames = 0
                 primary_hint = diag.corrective_hints[0] if diag.corrective_hints else "হাত ক্যামেরার সামনে আনুন..."
                 self.update_posture_coach(primary_hint, state="warning")
             return

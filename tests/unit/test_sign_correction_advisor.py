@@ -34,7 +34,7 @@ def _create_mock_hand(
         lm[1] = [wx - 0.02, wy - 0.01, palm_z]
         lm[2] = [wx - 0.03, wy - 0.02, palm_z]
         lm[3] = [wx - 0.02, wy - 0.01, palm_z]
-        lm[4] = [wx - 0.01, wy, palm_z]  # Curled
+        lm[4] = [wx - 0.01, wy, palm_z + 0.03]  # Curled
 
     # Index (5-8), Middle (9-12), Ring (13-16), Pinky (17-20)
     finger_bases = [(0.02, 5), (0.04, 9), (0.06, 13), (0.08, 17)]
@@ -42,13 +42,14 @@ def _create_mock_hand(
         is_extended = fingers_up[f_idx + 1]
         bx = wx + x_off
         lm[base_idx] = [bx, wy - 0.05, palm_z]      # MCP
-        lm[base_idx + 1] = [bx, wy - 0.09, palm_z]  # PIP
-        lm[base_idx + 2] = [bx, wy - 0.12, palm_z]  # DIP
-
         if is_extended:
-            lm[base_idx + 3] = [bx, wy - 0.15, palm_z]  # Extended Tip (higher y -> lower value)
+            lm[base_idx + 1] = [bx, wy - 0.09, palm_z]  # PIP
+            lm[base_idx + 2] = [bx, wy - 0.13, palm_z]  # DIP
+            lm[base_idx + 3] = [bx, wy - 0.17, palm_z]  # Tip
         else:
-            lm[base_idx + 3] = [bx, wy - 0.07, palm_z]  # Curled Tip (lower than PIP)
+            lm[base_idx + 1] = [bx, wy - 0.08, palm_z + 0.03]
+            lm[base_idx + 2] = [bx, wy - 0.05, palm_z + 0.05]
+            lm[base_idx + 3] = [bx, wy - 0.02, palm_z + 0.03]
 
     return lm
 

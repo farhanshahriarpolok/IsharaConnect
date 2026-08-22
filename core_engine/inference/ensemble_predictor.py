@@ -17,6 +17,7 @@ import numpy as np
 from core_engine.vision.geometric_rule_engine import BdSLGeometricRuleEngine
 from core_engine.vision.dtw_matcher import DTWMotionMatcher
 from core_engine.vision.dactylology_engine import DactylologyEngine
+from core_engine.vision.spatial_normalizer import SpatialNormalizer
 from core_engine.inference.predictor import RealTimePredictor
 from core_engine.inference.minimal_pair_discriminator import MinimalPairDiscriminator
 from core_engine.nlp.master_lexicon import master_lexicon
@@ -171,6 +172,7 @@ class EnsemblePredictor:
         self.master_lexicon = master_lexicon
         self.dactylology_engine = DactylologyEngine()
         self.syntax_engine = bdsl_syntax_engine
+        self.spatial_normalizer = SpatialNormalizer()
 
         self.geometric_threshold = geometric_threshold
         self.sensitivity = sensitivity

@@ -67,7 +67,9 @@ class CameraHUDOverlay:
         fps: float = 30.0,
         diagnostic_result: Optional[Any] = None,
         ghost_target_slug: Optional[str] = None,
-        target_anchor: str = "NEUTRAL_SPACE"
+        target_anchor: str = "NEUTRAL_SPACE",
+        face_landmarks: Optional[np.ndarray] = None,
+        pose_landmarks: Optional[np.ndarray] = None
     ) -> np.ndarray:
         """Draws glowing skeleton landmarks, HUD cards, and tracking telemetry.
 
@@ -80,6 +82,8 @@ class CameraHUDOverlay:
             diagnostic_result: Optional DiagnosticResult instance from SignCorrectionAdvisor.
             ghost_target_slug: Optional target sign slug for rendering reference ghost skeleton.
             target_anchor: Optional target anchor name.
+            face_landmarks: Optional (468, 3) FaceMesh array.
+            pose_landmarks: Optional (33, 3) Pose array.
 
         Returns:
             Annotated BGR frame.
@@ -127,18 +131,24 @@ class CameraHUDOverlay:
             if has_right:
                 self._draw_hand_skeleton(out_frame, right_landmarks, w, h, is_left=False)
 
-        # 2. Draw Dual-Hand Touch Contact Rings
+        # 2. Draw On-Face Target Anchor Aura & Directional Vector Arrow
+        if target_anchor and target_anchor.upper() != "NEUTRAL_SPACE":
+            self._draw_target_anchor_aura(
+                out_frame, target_anchor, active_user_lm, face_landmarks, pose_landmarks, match_score, w, h
+            )
+
+        # 3. Draw Dual-Hand Touch Contact Rings
         if has_left and has_right:
             self._draw_contact_rings(out_frame, left_landmarks, right_landmarks, w, h)
 
-        # 3. Draw Top Tracking Status Pill
+        # 4. Draw Top Tracking Status Pill
         self._draw_status_pill(out_frame, has_left, has_right, safe_fps)
 
-        # 4. Draw 4-Channel Articulatory Diagnostic Status Chips & Advice
+        # 5. Draw 4-Channel Articulatory Diagnostic Status Chips & Advice
         if diagnostic_result is not None:
             self._draw_diagnostic_chips(out_frame, diagnostic_result, w, h)
 
-        # 5. Draw Floating Prediction Tag above Active Hand
+        # 6. Draw Floating Prediction Tag above Active Hand
         if prediction_payload and isinstance(prediction_payload, dict):
             active_lm = right_landmarks if has_right else (left_landmarks if has_left else None)
             if active_lm is not None and len(active_lm) > 0:
@@ -153,6 +163,46 @@ class CameraHUDOverlay:
                 self._draw_floating_tag(out_frame, 80, 80, prediction_payload)
 
         return out_frame
+
+    def _draw_target_anchor_aura(
+        self,
+        frame: np.ndarray,
+        target_anchor: str,
+        active_user_lm: Optional[np.ndarray],
+        face_landmarks: Optional[np.ndarray],
+        pose_landmarks: Optional[np.ndarray],
+        match_score: float,
+        w: int,
+        h: int
+    ):
+        """Draws pulsing on-face target aura and animated directional vector arrow pointing from hand to anchor."""
+        if not target_anchor or target_anchor.upper() == "NEUTRAL_SPACE":
+            return
+
+        from core_engine.vision.spatial_normalizer import SpatialNormalizer
+        anchor_3d = SpatialNormalizer.get_anatomical_anchor_3d(target_anchor, face_landmarks, pose_landmarks)
+        ax = int(np.clip(anchor_3d[0] * w, 0, w - 1))
+        ay = int(np.clip(anchor_3d[1] * h, 0, h - 1))
+
+        is_aligned = match_score >= 75.0
+        aura_color = (129, 185, 16) if is_aligned else (212, 182, 6)  # Green vs Cyan
+        radius = int(18 + 4 * math.sin(self.pulse_phase * 2))
+
+        # Draw glowing aura rings
+        cv2.circle(frame, (ax, ay), radius + 8, aura_color, 1, cv2.LINE_AA)
+        cv2.circle(frame, (ax, ay), radius, aura_color, 2, cv2.LINE_AA)
+        cv2.circle(frame, (ax, ay), 4, (255, 255, 255), -1, cv2.LINE_AA)
+
+        # Draw directional guidance arrow if user hand is detected but not aligned
+        if active_user_lm is not None and len(active_user_lm) >= 21 and not is_aligned:
+            art_3d = SpatialNormalizer.resolve_active_articulator(active_user_lm, "AUTO")
+            hx = int(np.clip(art_3d[0] * w, 0, w - 1))
+            hy = int(np.clip(art_3d[1] * h, 0, h - 1))
+
+            dist = math.hypot(ax - hx, ay - hy)
+            if dist > 30:  # Only draw arrow when hand is away
+                cv2.arrowedLine(frame, (hx, hy), (ax, ay), (11, 158, 245), 2, tipLength=0.15, line_type=cv2.LINE_AA)
+                cv2.circle(frame, (hx, hy), 5, (11, 158, 245), -1, cv2.LINE_AA)
 
     def _draw_diagnostic_chips(
         self,

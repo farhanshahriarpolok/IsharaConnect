@@ -66,8 +66,9 @@ class SignCorrectionAdvisor:
 
         # ── Channel 2: Spatial Body Anchor Proximity ─────────────────────────
         target_anchor = spec.get("target_body_anchor", "NEUTRAL_SPACE")
+        art_type = spec.get("articulator_type", "AUTO")
         pos_score, pos_status, pos_hint, dist_cm = self._eval_anchor_position(
-            active_lm, target_anchor, face_landmarks
+            active_lm, target_anchor, face_landmarks, pose_landmarks, art_type
         )
 
         # ── Channel 3: 5-Finger Articulation & 15-Joint Angles ────────────────
@@ -205,38 +206,20 @@ class SignCorrectionAdvisor:
         self,
         active_lm: Optional[np.ndarray],
         target_anchor: str,
-        face_lm: Optional[np.ndarray]
+        face_lm: Optional[np.ndarray],
+        pose_lm: Optional[np.ndarray] = None,
+        articulator_type: str = "AUTO"
     ) -> Tuple[float, str, Optional[str], float]:
         if active_lm is None or len(active_lm) < 21:
             return 0.0, "error", "⚠️ হাতের অবস্থান শনাক্ত করা যায়নি।", 50.0
 
-        wrist = active_lm[0]
-        score, dist_cm = self.normalizer.calculate_anchor_proximity(
-            wrist, target_anchor, face_lm
+        score, dist_cm, hint, _ = self.normalizer.calculate_anchor_alignment(
+            hand_landmarks=active_lm,
+            target_anchor_name=target_anchor,
+            face_landmarks=face_lm,
+            pose_landmarks=pose_lm,
+            articulator_type=articulator_type
         )
-
-        anchor_bn_map = {
-            "CHIN": "চিবুকের কাছে",
-            "UPPER_LIP": "ঠোঁটের ওপর (গোঁফের কাছে)",
-            "LIP_UPPER": "ঠোঁটের ওপর",
-            "PHILTRUM": "মুখের কাছে",
-            "CHEEK": "ডান গালের কাছে",
-            "CHEEK_RIGHT": "ডান গালের কাছে",
-            "CHEEK_LEFT": "বাম গালের কাছে",
-            "FOREHEAD": "কপালের সামনে",
-            "CHEST": "বুকের সামনে",
-            "CHEST_MID": "বুকের মাঝে",
-            "LEFT_WRIST": "বাম হাতের কবজির ওপর",
-            "NEUTRAL_SPACE": "ক্যামেরা ফ্রেমের মাঝে"
-        }
-        loc_str = anchor_bn_map.get(target_anchor.upper(), "নির্দিষ্ট অবস্থানে")
-
-        hint = None
-        if score < 0.70:
-            if wrist[1] > 0.65 and target_anchor in ["CHIN", "UPPER_LIP", "FOREHEAD", "CHEEK", "CHEEK_RIGHT"]:
-                hint = f"⚠️ হাত নিচে রয়েছে। হাতটি উপরে {loc_str} তুলুন।"
-            else:
-                hint = f"⚠️ হাতটি {loc_str} নিয়ে আসুন।"
 
         status = "ok" if score >= 0.75 else "warn" if score >= 0.45 else "error"
         return score, status, hint, dist_cm

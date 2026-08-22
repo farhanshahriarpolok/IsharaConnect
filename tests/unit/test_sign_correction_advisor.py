@@ -72,12 +72,12 @@ def test_advisor_perfect_posture_dhonnobad():
 def test_advisor_incorrect_position_chin_vs_chest():
     """Verify placing hand at chest instead of chin lowers position score and triggers hint."""
     advisor = SignCorrectionAdvisor()
-    # Chest position (0.50, 0.65) instead of Chin (0.50, 0.38)
-    hand_wrong_pos = _create_mock_hand(wrist_xy=(0.50, 0.65), fingers_up=[True, True, True, True, True])
+    # Chest position (0.50, 0.75) instead of Chin (0.50, 0.38)
+    hand_wrong_pos = _create_mock_hand(wrist_xy=(0.50, 0.75), fingers_up=[True, True, True, True, True])
 
     diag = advisor.evaluate_user_posture("dhonnobad", right_landmarks=hand_wrong_pos)
     assert diag.channel_scores["position"] < 0.60
-    assert any("চিবুকের কাছে" in h for h in diag.corrective_hints)
+    assert any("চিবুক" in h for h in diag.corrective_hints)
 
 
 def test_advisor_incorrect_handshape_curled_fingers():

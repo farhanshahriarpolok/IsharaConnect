@@ -117,6 +117,16 @@ class KinematicMotionInterpolator:
         # 2. Synthesize smooth parametric motion sequence
         return self._synthesize_parametric_sequence(slug)
 
+    def generate_motion_sequence(
+        self,
+        sign_slug: str,
+        label_bn: str = "",
+        label_en: str = ""
+    ) -> List[KinematicJointFrame]:
+        """Alias for resolve_motion_sequence."""
+        return self.resolve_motion_sequence(sign_slug, label_bn, label_en)
+
+
     def _tensor_to_kinematic_frames(self, seq_tensor: np.ndarray, slug: str) -> List[KinematicJointFrame]:
         """Converts a (60, 151) dataset tensor into full upper-body kinematic frames."""
         frames = []
@@ -363,6 +373,30 @@ class KinematicMotionInterpolator:
                 lw = (0.40, 0.50 - 0.05 * k)
                 rw = (0.60, 0.50 - 0.05 * k)
                 return rw, lw, "index_point", "index_point", True
+            return traj
+
+        elif slug in ["ma", "mother", "maa"]:
+            def traj(p: float):
+                # Double tap on right cheek (AU04/neutral, index tip touches cheek)
+                tap = math.sin(4 * math.pi * p)
+                k = max(0.0, tap)
+                rw = (0.58 - 0.04 * k, 0.24 - 0.03 * k)
+                return rw, (0.31, 0.75), "index_point", "rest", False
+            return traj
+
+        elif slug in ["baba", "father", "abba"]:
+            def traj(p: float):
+                # Moustache stroke across upper lip (thumb + index pinch stroke)
+                k = self._smooth_step(math.sin(math.pi * p))
+                rw = (0.50 + 0.09 * (p - 0.5), 0.27)
+                return rw, (0.31, 0.75), "pinch_grip", "rest", False
+            return traj
+
+        elif slug in ["apni", "you_respect"]:
+            def traj(p: float):
+                k = self._smooth_step(math.sin(math.pi * p))
+                rw = (0.60 - 0.10 * k, 0.48 - 0.08 * k)
+                return rw, (0.31, 0.75), "flat_palm_up", "rest", False
             return traj
 
         else:

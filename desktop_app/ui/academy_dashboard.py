@@ -42,6 +42,8 @@ from desktop_app.ui.components.ghost_overlay import GhostOverlayPainter
 from desktop_app.ui.components.motion_trajectory_viewer import MotionTrajectoryViewer
 from desktop_app.ui.components.sign_card_viewer import SignCardViewer
 from desktop_app.ui.components.human_rig_viewer import HumanRigViewer
+from desktop_app.ui.components.toon_avatar_renderer import ToonAvatarRenderer
+from desktop_app.ui.components.avatar_playback_bar import AvatarPlaybackBar
 from desktop_app.ui.dialogs.exam_dialog import ExamDialog
 from desktop_app.ui.theme import ThemeStyles
 
@@ -491,19 +493,32 @@ class AcademyDashboard(QWidget):
         toggle_layout.addWidget(self.btn_view_motion)
         right_layout.addLayout(toggle_layout)
 
-        # Middle: Stacked Widget containing SVG SignCardViewer (0) and 2D Kinematic HumanRigViewer (1)
+        # Middle: Stacked Widget containing SVG SignCardViewer (0) and Cel-Shaded ToonAvatarRenderer + PlaybackBar (1)
         self.ref_display_stack = QStackedWidget()
-        self.ref_display_stack.setFixedSize(280, 240)
+        self.ref_display_stack.setFixedSize(280, 280)
 
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.sign_card_viewer.setFixedSize(280, 240)
+        self.sign_card_viewer.setFixedSize(280, 280)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
 
-        self.human_rig_viewer = HumanRigViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.human_rig_viewer.setFixedSize(280, 240)
+        # Live Action Container with ToonAvatarRenderer and Cyber Playback Controller
+        live_action_container = QWidget()
+        live_action_layout = QVBoxLayout(live_action_container)
+        live_action_layout.setContentsMargins(0, 0, 0, 0)
+        live_action_layout.setSpacing(4)
 
-        self.ref_display_stack.addWidget(self.sign_card_viewer)  # Index 0: Static Card
-        self.ref_display_stack.addWidget(self.human_rig_viewer)  # Index 1: Live Motion Rig
+        self.toon_avatar_renderer = ToonAvatarRenderer("dhonnobad", "ধন্যবাদ", "Thank you")
+        self.toon_avatar_renderer.setFixedSize(280, 215)
+        self.human_rig_viewer = self.toon_avatar_renderer  # compatibility alias
+
+        self.avatar_playback_bar = AvatarPlaybackBar(self.toon_avatar_renderer)
+        self.avatar_playback_bar.setFixedWidth(280)
+
+        live_action_layout.addWidget(self.toon_avatar_renderer)
+        live_action_layout.addWidget(self.avatar_playback_bar)
+
+        self.ref_display_stack.addWidget(self.sign_card_viewer)       # Index 0: Static Card
+        self.ref_display_stack.addWidget(live_action_container)       # Index 1: Cel-Shaded Toon Avatar
         right_layout.addWidget(self.ref_display_stack, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Bottom: Anatomical Step-by-Step Instruction Guide

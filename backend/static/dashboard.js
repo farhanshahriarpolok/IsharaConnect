@@ -57,7 +57,9 @@ class DashboardController {
   // ─── Avatar ─────────────────────────────────────────────────────────────────
 
   initAvatar() {
-    if (typeof HumanoidBdSLAvatar !== "undefined") {
+    if (typeof ToonAvatarRenderer !== "undefined") {
+      this.avatar = new ToonAvatarRenderer("avatar-container");
+    } else if (typeof HumanoidBdSLAvatar !== "undefined") {
       this.avatar = new HumanoidBdSLAvatar("avatar-container");
     } else if (typeof Ishara3DFACSAvatar !== "undefined") {
       this.avatar = new Ishara3DFACSAvatar("avatar-container");

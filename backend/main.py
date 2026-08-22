@@ -27,6 +27,11 @@ from backend.api.v1.auth import router as auth_router
 from backend.api.v1.users import router as users_router
 from backend.api.v1.progress import router as progress_router
 from backend.api.v1.exams import router as exams_router
+from backend.api.v1.certificates import router as certificates_router
+from backend.db.session import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request, Depends, Query
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -55,6 +60,29 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(users_router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(progress_router, prefix="/api/v1/progress", tags=["Progress"])
 app.include_router(exams_router, prefix="/api/v1/exams", tags=["Exams"])
+app.include_router(certificates_router, prefix="/api/v1/certificates", tags=["Certificates"])
+
+# Public Web Verification Endpoints (QR Code Target)
+@app.get("/verify/{cert_hash}", response_class=HTMLResponse, tags=["Public Verification"])
+async def public_verify_page(
+    request: Request,
+    cert_hash: str,
+    hash: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_async_db)
+):
+    from backend.api.v1.certificates import verify_certificate_html
+    return await verify_certificate_html(request, cert_hash, hash=hash, db=db)
+
+
+@app.get("/admin/verify-certificate/{cert_id}", response_class=HTMLResponse, tags=["Public Verification"])
+async def admin_verify_page_alias(
+    request: Request,
+    cert_id: str,
+    hash: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_async_db)
+):
+    from backend.api.v1.certificates import verify_certificate_html
+    return await verify_certificate_html(request, cert_id, hash=hash, db=db)
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(__file__), "static")

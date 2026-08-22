@@ -9,7 +9,7 @@ Renders:
 
 import math
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
@@ -41,6 +41,13 @@ FINGER_CONNECTIONS = {
 }
 
 
+def _safe_conf(val: Optional[Union[float, int]]) -> float:
+    """Universal NaN, Inf, and range sanitization helper for confidence scores."""
+    if val is None or not isinstance(val, (int, float)) or math.isnan(val) or math.isinf(val):
+        return 0.0
+    return max(0.0, min(1.0, float(val)))
+
+
 class CameraHUDOverlay:
     """Renders cybernetic futuristic HUD visual elements on raw video frames."""
 
@@ -67,12 +74,28 @@ class CameraHUDOverlay:
         Returns:
             Annotated BGR frame.
         """
+        if frame is None or not isinstance(frame, np.ndarray) or frame.size == 0 or len(frame.shape) < 3:
+            return frame
+
         out_frame = frame.copy()
         h, w, _ = out_frame.shape
         self.pulse_phase = (self.pulse_phase + 0.15) % (2 * math.pi)
 
-        has_left = left_landmarks is not None and len(left_landmarks) == 21 and np.any(left_landmarks)
-        has_right = right_landmarks is not None and len(right_landmarks) == 21 and np.any(right_landmarks)
+        # Sanitize FPS
+        safe_fps = 0.0 if (fps is None or not isinstance(fps, (int, float)) or math.isnan(fps) or math.isinf(fps) or fps < 0) else float(fps)
+
+        has_left = (
+            left_landmarks is not None
+            and len(left_landmarks) == 21
+            and not np.isnan(left_landmarks).any()
+            and np.any(left_landmarks)
+        )
+        has_right = (
+            right_landmarks is not None
+            and len(right_landmarks) == 21
+            and not np.isnan(right_landmarks).any()
+            and np.any(right_landmarks)
+        )
 
         # 1. Draw Multi-Colored Glowing Landmarks for Both Hands
         if has_left:
@@ -85,15 +108,21 @@ class CameraHUDOverlay:
             self._draw_contact_rings(out_frame, left_landmarks, right_landmarks, w, h)
 
         # 3. Draw Top Tracking Status Pill
-        self._draw_status_pill(out_frame, has_left, has_right, fps)
+        self._draw_status_pill(out_frame, has_left, has_right, safe_fps)
 
         # 4. Draw Floating Prediction Tag above Active Hand
-        if prediction_payload:
+        if prediction_payload and isinstance(prediction_payload, dict):
             active_lm = right_landmarks if has_right else (left_landmarks if has_left else None)
-            if active_lm is not None:
-                wrist_x = int(active_lm[0][0] * w)
-                wrist_y = int(active_lm[0][1] * h)
-                self._draw_floating_tag(out_frame, wrist_x, wrist_y, prediction_payload)
+            if active_lm is not None and len(active_lm) > 0:
+                raw_wx = float(active_lm[0][0]) * w
+                raw_wy = float(active_lm[0][1]) * h
+                if not (math.isnan(raw_wx) or math.isinf(raw_wx) or math.isnan(raw_wy) or math.isinf(raw_wy)):
+                    wrist_x = int(np.clip(raw_wx, 0, w - 1))
+                    wrist_y = int(np.clip(raw_wy, 0, h - 1))
+                    self._draw_floating_tag(out_frame, wrist_x, wrist_y, prediction_payload)
+            else:
+                # If no hands detected, draw floating tag at top-left fallback position
+                self._draw_floating_tag(out_frame, 80, 80, prediction_payload)
 
         return out_frame
 
@@ -108,9 +137,18 @@ class CameraHUDOverlay:
         """Draws neon bones and glowing joint dots for a single hand."""
         points = []
         for lm in landmarks:
-            px = int(np.clip(lm[0] * w, 0, w - 1))
-            py = int(np.clip(lm[1] * h, 0, h - 1))
+            raw_px = float(lm[0]) * w
+            raw_py = float(lm[1]) * h
+            if math.isnan(raw_px) or math.isinf(raw_px):
+                raw_px = 0.0
+            if math.isnan(raw_py) or math.isinf(raw_py):
+                raw_py = 0.0
+            px = int(np.clip(raw_px, 0, w - 1))
+            py = int(np.clip(raw_py, 0, h - 1))
             points.append((px, py))
+
+        if len(points) < 21:
+            return
 
         # Palm cross connectors (0-5, 5-9, 9-13, 13-17)
         palm_lines = [(5, 9), (9, 13), (13, 17)]
@@ -148,14 +186,18 @@ class CameraHUDOverlay:
         tips = [4, 8, 12, 16, 20]
         for l_idx in tips:
             for r_idx in tips:
+                if l_idx >= len(left_lm) or r_idx >= len(right_lm):
+                    continue
                 p_left = np.array([left_lm[l_idx][0] * w, left_lm[l_idx][1] * h])
                 p_right = np.array([right_lm[r_idx][0] * w, right_lm[r_idx][1] * h])
+                if np.any(np.isnan(p_left)) or np.any(np.isinf(p_left)) or np.any(np.isnan(p_right)) or np.any(np.isinf(p_right)):
+                    continue
                 dist = np.linalg.norm(p_left - p_right)
                 if dist < 35.0:  # Contact active
                     mid = ((p_left + p_right) / 2.0).astype(int)
                     ring_r = int(12 + 6 * math.sin(self.pulse_phase))
-                    cv2.circle(frame, (mid[0], mid[1]), ring_r, COLOR_EMERALD, 2, cv2.LINE_AA)
-                    cv2.circle(frame, (mid[0], mid[1]), ring_r + 5, COLOR_CYAN, 1, cv2.LINE_AA)
+                    cv2.circle(frame, (int(mid[0]), int(mid[1])), ring_r, COLOR_EMERALD, 2, cv2.LINE_AA)
+                    cv2.circle(frame, (int(mid[0]), int(mid[1])), ring_r + 5, COLOR_CYAN, 1, cv2.LINE_AA)
 
     def _draw_status_pill(
         self,
@@ -193,11 +235,12 @@ class CameraHUDOverlay:
     ):
         """Draws floating cybernetic prediction label above the wrist."""
         label_bn = payload.get("label_bn", "")
-        confidence = payload.get("confidence", 0.0)
+        raw_conf = payload.get("confidence", 0.0)
+        confidence = _safe_conf(raw_conf)
         source = payload.get("source", "engine")
 
         card_x = max(10, min(wrist_x - 70, frame.shape[1] - 180))
-        card_y = max(55, wrist_y - 30)
+        card_y = max(55, min(wrist_y - 30, frame.shape[0] - 10))
 
         overlay = frame.copy()
         cv2.rectangle(overlay, (card_x, card_y - 28), (card_x + 160, card_y + 8), COLOR_DARK_BG, -1)
@@ -207,6 +250,6 @@ class CameraHUDOverlay:
         border_color = COLOR_EMERALD if confidence >= 0.80 else COLOR_CYAN
         cv2.rectangle(frame, (card_x, card_y - 28), (card_x + 160, card_y + 8), border_color, 1, cv2.LINE_AA)
 
-        # Text
+        # Text with universal NaN guard
         display_str = f"{label_bn} ({int(confidence * 100)}%)"
         cv2.putText(frame, display_str, (card_x + 8, card_y - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_WHITE, 1, cv2.LINE_AA)

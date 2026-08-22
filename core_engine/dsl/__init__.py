@@ -20,7 +20,10 @@ from core_engine.dsl.bdsl_v3_spec import (
     BdSLTemporalPhases,
     BdSLMorphosyntax,
 )
-from core_engine.dsl.procedural_synthesizer import HyperKinematicSynthesizer
+from core_engine.dsl.procedural_synthesizer import (
+    HyperKinematicSynthesizer,
+)
+from core_engine.dsl.sequence_blender import MultiSignSequenceBlender
 from core_engine.dsl.video_to_v3_extractor import BdSLVideoV3Extractor
 
 __all__ = [
@@ -39,5 +42,6 @@ __all__ = [
     "BdSLTemporalPhases",
     "BdSLMorphosyntax",
     "HyperKinematicSynthesizer",
+    "MultiSignSequenceBlender",
     "BdSLVideoV3Extractor",
 ]

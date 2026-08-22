@@ -1,8 +1,9 @@
 """Camera worker thread for non-blocking capture and inference."""
 
 import logging
+import math
 import time
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 import cv2
 import numpy as np
@@ -25,6 +26,7 @@ class CameraWorker(QThread):
     # Signals
     frame_ready = pyqtSignal(QImage)
     sign_detected = pyqtSignal(dict)
+    prediction_ready = pyqtSignal(dict)
     trajectory_ready = pyqtSignal(dict)
     fps_updated = pyqtSignal(float)
     error_occurred = pyqtSignal(str)
@@ -116,7 +118,7 @@ class CameraWorker(QThread):
             
             while self._is_running:
                 ret, frame = cap.read()
-                if not ret:
+                if not ret or frame is None:
                     failed_frames += 1
                     if failed_frames > 30:
                         logger.error("Camera lost or locked by another process.")
@@ -133,72 +135,114 @@ class CameraWorker(QThread):
                 if self.mirror_mode:
                     frame = cv2.flip(frame, 1)  # Mirror view
                 
-                # 1. Vision Processing
-                self.detector.find_hands(frame, draw=False)
-                extraction = self.detector.extract_landmarks(frame.shape)
-                
-                # 2. Extract Trajectory Points
-                left_w, right_w, left_idx, right_idx = None, None, None, None
-                if extraction["raw_left"] is not None and len(extraction["raw_left"]) >= 9:
-                    left_w = (float(extraction["raw_left"][0][0]), float(extraction["raw_left"][0][1]))
-                    left_idx = (float(extraction["raw_left"][8][0]), float(extraction["raw_left"][8][1]))
-                if extraction["raw_right"] is not None and len(extraction["raw_right"]) >= 9:
-                    right_w = (float(extraction["raw_right"][0][0]), float(extraction["raw_right"][0][1]))
-                    right_idx = (float(extraction["raw_right"][8][0]), float(extraction["raw_right"][8][1]))
-                
-                self.trajectory_ready.emit({
-                    "left_wrist": left_w,
-                    "right_wrist": right_w,
-                    "left_index": left_idx,
-                    "right_index": right_idx
-                })
+                # Protected frame processing block
+                try:
+                    # 1. Vision Processing
+                    extraction = {"raw_left": None, "raw_right": None}
+                    if self.detector is not None:
+                        self.detector.find_hands(frame, draw=False)
+                        extraction = self.detector.extract_landmarks(frame.shape)
+                    
+                    # 2. Extract Trajectory Points
+                    left_w, right_w, left_idx, right_idx = None, None, None, None
+                    if extraction.get("raw_left") is not None and len(extraction["raw_left"]) >= 9:
+                        try:
+                            left_w = (float(extraction["raw_left"][0][0]), float(extraction["raw_left"][0][1]))
+                            left_idx = (float(extraction["raw_left"][8][0]), float(extraction["raw_left"][8][1]))
+                        except Exception:
+                            pass
+                    if extraction.get("raw_right") is not None and len(extraction["raw_right"]) >= 9:
+                        try:
+                            right_w = (float(extraction["raw_right"][0][0]), float(extraction["raw_right"][0][1]))
+                            right_idx = (float(extraction["raw_right"][8][0]), float(extraction["raw_right"][8][1]))
+                        except Exception:
+                            pass
+                    
+                    self.trajectory_ready.emit({
+                        "left_wrist": left_w,
+                        "right_wrist": right_w,
+                        "left_index": left_idx,
+                        "right_index": right_idx
+                    })
 
-                # Feature Extraction
-                feature_vector = None
-                if extraction["raw_left"] is not None and extraction["raw_right"] is not None:
-                    # Dual-hand: get 151-D vector
-                    spatial_features = self.spatial_engine.extract_spatial_features(frame)
-                    normalized_landmarks_flat = spatial_features["normalized_landmarks"].flatten()
-                    touch_matrix_flat = spatial_features["touch_matrix"].flatten()
-                    feature_vector = np.concatenate([normalized_landmarks_flat, touch_matrix_flat])
-                elif extraction["raw_left"] is not None or extraction["raw_right"] is not None:
-                    # Normalization
-                    feature_vector = LandmarkNormalizer.process_frame(
-                        extraction["raw_left"], extraction["raw_right"]
+                    # Feature Extraction
+                    feature_vector = None
+                    if extraction.get("raw_left") is not None and extraction.get("raw_right") is not None:
+                        # Dual-hand: get 151-D vector
+                        if self.spatial_engine is not None:
+                            spatial_features = self.spatial_engine.extract_spatial_features(frame)
+                            if spatial_features is not None and "normalized_landmarks" in spatial_features and "touch_matrix" in spatial_features:
+                                normalized_landmarks_flat = spatial_features["normalized_landmarks"].flatten()
+                                touch_matrix_flat = spatial_features["touch_matrix"].flatten()
+                                feature_vector = np.concatenate([normalized_landmarks_flat, touch_matrix_flat])
+                    elif extraction.get("raw_left") is not None or extraction.get("raw_right") is not None:
+                        # Normalization
+                        feature_vector = LandmarkNormalizer.process_frame(
+                            extraction.get("raw_left"), extraction.get("raw_right")
+                        )
+                    
+                    # 3. Hybrid Ensemble Inference
+                    prediction = None
+                    if self.ensemble_predictor is not None:
+                        prediction = self.ensemble_predictor.predict(
+                            feature_vector=feature_vector,
+                            left_landmarks=extraction.get("raw_left"),
+                            right_landmarks=extraction.get("raw_right")
+                        )
+
+                    if prediction and isinstance(prediction, dict):
+                        # Sanitize prediction dictionary before emitting
+                        if "confidence" in prediction:
+                            conf_val = prediction["confidence"]
+                            if conf_val is None or not isinstance(conf_val, (int, float)) or math.isnan(conf_val) or math.isinf(conf_val):
+                                prediction["confidence"] = 0.0
+                            else:
+                                prediction["confidence"] = max(0.0, min(1.0, float(conf_val)))
+
+                        if "left_landmarks" not in prediction and extraction.get("raw_left") is not None:
+                            prediction["left_landmarks"] = extraction["raw_left"]
+                        if "right_landmarks" not in prediction and extraction.get("raw_right") is not None:
+                            prediction["right_landmarks"] = extraction["raw_right"]
+
+                        self.last_prediction = prediction
+                        self.sign_detected.emit(prediction)
+                        self.prediction_ready.emit(prediction)
+
+                    # 4. FPS Calculation
+                    curr_time = time.time()
+                    dt = curr_time - prev_time
+                    fps = 1.0 / dt if dt > 0 else 0.0
+                    prev_time = curr_time
+                    self.fps_updated.emit(fps)
+
+                    # 5. Draw Cybernetic Neon HUD
+                    hud_frame = self.hud_overlay.draw_hud(
+                        frame=frame,
+                        left_landmarks=extraction.get("raw_left"),
+                        right_landmarks=extraction.get("raw_right"),
+                        prediction_payload=self.last_prediction,
+                        fps=fps
                     )
-                
-                # 3. Hybrid Ensemble Inference
-                prediction = self.ensemble_predictor.predict(
-                    feature_vector=feature_vector,
-                    left_landmarks=extraction["raw_left"],
-                    right_landmarks=extraction["raw_right"]
-                )
-                if prediction:
-                    self.last_prediction = prediction
-                    self.sign_detected.emit(prediction)
 
-                # 4. FPS Calculation
-                curr_time = time.time()
-                fps = 1.0 / (curr_time - prev_time) if (curr_time - prev_time) > 0 else 0
-                prev_time = curr_time
-                self.fps_updated.emit(fps)
+                    # Convert frame to QImage
+                    rgb_image = cv2.cvtColor(hud_frame, cv2.COLOR_BGR2RGB)
+                    h, w, ch = rgb_image.shape
+                    bytes_per_line = ch * w
+                    q_img = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+                    
+                    self.frame_ready.emit(q_img.copy())  # Must copy since memory is unmanaged after this scope
 
-                # 5. Draw Cybernetic Neon HUD
-                hud_frame = self.hud_overlay.draw_hud(
-                    frame=frame,
-                    left_landmarks=extraction["raw_left"],
-                    right_landmarks=extraction["raw_right"],
-                    prediction_payload=self.last_prediction,
-                    fps=fps
-                )
-
-                # Convert frame to QImage
-                rgb_image = cv2.cvtColor(hud_frame, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
-                bytes_per_line = ch * w
-                q_img = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
-                
-                self.frame_ready.emit(q_img.copy())  # Must copy since memory is unmanaged after this scope
+                except Exception as frame_err:
+                    logger.warning(f"Non-fatal error in CameraWorker frame processing: {frame_err}", exc_info=True)
+                    try:
+                        # Fallback: emit the raw camera frame so viewport never freezes
+                        rgb_fallback = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        h, w, ch = rgb_fallback.shape
+                        bytes_per_line = ch * w
+                        q_img = QImage(rgb_fallback.data, w, h, bytes_per_line, QImage.Format.Format_RGB888)
+                        self.frame_ready.emit(q_img.copy())
+                    except Exception as fallback_err:
+                        logger.error(f"Failed rendering fallback camera frame: {fallback_err}")
                 
                 # Yield to event loop
                 QThread.msleep(10)

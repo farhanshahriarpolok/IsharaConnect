@@ -10,6 +10,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# Ensure UTF-8 stdout/stderr on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import cv2
 import numpy as np
 
@@ -70,20 +76,24 @@ def main():
         )
     except Exception as e:
         print(f"Direct video extraction fallback: {e}")
-        # Load or generate baseline schema
-        from core_engine.dsl.bdsl_tools import get_sign_dsl_tool
-        dsl_res = get_sign_dsl_tool(args.gloss_bn)
-        schema = dsl_res.get("data", {
+        # Generate baseline schema matching BdSLV3SignSpec
+        schema = {
             "sign_id": args.sign_id,
             "gloss_bn": args.gloss_bn,
             "gloss_en": args.gloss_en,
             "phonetics": {"handshape_code": "HS_FLAT_BENT_THUMB", "stokoe_notation": "⫸𝄆√", "primary_dominant_hand": "right", "two_handed": False},
-            "kinematics": {"trajectory_spline": "BEZIER_P0_P1_P2", "start_anchor": {"body_part": "CHIN", "offset_cm": [0.0, 2.0, 4.0]}, "end_anchor": {"body_part": "MID_CHEST", "offset_cm": [0.0, 0.0, 25.0]}},
+            "kinematics": {
+                "trajectory_spline": "BEZIER_P0_P1_P2",
+                "start_anchor": {"body_part": "CHIN", "offset_cm": [0.0, 2.0, 4.0]},
+                "end_anchor": {"body_part": "MID_CHEST", "offset_cm": [0.0, 0.0, 25.0]},
+                "joint_rotations_euler": {"right_wrist": {"pitch_deg": -15.0, "yaw_deg": 0.0, "roll_deg": 45.0}, "right_elbow": {"flexion_deg": 85.0}},
+                "velocity_profile": {"peak_velocity_ms": 1.25, "ease_type": "CUBIC_OUT"}
+            },
             "facial_action_units": {"AU06_cheek_raiser": 0.65, "AU12_lip_corner_puller": 0.85, "AU25_lips_part": 0.20, "head_pose": {"pitch": -4.0, "yaw": 0.0, "roll": 0.0}, "gaze_vector": [0.0, 0.0, 1.0]},
             "contact_physics": {"has_contact": True, "contact_surface": "LOWER_CHIN", "contact_phase": "START", "contact_force_norm": 0.4},
             "temporal_phases_ms": {"preparation_duration": 180, "stroke_duration": 450, "hold_duration": 120, "retraction_duration": 200, "total_ms": 950},
             "morphosyntax": {"pos": args.pos, "root_lemma": args.gloss_bn, "synonyms": ["থ্যাংক ইউ", "কৃতজ্ঞতা"], "requires_nmm_negation": False}
-        })
+        }
 
     out_file = Path(args.output)
     out_file.parent.mkdir(parents=True, exist_ok=True)

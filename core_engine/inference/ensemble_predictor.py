@@ -80,7 +80,10 @@ class PredictionLatch:
         now = time.time()
 
         # 1. No hand / Low confidence (< drop_threshold)
-        if raw_prediction is None or raw_prediction.get("confidence", 0.0) < self.drop_threshold:
+        raw_conf = raw_prediction.get("confidence", 0.0) if raw_prediction else 0.0
+        if raw_conf is None or not isinstance(raw_conf, (int, float)) or np.isnan(raw_conf) or np.isinf(raw_conf):
+            raw_conf = 0.0
+        if raw_prediction is None or raw_conf < self.drop_threshold:
             if self.state in [LatchState.EMITTED, LatchState.HOLDING]:
                 if self.last_drop_time == 0.0:
                     self.last_drop_time = now
@@ -200,22 +203,29 @@ class EnsemblePredictor:
         geom_slug, geom_conf, finger_status = self.geometric_engine.evaluate_rules(
             left_landmarks, right_landmarks
         )
+        if geom_conf is None or not isinstance(geom_conf, (int, float)) or np.isnan(geom_conf) or np.isinf(geom_conf):
+            geom_conf = 0.0
+        else:
+            geom_conf = max(0.0, min(1.0, float(geom_conf)))
 
         # 2. Dynamic Sign DTW Evaluation (if temporal sequence available)
         if temporal_buffer is not None and len(temporal_buffer) >= 12:
             candidate = target_sign or geom_slug or "dhonnobad"
             dtw_res = self.dtw_matcher.evaluate_gesture_accuracy(temporal_buffer, candidate)
-            if dtw_res["is_match"] and dtw_res["score"] >= (self.geometric_threshold * 100):
+            raw_dtw_score = dtw_res.get("score", 0.0)
+            if raw_dtw_score is None or not isinstance(raw_dtw_score, (int, float)) or np.isnan(raw_dtw_score) or np.isinf(raw_dtw_score):
+                raw_dtw_score = 0.0
+            if dtw_res.get("is_match", False) and raw_dtw_score >= (self.geometric_threshold * 100):
                 meta = SIGN_METADATA.get(candidate, {"bn": candidate, "en": candidate})
                 return {
                     "label_bn": meta["bn"],
                     "label_en": meta["en"],
-                    "confidence": float(dtw_res["score"] / 100.0),
+                    "confidence": max(0.0, min(1.0, float(raw_dtw_score / 100.0))),
                     "is_stable": True,
                     "source": "dtw",
                     "finger_status": finger_status,
                     "checklist": finger_status.get("checklist", []),
-                    "dtw_score": dtw_res["score"]
+                    "dtw_score": raw_dtw_score
                 }
 
         # 3. Fast-Path: Unambiguous Static Geometric Pose
@@ -240,6 +250,13 @@ class EnsemblePredictor:
                 logger.debug("Neural predictor inference step: %s", e)
 
         if neural_pred is not None:
+            # Sanitize confidence in neural_pred
+            if "confidence" in neural_pred:
+                n_conf = neural_pred["confidence"]
+                if n_conf is None or not isinstance(n_conf, (int, float)) or np.isnan(n_conf) or np.isinf(n_conf):
+                    neural_pred["confidence"] = 0.0
+                else:
+                    neural_pred["confidence"] = max(0.0, min(1.0, float(n_conf)))
             # Attach live geometric finger checklist & status to neural prediction
             neural_pred["source"] = "neural"
             neural_pred["finger_status"] = finger_status

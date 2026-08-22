@@ -6,6 +6,7 @@
 
 import json
 import logging
+import math
 import os
 import random
 from pathlib import Path
@@ -725,7 +726,11 @@ class AcademyDashboard(QWidget):
             return
 
         label_bn = data.get("label_bn", "")
-        conf = float(data.get("confidence", 0.0)) * 100.0
+        conf_raw = data.get("confidence", 0.0)
+        if conf_raw is None or not isinstance(conf_raw, (int, float)) or math.isnan(conf_raw) or math.isinf(conf_raw):
+            conf_raw = 0.0
+        conf = float(conf_raw) * 100.0
+        conf = max(0.0, min(100.0, conf))
         left_lm = data.get("left_landmarks")
         right_lm = data.get("right_landmarks")
 
@@ -734,6 +739,9 @@ class AcademyDashboard(QWidget):
             score, is_match, checklist, advice = self.rule_engine.evaluate_target_posture(
                 left_lm, right_lm, self.current_sign_slug
             )
+            if score is None or not isinstance(score, (int, float)) or math.isnan(score) or math.isinf(score):
+                score = 0.0
+            score = max(0.0, min(1.0, float(score)))
             pct = int(score * 100.0)
             self.progress_bar.setValue(pct)
             self.match_gauge.set_value(float(pct))
@@ -759,7 +767,7 @@ class AcademyDashboard(QWidget):
 
         # Fallback if only prediction classification dict is forwarded
         if label_bn and (label_bn == self.current_sign_bn or self.current_sign_slug in str(data.get("label_en", "")).lower()):
-            self.progress_bar.setValue(int(min(100.0, max(0.0, conf))))
+            self.progress_bar.setValue(int(conf))
             self.match_gauge.set_value(conf)
             if conf >= 70.0:
                 self.update_posture_coach("ভঙ্গি নিখুঁত! হাত এই অবস্থায় ধরে রাখুন...", state="perfect")
@@ -912,13 +920,17 @@ class AcademyDashboard(QWidget):
         if self.is_dynamic_sign and len(self.temporal_frame_buffer) >= 10:
             user_seq = np.array(self.temporal_frame_buffer, dtype=np.float32)
             dtw_eval = self.dtw_matcher.evaluate_gesture_accuracy(user_seq, self.current_sign_slug)
-            current_score = float(dtw_eval["score"])
+            raw_s = dtw_eval.get("score", 0.0)
+            current_score = float(raw_s) if (raw_s is not None and not math.isnan(raw_s) and not math.isinf(raw_s)) else 0.0
         else:
-            current_score = float(self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks))
+            raw_s = self.ghost_painter.calculate_alignment_score(self.mock_ref_landmarks, live_landmarks)
+            current_score = float(raw_s) if (raw_s is not None and not math.isnan(raw_s) and not math.isinf(raw_s)) else 0.0
+
+        current_score = max(0.0, min(100.0, current_score))
 
         # Update Accuracy Progress Bar & Circular Gauge
-        self.progress_bar.setValue(int(min(100.0, max(0.0, current_score))))
-        self.match_gauge.set_value(current_score if (has_left or has_right) else 0)
+        self.progress_bar.setValue(int(current_score))
+        self.match_gauge.set_value(current_score if (has_left or has_right) else 0.0)
 
         # Checklist HTML formatting
         checklist_html = ""

@@ -157,8 +157,15 @@ class RealTimePredictor:
             return None
 
         probs = self._softmax(logits)[0] # Shape (num_classes,)
+        probs = np.nan_to_num(probs, nan=0.0, posinf=1.0, neginf=0.0)
+        sum_probs = np.sum(probs)
+        if sum_probs > 0:
+            probs = probs / sum_probs
         pred_class_id = int(np.argmax(probs))
         confidence = float(probs[pred_class_id])
+        if np.isnan(confidence) or np.isinf(confidence):
+            confidence = 0.0
+        confidence = max(0.0, min(1.0, confidence))
         
         # OOD Rejection (Unknown Sign)
         is_unknown = False

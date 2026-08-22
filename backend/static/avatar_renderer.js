@@ -1,213 +1,246 @@
 /**
- * IsharaConnect - 3D Avatar Viewport Engine
- * Renders real-time 3D skeletal landmarks and sign animations using Three.js & OrbitControls.
+ * IsharaConnect - 3D FACS Skeletal Avatar Engine
+ * Real-time 60 FPS Three.js rendering with FACS blendshapes and Hermite co-articulation streaming.
  */
 
-class Ishara3DAvatarEngine {
+class Ishara3DFACSAvatar {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
-    this.frames = [];
-    this.currentFrameIdx = 0;
+    this.frameQueue = [];
     this.isPlaying = true;
-    this.fps = 30;
-    this.lastFrameTime = 0;
+    this.totalFramesReceived = 0;
 
     this.initScene();
     this.initLighting();
-    this.buildSkeletalMesh();
-    this.animate = this.animate.bind(this);
-    requestAnimationFrame(this.animate);
+    this.createAvatarMesh();
+    this.initWebSocket();
+
+    this.renderLoop = this.renderLoop.bind(this);
+    requestAnimationFrame(this.renderLoop);
   }
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x090d16);
+    this.scene.background = new THREE.Color(0x0a0f1d);
 
-    // Camera setup
-    this.camera = new THREE.PerspectiveCamera(
-      45,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    this.camera.position.set(0, 1.2, 2.2);
+    this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+    this.camera.position.set(0, 1.3, 1.8);
 
-    // WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.shadowMap.enabled = true;
     if (this.container) {
       this.container.appendChild(this.renderer.domElement);
     } else {
       document.body.appendChild(this.renderer.domElement);
     }
 
-    // Interactive OrbitControls
     if (typeof THREE.OrbitControls !== "undefined") {
       this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-      this.controls.target.set(0, 1.0, 0);
+      this.controls.target.set(0, 1.1, 0);
       this.controls.enableDamping = true;
       this.controls.dampingFactor = 0.05;
       this.controls.maxPolarAngle = Math.PI / 2 + 0.1;
-      this.controls.minDistance = 0.8;
-      this.controls.maxDistance = 6.0;
+      this.controls.minDistance = 0.6;
+      this.controls.maxDistance = 4.0;
     }
 
-    // Grid Floor Helper
+    // Grid Floor
     const grid = new THREE.GridHelper(10, 20, 0x1e293b, 0x0f172a);
     grid.position.y = 0;
     this.scene.add(grid);
 
-    window.addEventListener("resize", () => this.onResize());
+    window.addEventListener("resize", () => {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   }
 
   initLighting() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    this.scene.add(ambientLight);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const keyLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
+    keyLight.position.set(2, 4, 3);
+    this.scene.add(keyLight);
 
-    const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
-    dirLight.position.set(2, 4, 3);
-    dirLight.castShadow = true;
-    this.scene.add(dirLight);
-
-    const fillLight = new THREE.DirectionalLight(0xa855f7, 0.6);
-    fillLight.position.set(-2, 2, -2);
-    this.scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0xa855f7, 0.8);
+    rimLight.position.set(-2, 2, -2);
+    this.scene.add(rimLight);
   }
 
-  buildSkeletalMesh() {
-    this.jointMeshes = [];
+  createAvatarMesh() {
+    // ১. ফেসিয়াল মেশ উইথ মরফ টার্গেটস (FACS AUs)
+    const headGeo = new THREE.SphereGeometry(0.12, 32, 32);
 
-    // Joint Spheres Material
-    const jointGeo = new THREE.SphereGeometry(0.015, 16, 16);
-    const jointMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      roughness: 0.3,
-      metalness: 0.2,
-      emissive: 0x0284c7,
-      emissiveIntensity: 0.2,
+    // Morph Target 0: AU12 (Smile / Lip Corner Puller)
+    const pos = headGeo.attributes.position;
+    const morphPositions = [];
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      let y = pos.getY(i);
+      let z = pos.getZ(i);
+      // নিচের ঠোঁটের কোণ উপরের দিকে টানা
+      if (y < 0 && z > 0.05) {
+        y += 0.02;
+        x *= 1.1;
+      }
+      morphPositions.push(x, y, z);
+    }
+    headGeo.morphAttributes.position = [
+      new THREE.Float32BufferAttribute(morphPositions, 3),
+    ];
+
+    const headMat = new THREE.MeshStandardMaterial({
+      color: 0xfbcfe8,
+      roughness: 0.5,
+      morphTargets: true,
     });
 
-    // Create nodes for 75 landmarks (Pose 33 + Left Hand 21 + Right Hand 21)
-    for (let i = 0; i < 75; i++) {
+    this.headMesh = new THREE.Mesh(headGeo, headMat);
+    this.headMesh.position.set(0, 1.25, 0);
+    this.scene.add(this.headMesh);
+
+    // ২. ডান হাতের জয়েন্টস নোড (২১ ল্যান্ডমার্ক)
+    this.handJoints = [];
+    const jointGeo = new THREE.SphereGeometry(0.012, 12, 12);
+    const jointMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      metalness: 0.3,
+      emissive: 0x0284c7,
+      emissiveIntensity: 0.3,
+    });
+
+    for (let i = 0; i < 21; i++) {
       const mesh = new THREE.Mesh(jointGeo, jointMat);
-      mesh.visible = false;
+      mesh.position.set(0, 1.0, 0);
       this.scene.add(mesh);
-      this.jointMeshes.push(mesh);
+      this.handJoints.push(mesh);
     }
   }
 
-  loadLandmarks(landmarksPayload, glossName = "BdSL Sign") {
+  initWebSocket() {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = window.location.host || "localhost:8000";
+    const wsUrl = `${protocol}//${host}/ws/avatar_stream`;
+    const statusElem = document.getElementById("hud-stats");
+
+    try {
+      this.socket = new WebSocket(wsUrl);
+
+      this.socket.onopen = () => {
+        if (statusElem) statusElem.innerText = "WebSocket: সংযুক্ত (Connected)";
+      };
+
+      this.socket.onmessage = (event) => {
+        const packet = JSON.parse(event.data);
+        if (packet.status === "start_stream") {
+          this.frameQueue = [];
+          this.totalFramesReceived = packet.total_frames;
+          if (statusElem) {
+            statusElem.innerText = `স্ট্রিমিং: ${packet.total_frames} ফ্রেম @ ${packet.fps} FPS`;
+          }
+        } else if (packet.status === "frame") {
+          this.frameQueue.push(packet.data);
+        } else if (packet.status === "end_stream") {
+          if (statusElem) {
+            statusElem.innerText = "স্ট্রিমিং সম্পন্ন (Complete)";
+          }
+        }
+      };
+
+      this.socket.onclose = () => {
+        if (statusElem) statusElem.innerText = "WebSocket: সংযোগ বিচ্ছিন্ন (Disconnected)";
+      };
+    } catch (e) {
+      console.warn("WebSocket init error:", e);
+      if (statusElem) statusElem.innerText = "WebSocket: ত্রুটি (Error)";
+    }
+  }
+
+  requestSignStream(glossText) {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      console.warn("WebSocket is not connected.");
+      return;
+    }
+    const glosses = glossText
+      .split(/[\s,]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
     const hudSign = document.getElementById("active-gloss");
-    if (hudSign) {
-      hudSign.innerText = glossName;
-    }
-    this.frames = landmarksPayload.frames || [];
-    this.fps = landmarksPayload.fps || 30;
-    this.currentFrameIdx = 0;
+    if (hudSign) hudSign.innerText = glosses.join(" ");
+
+    this.socket.send(JSON.stringify({ glosses }));
   }
 
-  updateFrame(frameIdx) {
-    if (!this.frames || this.frames.length === 0) return;
-    const frame = this.frames[frameIdx];
-
-    // Right Hand and Upper Body joint mapping
-    if (frame.right_hand) {
-      frame.right_hand.forEach((pt, i) => {
-        const mesh = this.jointMeshes[i];
-        if (mesh) {
-          const px = pt.x !== undefined ? pt.x : pt[0];
-          const py = pt.y !== undefined ? pt.y : pt[1];
-          const pz = pt.z !== undefined ? pt.z : (pt[2] || 0.0);
-
-          // 2D/3D space normalization to Three.js world coordinates
-          mesh.position.set((px - 0.5) * 1.5, (1.0 - py) * 1.5 + 0.5, -pz * 1.5);
-          mesh.visible = true;
-        }
-      });
-    }
-
-    if (frame.pose) {
-      frame.pose.forEach((pt, i) => {
-        const mesh = this.jointMeshes[21 + i];
-        if (mesh) {
-          const px = pt.x !== undefined ? pt.x : pt[0];
-          const py = pt.y !== undefined ? pt.y : pt[1];
-          const pz = pt.z !== undefined ? pt.z : (pt[2] || 0.0);
-          mesh.position.set((px - 0.5) * 1.5, (1.0 - py) * 1.5 + 0.5, -pz * 1.5);
-          mesh.visible = true;
-        }
-      });
-    }
-  }
-
-  animate(timestamp) {
-    requestAnimationFrame(this.animate);
+  renderLoop() {
+    requestAnimationFrame(this.renderLoop);
     if (this.controls) {
       this.controls.update();
     }
 
-    if (this.isPlaying && this.frames.length > 0) {
-      if (timestamp - this.lastFrameTime > 1000 / this.fps) {
-        this.updateFrame(this.currentFrameIdx);
-        this.currentFrameIdx = (this.currentFrameIdx + 1) % this.frames.length;
-        this.lastFrameTime = timestamp;
+    if (this.frameQueue.length > 0) {
+      const frame = this.frameQueue.shift();
+
+      // ১. হাতের জয়েন্ট পজিশন আপডেট
+      if (frame.right_hand) {
+        frame.right_hand.forEach((pt, idx) => {
+          if (this.handJoints[idx]) {
+            const px = pt.x !== undefined ? pt.x : pt[0];
+            const py = pt.y !== undefined ? pt.y : pt[1];
+            const pz = pt.z !== undefined ? pt.z : (pt[2] || 0.0);
+
+            this.handJoints[idx].position.set(
+              (px - 0.5) * 1.5,
+              (1.0 - py) * 1.5 + 0.5,
+              -pz * 1.5
+            );
+          }
+        });
+      }
+
+      // ২. ফেসিয়াল অ্যাকশন ইউনিট (FACS) ব্লেন্ডশেপ ও হেড পোজ আপডেট
+      if (frame.facs) {
+        // AU12 (Smile) ইনফ্লুয়েন্স
+        const au12 = frame.facs.AU12 || 0.0;
+        if (this.headMesh && this.headMesh.morphTargetInfluences) {
+          this.headMesh.morphTargetInfluences[0] = au12;
+        }
+
+        // হেড পিচ (মাথার সামনে/পেছনে নড়াচড়া)
+        const pitch = frame.facs.head_pitch || 0.0;
+        if (this.headMesh) {
+          this.headMesh.rotation.x = THREE.MathUtils.degToRad(pitch);
+        }
       }
     }
 
     this.renderer.render(this.scene, this.camera);
   }
-
-  onResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
 }
 
 // ----------------- Runtime Initialization -----------------
 document.addEventListener("DOMContentLoaded", () => {
-  const engine = new Ishara3DAvatarEngine("viewport-container");
+  const avatar = new Ishara3DFACSAvatar("viewport-container");
 
-  // Load landmark data from API / static cache
-  fetch("/static/data/dhonnobad.json")
-    .then((res) => res.json())
-    .then((data) => {
-      engine.loadLandmarks(data, "ধন্যবাদ (Dhonnobad)");
-    })
-    .catch(() => {
-      console.log("Using synthetic procedural keypoints...");
-      const syntheticFrames = [];
-      for (let i = 0; i < 30; i++) {
-        const t = i / 30;
-        const arc = Math.sin(t * Math.PI);
-        syntheticFrames.push({
-          right_hand: [
-            { x: 0.5 + arc * 0.1, y: 0.3 + arc * 0.15, z: arc * 0.05 },
-            { x: 0.51 + arc * 0.1, y: 0.28 + arc * 0.15, z: arc * 0.05 },
-            { x: 0.52 + arc * 0.1, y: 0.26 + arc * 0.15, z: arc * 0.05 },
-            { x: 0.52 + arc * 0.1, y: 0.24 + arc * 0.15, z: arc * 0.05 },
-            { x: 0.52 + arc * 0.1, y: 0.22 + arc * 0.15, z: arc * 0.05 }
-          ]
-        });
+  const synthBtn = document.getElementById("btn-synthesize");
+  const inputElem = document.getElementById("input-glosses");
+
+  if (synthBtn && inputElem) {
+    synthBtn.addEventListener("click", () => {
+      const text = inputElem.value.trim();
+      if (text) {
+        avatar.requestSignStream(text);
       }
-      engine.loadLandmarks({ frames: syntheticFrames, fps: 30 }, "ধন্যবাদ (Dhonnobad)");
     });
 
-  const playBtn = document.getElementById("btn-play");
-  if (playBtn) {
-    playBtn.addEventListener("click", (e) => {
-      engine.isPlaying = !engine.isPlaying;
-      e.target.innerText = engine.isPlaying ? "Pause" : "Play";
-    });
-  }
-
-  const resetBtn = document.getElementById("btn-reset");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      engine.currentFrameIdx = 0;
-      engine.updateFrame(0);
+    inputElem.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        const text = inputElem.value.trim();
+        if (text) {
+          avatar.requestSignStream(text);
+        }
+      }
     });
   }
 });

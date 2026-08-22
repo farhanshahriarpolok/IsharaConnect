@@ -1,22 +1,7 @@
 {
   "sign_id": "BDSL_V3_00104",
-  "slug": "dhonnobad",
-  "label_bn": "ধন্যবাদ",
-  "label_en": "Thank you",
-  "tier": "word",
-  "handedness": "single",
-  "motion_type": "dynamic",
-  "category": "dynamic",
-  "dsl": {
-    "hand": "right",
-    "handshape": "flat_open_palm",
-    "orientation": "palm_facing_inward",
-    "start_position": "chin_contact",
-    "trajectory": "forward_arc_towards_interlocutor",
-    "end_position": "mid_air_chest_height",
-    "facial_expression": "pleasant_smile",
-    "duration_ms": 1200
-  },
+  "gloss_bn": "ধন্যবাদ",
+  "gloss_en": "dhonnobad",
   "phonetics": {
     "handshape_code": "HS_FLAT_BENT_THUMB",
     "stokoe_notation": "⫸𝄆√",

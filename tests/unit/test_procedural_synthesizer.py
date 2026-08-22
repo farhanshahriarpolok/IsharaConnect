@@ -3,7 +3,10 @@
 import json
 from pathlib import Path
 import pytest
-from core_engine.dsl.procedural_synthesizer import HyperKinematicSynthesizer
+from core_engine.dsl.procedural_synthesizer import (
+    HyperKinematicSynthesizer,
+    MultiSignSequenceBlender,
+)
 
 
 @pytest.fixture
@@ -44,3 +47,51 @@ def test_trajectory_frame_generation(dhonnobad_schema):
     last_frame = frames[-1]
     assert last_frame["frame_idx"] == len(frames) - 1
     assert last_frame["facs"]["AU12"] > first_frame["facs"]["AU12"]
+
+
+def test_multi_sign_sequence_blender_initialization():
+    """Test blender initialization with fps and transition parameters."""
+    blender = MultiSignSequenceBlender(fps=60, transition_ms=150)
+    assert blender.fps == 60
+    assert blender.transition_ms == 150
+    assert blender.transition_frames >= 2
+
+
+def test_multi_sign_sequence_blender_transitions(dhonnobad_schema):
+    """Test transition generation between consecutive frames."""
+    blender = MultiSignSequenceBlender(fps=30, transition_ms=100)
+    synthesizer = HyperKinematicSynthesizer(fps=30)
+    frames = synthesizer.generate_trajectory_frames(dhonnobad_schema)
+
+    transitions = blender.generate_transition_frames(frames[-1], frames[0])
+    assert len(transitions) == blender.transition_frames
+    for t_frame in transitions:
+        assert t_frame["is_transition"] is True
+        assert "right_wrist" in t_frame
+        assert len(t_frame["right_wrist"]) == 3
+        assert len(t_frame["right_hand"]) == 21
+        assert "facs" in t_frame
+
+
+def test_blend_sentence_stream(dhonnobad_schema):
+    """Test full multi-sign sequence blending into continuous motion stream."""
+    blender = MultiSignSequenceBlender(fps=30, transition_ms=100)
+
+    # Blend two identical signs in sequence
+    stream = blender.blend_sentence_stream([dhonnobad_schema, dhonnobad_schema])
+    assert len(stream) > 0
+
+    # Ensure continuous indexing and timestamps
+    for i, frame in enumerate(stream):
+        assert frame["frame_idx"] == i
+        assert frame["timestamp_ms"] == int((i / 30.0) * 1000)
+
+    # Check that transition frames exist in the middle
+    transition_frames = [f for f in stream if f.get("is_transition")]
+    assert len(transition_frames) == blender.transition_frames
+
+
+def test_blend_empty_stream():
+    """Test blending empty sequence returns empty list."""
+    blender = MultiSignSequenceBlender()
+    assert blender.blend_sentence_stream([]) == []

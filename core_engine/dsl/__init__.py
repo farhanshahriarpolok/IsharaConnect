@@ -11,6 +11,15 @@ from core_engine.dsl.agent_pipeline import (
     ishara_agent,
     run_pipeline,
 )
+from core_engine.dsl.bdsl_v3_spec import (
+    BdSLV3SignSpec,
+    BdSLPhonetics,
+    BdSLKinematics,
+    BdSLFacialActionUnits,
+    BdSLContactPhysics,
+    BdSLTemporalPhases,
+    BdSLMorphosyntax,
+)
 
 __all__ = [
     "load_bdsl_dictionary",
@@ -20,4 +29,11 @@ __all__ = [
     "Task",
     "ishara_agent",
     "run_pipeline",
+    "BdSLV3SignSpec",
+    "BdSLPhonetics",
+    "BdSLKinematics",
+    "BdSLFacialActionUnits",
+    "BdSLContactPhysics",
+    "BdSLTemporalPhases",
+    "BdSLMorphosyntax",
 ]

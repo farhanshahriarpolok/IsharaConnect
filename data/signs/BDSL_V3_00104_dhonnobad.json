@@ -1,0 +1,47 @@
+{
+  "sign_id": "BDSL_V3_00104",
+  "gloss_bn": "ধন্যবাদ",
+  "gloss_en": "dhonnobad",
+  "phonetics": {
+    "handshape_code": "HS_FLAT_BENT_THUMB",
+    "stokoe_notation": "⫸𝄆√",
+    "primary_dominant_hand": "right",
+    "two_handed": false
+  },
+  "kinematics": {
+    "trajectory_spline": "BEZIER_P0_P1_P2",
+    "start_anchor": { "body_part": "CHIN", "offset_cm": [0.0, 2.0, 4.0] },
+    "end_anchor": { "body_part": "MID_CHEST", "offset_cm": [0.0, 0.0, 25.0] },
+    "joint_rotations_euler": {
+      "right_wrist": { "pitch_deg": -15.0, "yaw_deg": 0.0, "roll_deg": 45.0 },
+      "right_elbow": { "flexion_deg": 85.0 }
+    },
+    "velocity_profile": { "peak_velocity_ms": 1.25, "ease_type": "CUBIC_OUT" }
+  },
+  "facial_action_units": {
+    "AU06_cheek_raiser": 0.65,
+    "AU12_lip_corner_puller": 0.85,
+    "AU25_lips_part": 0.20,
+    "head_pose": { "pitch": -4.0, "yaw": 0.0, "roll": 0.0 },
+    "gaze_vector": [0.0, 0.0, 1.0]
+  },
+  "contact_physics": {
+    "has_contact": true,
+    "contact_surface": "LOWER_CHIN",
+    "contact_phase": "START",
+    "contact_force_norm": 0.4
+  },
+  "temporal_phases_ms": {
+    "preparation_duration": 180,
+    "stroke_duration": 450,
+    "hold_duration": 120,
+    "retraction_duration": 200,
+    "total_ms": 950
+  },
+  "morphosyntax": {
+    "pos": "INTERJECTION",
+    "root_lemma": "ধন্যবাদ",
+    "synonyms": ["থ্যাংক ইউ", "কৃতজ্ঞতা"],
+    "requires_nmm_negation": false
+  }
+}

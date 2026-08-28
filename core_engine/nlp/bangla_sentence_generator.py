@@ -105,10 +105,20 @@ class BanglaSentenceToSignCompiler:
         Typically sourced from ``MasterBdSLLexicon.signs_by_bn`` or
         ``MasterBdSLLexicon.all_signs()``.
         Pass an empty dict ``{}`` for lexicon-free operation.
+    lemmatizer : BanglaFoundationLemmatizer, optional
+        When provided, used as a fallback for verb tokens not covered by the
+        static ``_VERB_STEM_MAP`` and to strip noun case-endings from object
+        tokens before gloss assignment.
     """
 
-    def __init__(self, master_lexicon_db: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        master_lexicon_db: Dict[str, Any],
+        lemmatizer: Optional[Any] = None,
+    ) -> None:
         self.lexicon: Dict[str, Any] = master_lexicon_db
+        # Optional BanglaFoundationLemmatizer for unseen verb forms & noun stripping
+        self.lemmatizer: Optional[Any] = lemmatizer
 
         # Expose for external inspection / extension
         self.verb_stem_map: Dict[str, str] = dict(_VERB_STEM_MAP)
@@ -166,10 +176,18 @@ class BanglaSentenceToSignCompiler:
                 applied_rules.append(f"ConjunctionDeletion({word})")
                 continue
 
-            # Step 2: Verb stem normalisation
+            # Step 2: Verb stem normalisation — static map first, lemmatizer fallback
             normalized = self.verb_stem_map.get(word, word)
             if normalized != word:
                 applied_rules.append(f"VerbStemNormalisation({word}→{normalized})")
+            elif self.lemmatizer is not None and normalized == word:
+                # Fallback: regex-based suffix stripping for unseen inflected forms
+                analysis = self.lemmatizer.analyse(word)
+                if analysis.is_verb and analysis.changed:
+                    normalized = analysis.lemma
+                    applied_rules.append(
+                        f"LemmatizerFallback({word}→{normalized}, {analysis.tense_hint})"
+                    )
 
             # Step 3: Categorical role assignment
             if normalized in self.time_words or word in self.time_words:

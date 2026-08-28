@@ -72,10 +72,18 @@ STEM_DICTIONARY: Dict[str, str] = {
 
 
 class BdSLSyntaxEngine:
-    """Tier 3 & 4 Visual-Spatial Grammar Engine."""
+    """Tier 3 & 4 Visual-Spatial Grammar Engine.
 
-    def __init__(self):
-        pass
+    Parameters
+    ----------
+    lemmatizer : optional
+        A ``BanglaFoundationLemmatizer`` instance. When provided, regex-based
+        suffix stripping is used as a fallback for inflected forms not found in
+        ``STEM_DICTIONARY``. Pass ``None`` (default) to use dict-only stemming.
+    """
+
+    def __init__(self, lemmatizer: Any = None) -> None:
+        self._lemmatizer = lemmatizer
 
     def tokenize(self, text: str) -> List[str]:
         """Cleans and tokenizes natural Bengali text."""
@@ -123,10 +131,16 @@ class BdSLSyntaxEngine:
             else:
                 filtered_tokens.append(tok)
 
-        # Step 3: Verb Stemming / Normalization
+        # Step 3: Verb Stemming / Normalisation
         stemmed_tokens: List[str] = []
         for tok in filtered_tokens:
             stem = STEM_DICTIONARY.get(tok, tok)
+            if stem == tok and self._lemmatizer is not None:
+                # Fallback: regex suffix stripping for unseen inflected forms
+                analysis = self._lemmatizer.analyse(tok)
+                if analysis.is_verb and analysis.changed:
+                    stem = analysis.lemma
+                    applied_rules.append(f"LemmatizerFallback({tok}\u2192{stem})")
             stemmed_tokens.append(stem)
 
         # Step 4: Post-Nominal Adjective Inversion (Adj + N -> N + Adj)

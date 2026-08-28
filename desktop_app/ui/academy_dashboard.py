@@ -502,8 +502,8 @@ class AcademyDashboard(QWidget):
         self.svg_widget = self.sign_card_viewer  # compatibility alias
 
         # Live Action Container with ToonAvatarRenderer and Cyber Playback Controller
-        live_action_container = QWidget()
-        live_action_layout = QVBoxLayout(live_action_container)
+        self.live_action_container = QWidget()
+        live_action_layout = QVBoxLayout(self.live_action_container)
         live_action_layout.setContentsMargins(0, 0, 0, 0)
         live_action_layout.setSpacing(4)
 
@@ -518,7 +518,7 @@ class AcademyDashboard(QWidget):
         live_action_layout.addWidget(self.avatar_playback_bar)
 
         self.ref_display_stack.addWidget(self.sign_card_viewer)       # Index 0: Static Card
-        self.ref_display_stack.addWidget(live_action_container)       # Index 1: Cel-Shaded Toon Avatar
+        self.ref_display_stack.addWidget(self.live_action_container)  # Index 1: Cel-Shaded Toon Avatar
         right_layout.addWidget(self.ref_display_stack, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Bottom: Anatomical Step-by-Step Instruction Guide

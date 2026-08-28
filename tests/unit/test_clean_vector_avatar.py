@@ -160,16 +160,29 @@ class TestModularPaintingSafety:
         rs = QPointF(260.0, 120.0)
         renderer._draw_torso_and_clothing(p, chest, neck, ls, rs, 400.0, 300.0)
 
+        # 2b. Torso via Bounds & Scale
+        bounds = QRectF(50.0, 50.0, 300.0, 200.0)
+        renderer._draw_torso_and_clothing(p, bounds, scale=1.2)
+
         # 3. Arms
         lw = QPointF(130.0, 220.0)
         rw = QPointF(240.0, 190.0)
         renderer._draw_vector_arm(p, ls, QPointF(130.0, 170.0), lw, is_right=False)
         renderer._draw_vector_arm(p, rs, QPointF(260.0, 170.0), rw, is_right=True)
 
+        # 3b. Unified Arm and Hand Drawing
+        renderer._draw_vector_arm_and_hand(p, rs, QPointF(260.0, 170.0), rw, hand_type="right", scale=1.1)
+        renderer._draw_vector_arm_and_hand(p, ls, QPointF(130.0, 170.0), lw, hand_type="left", scale=1.1)
+
         # 4. Head & Face
         head = QPointF(200.0, 70.0)
         renderer._draw_head_and_hair(p, head, 400.0, 300.0)
         renderer._draw_face_features(p, head, 400.0, 300.0)
+
+        # 4b. Head & Face with NMM Parameters
+        nmm = {"au01": 0.4, "au02": 0.3, "au04": 0.2, "mouth_open": 0.5}
+        renderer._draw_head_and_hair(p, head, scale=1.2, nmm_params=nmm)
+        renderer._draw_face_features(p, head, scale=1.2, nmm_params=nmm)
 
         # 5. Hand
         hand_pts = renderer.frames[0].right_hand
@@ -180,3 +193,37 @@ class TestModularPaintingSafety:
 
         p.end()
         assert not img.isNull()
+
+    def test_playback_controls_and_seeking(self):
+        renderer = ToonAvatarRenderer("dhonnobad")
+        assert renderer.is_playing is True
+
+        renderer.pause()
+        assert renderer.is_playing is False
+
+        renderer.play()
+        assert renderer.is_playing is True
+
+        renderer.toggle_play()
+        assert renderer.is_playing is False
+
+        renderer.set_speed(0.5)
+        assert renderer.speed == 0.5
+
+        renderer.seek(10)
+        assert renderer.current_frame_idx == 10
+
+        renderer.step_forward()
+        assert renderer.current_frame_idx == 11
+
+        renderer.step_backward()
+        assert renderer.current_frame_idx == 10
+
+        mode = renderer.toggle_view_mode()
+        assert mode == "hand_zoom"
+        assert renderer.view_mode == AvatarViewMode.HAND_ZOOM
+
+        mode2 = renderer.toggle_view_mode()
+        assert mode2 == "full_body"
+        assert renderer.view_mode == AvatarViewMode.FULL_BODY
+

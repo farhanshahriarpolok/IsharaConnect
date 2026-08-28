@@ -16,7 +16,7 @@ Features:
 import enum
 import logging
 import math
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import (
@@ -461,73 +461,96 @@ class ToonAvatarRenderer(QWidget):
         self._draw_touch_effects(p, frame, w, h)
 
     def _draw_torso_and_clothing(
-        self, p: QPainter, chest: QPointF, neck: QPointF, ls: QPointF, rs: QPointF, w: float, h: float
+        self,
+        p: QPainter,
+        chest_or_bounds: Any,
+        neck: Optional[QPointF] = None,
+        ls: Optional[QPointF] = None,
+        rs: Optional[QPointF] = None,
+        w: Optional[float] = None,
+        h: Optional[float] = None,
+        scale: float = 1.0,
     ) -> None:
         """Draws slate-blue collared shirt with line-art collar flaps and button placket."""
+        if isinstance(chest_or_bounds, (QRectF, tuple, list)):
+            bounds = chest_or_bounds if isinstance(chest_or_bounds, QRectF) else QRectF(*chest_or_bounds)
+            w = bounds.width()
+            h = bounds.height()
+            cx = bounds.center().x()
+            top = bounds.top()
+            neck = QPointF(cx, top + 30.0 * scale)
+            chest = QPointF(cx, top + 80.0 * scale)
+            ls = QPointF(cx - 60.0 * scale, top + 40.0 * scale)
+            rs = QPointF(cx + 60.0 * scale, top + 40.0 * scale)
+        else:
+            chest = chest_or_bounds
+            w = w or float(self.width())
+            h = h or float(self.height())
+
         # 1. Shirt Torso Body
         shirt_path = QPainterPath()
         shirt_path.moveTo(ls)
         shirt_path.lineTo(rs)
-        shirt_path.lineTo(rs.x() + 15, h * 0.95)
-        shirt_path.lineTo(ls.x() - 15, h * 0.95)
+        shirt_path.lineTo(rs.x() + 15 * scale, h * 0.95)
+        shirt_path.lineTo(ls.x() - 15 * scale, h * 0.95)
         shirt_path.closeSubpath()
 
         p.fillPath(shirt_path, QBrush(COLOR_SHIRT_BASE))
 
         # 2. Cel-Shadow Fold (Right flank)
         shadow_path = QPainterPath()
-        shadow_path.moveTo(chest.x() + 5, neck.y())
+        shadow_path.moveTo(chest.x() + 5 * scale, neck.y())
         shadow_path.lineTo(rs)
-        shadow_path.lineTo(rs.x() + 15, h * 0.95)
-        shadow_path.lineTo(chest.x() + 12, h * 0.95)
+        shadow_path.lineTo(rs.x() + 15 * scale, h * 0.95)
+        shadow_path.lineTo(chest.x() + 12 * scale, h * 0.95)
         shadow_path.closeSubpath()
         p.fillPath(shadow_path, QBrush(COLOR_SHIRT_SHADOW))
 
         # 3. Contour Outline
-        p.setPen(QPen(COLOR_OUTLINE, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         p.drawPath(shirt_path)
 
         # 4. Center Button Placket
-        p.setPen(QPen(COLOR_SHIRT_PLACKET, 8.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
-        p.drawLine(QPointF(chest.x(), neck.y() + 10), QPointF(chest.x(), h * 0.95))
+        p.setPen(QPen(COLOR_SHIRT_PLACKET, 8.0 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.FlatCap))
+        p.drawLine(QPointF(chest.x(), neck.y() + 10 * scale), QPointF(chest.x(), h * 0.95))
 
         # Placket Line-Art Seams
-        p.setPen(QPen(COLOR_OUTLINE, 1.5))
-        p.drawLine(QPointF(chest.x() - 4, neck.y() + 10), QPointF(chest.x() - 4, h * 0.95))
-        p.drawLine(QPointF(chest.x() + 4, neck.y() + 10), QPointF(chest.x() + 4, h * 0.95))
+        p.setPen(QPen(COLOR_OUTLINE, 1.5 * scale))
+        p.drawLine(QPointF(chest.x() - 4 * scale, neck.y() + 10 * scale), QPointF(chest.x() - 4 * scale, h * 0.95))
+        p.drawLine(QPointF(chest.x() + 4 * scale, neck.y() + 10 * scale), QPointF(chest.x() + 4 * scale, h * 0.95))
 
         # White Buttons
-        p.setPen(QPen(COLOR_OUTLINE, 1.0))
+        p.setPen(QPen(COLOR_OUTLINE, 1.0 * scale))
         p.setBrush(QBrush(COLOR_SHIRT_BUTTON))
-        for btn_y in [neck.y() + 24, neck.y() + 44, neck.y() + 64, neck.y() + 84]:
+        for btn_y in [neck.y() + 24 * scale, neck.y() + 44 * scale, neck.y() + 64 * scale, neck.y() + 84 * scale]:
             if btn_y < h * 0.92:
-                p.drawEllipse(QPointF(chest.x(), btn_y), 2.2, 2.2)
+                p.drawEllipse(QPointF(chest.x(), btn_y), 2.2 * scale, 2.2 * scale)
 
         # 5. Crisp Line-Art Collar Flaps
         l_flap, r_flap = self.get_collar_path(neck, chest)
         p.fillPath(l_flap, QBrush(COLOR_COLLAR_BASE))
         p.fillPath(r_flap, QBrush(COLOR_COLLAR_BASE))
-        p.setPen(QPen(COLOR_OUTLINE, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         p.drawPath(l_flap)
         p.drawPath(r_flap)
 
-    def _draw_neck(self, p: QPainter, neck: QPointF, head: QPointF) -> None:
+    def _draw_neck(self, p: QPainter, neck: QPointF, head: QPointF, scale: float = 1.0) -> None:
         """Draws warm natural neck cylinder."""
-        nw = 18.0
+        nw = 18.0 * scale
         neck_path = QPainterPath()
-        neck_path.moveTo(neck.x() - nw, head.y() + 20)
-        neck_path.lineTo(neck.x() + nw, head.y() + 20)
-        neck_path.lineTo(neck.x() + nw + 2, neck.y() + 4)
-        neck_path.lineTo(neck.x() - nw - 2, neck.y() + 4)
+        neck_path.moveTo(neck.x() - nw, head.y() + 20 * scale)
+        neck_path.lineTo(neck.x() + nw, head.y() + 20 * scale)
+        neck_path.lineTo(neck.x() + nw + 2 * scale, neck.y() + 4 * scale)
+        neck_path.lineTo(neck.x() - nw - 2 * scale, neck.y() + 4 * scale)
         neck_path.closeSubpath()
 
         p.fillPath(neck_path, QBrush(COLOR_SKIN_SHADOW))
-        p.setPen(QPen(COLOR_OUTLINE, 2.0))
+        p.setPen(QPen(COLOR_OUTLINE, 2.0 * scale))
         p.drawPath(neck_path)
 
-    def _draw_vector_arm(self, p: QPainter, shoulder: QPointF, elbow: QPointF, wrist: QPointF, is_right: bool) -> None:
+    def _draw_vector_arm(self, p: QPainter, shoulder: QPointF, elbow: QPointF, wrist: QPointF, is_right: bool, scale: float = 1.0) -> None:
         """Draws collared shirt sleeve + forearm cylinder."""
-        arm_w = 16.0
+        arm_w = 16.0 * scale
 
         # Sleeve Segment
         dx = elbow.x() - shoulder.x()
@@ -543,11 +566,11 @@ class ToonAvatarRenderer(QWidget):
         up_path.closeSubpath()
 
         p.fillPath(up_path, QBrush(COLOR_SHIRT_BASE))
-        p.setPen(QPen(COLOR_OUTLINE, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         p.drawPath(up_path)
 
         # Forearm Segment (Warm Skin)
-        fa_w = 12.0
+        fa_w = 12.0 * scale
         dx2 = wrist.x() - elbow.x()
         dy2 = wrist.y() - elbow.y()
         L2 = math.hypot(dx2, dy2) or 1.0
@@ -561,13 +584,63 @@ class ToonAvatarRenderer(QWidget):
         fa_path.closeSubpath()
 
         p.fillPath(fa_path, QBrush(COLOR_SKIN_BASE))
-        p.setPen(QPen(COLOR_OUTLINE, 2.0))
+        p.setPen(QPen(COLOR_OUTLINE, 2.0 * scale))
         p.drawPath(fa_path)
 
-    def _draw_head_and_hair(self, p: QPainter, head: QPointF, w: float, h: float) -> None:
+    def _draw_vector_arm_and_hand(
+        self,
+        p: QPainter,
+        shoulder: QPointF,
+        elbow: QPointF,
+        wrist: QPointF,
+        finger_angles: Optional[List[float]] = None,
+        hand_type: str = "right",
+        scale: float = 1.0,
+        hand_pts: Optional[List[Tuple[float, float]]] = None,
+        w: float = 400.0,
+        h: float = 300.0,
+    ) -> None:
+        """Unified vector arm and articulated hand drawing."""
+        is_right = (hand_type == "right")
+        self._draw_vector_arm(p, shoulder, elbow, wrist, is_right=is_right, scale=scale)
+
+        if hand_pts:
+            self._draw_vector_hand(p, hand_pts, is_right=is_right, w=w, h=h, scale=scale)
+        else:
+            # Synthetic articulated hand centered at wrist
+            synthetic_hand = []
+            wx, wy = wrist.x() / max(1.0, w), wrist.y() / max(1.0, h)
+            synthetic_hand.append((wx, wy))
+            for f in range(5):
+                for j in range(1, 5):
+                    fx = wx + (f - 2) * 0.02 * (1 if is_right else -1)
+                    fy = wy + j * 0.025
+                    synthetic_hand.append((fx, fy))
+            self._draw_vector_hand(p, synthetic_hand, is_right=is_right, w=w, h=h, scale=scale)
+
+    def _draw_head_and_hair(
+        self,
+        p: QPainter,
+        head_pos: Any,
+        scale_or_w: Union[float, None] = 1.0,
+        nmm_params_or_h: Any = None,
+        scale: float = 1.0,
+        nmm_params: Optional[Dict[str, float]] = None,
+    ) -> None:
         """Draws facial oval and dark bob-cut hair."""
-        cx, cy = head.x(), head.y()
-        rx, ry = 34.0, 42.0
+        if isinstance(head_pos, QPointF):
+            cx, cy = head_pos.x(), head_pos.y()
+        elif isinstance(head_pos, (tuple, list)):
+            cx, cy = float(head_pos[0]), float(head_pos[1])
+        else:
+            cx, cy = float(self.width()) * 0.5, float(self.height()) * 0.25
+
+        if isinstance(scale_or_w, float) and scale_or_w <= 5.0:
+            scale = scale_or_w
+        if isinstance(nmm_params_or_h, dict):
+            nmm_params = nmm_params_or_h
+
+        rx, ry = 34.0 * scale, 42.0 * scale
 
         # Facial Oval
         head_path = self.get_head_path(cx, cy, rx, ry)
@@ -577,8 +650,8 @@ class ToonAvatarRenderer(QWidget):
         p.save()
         p.setClipPath(head_path)
         shadow_poly = QPolygonF([
-            QPointF(cx - rx, cy + 10),
-            QPointF(cx + rx, cy + 5),
+            QPointF(cx - rx, cy + 10 * scale),
+            QPointF(cx + rx, cy + 5 * scale),
             QPointF(cx + rx, cy + ry),
             QPointF(cx - rx, cy + ry),
         ])
@@ -587,7 +660,7 @@ class ToonAvatarRenderer(QWidget):
         p.fillPath(shadow_path, QBrush(COLOR_SKIN_SHADOW))
         p.restore()
 
-        p.setPen(QPen(COLOR_OUTLINE, 2.5))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale))
         p.drawPath(head_path)
 
         # Hair
@@ -596,114 +669,143 @@ class ToonAvatarRenderer(QWidget):
 
         # Hair Highlight Sheen
         hl_path = QPainterPath()
-        hl_path.moveTo(cx - 18, cy - ry + 4)
-        hl_path.quadTo(cx, cy - ry - 2, cx + 18, cy - ry + 4)
-        p.setPen(QPen(COLOR_HAIR_HL, 3.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        hl_path.moveTo(cx - 18 * scale, cy - ry + 4 * scale)
+        hl_path.quadTo(cx, cy - ry - 2 * scale, cx + 18 * scale, cy - ry + 4 * scale)
+        p.setPen(QPen(COLOR_HAIR_HL, 3.0 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         p.drawPath(hl_path)
 
-        p.setPen(QPen(COLOR_OUTLINE, 2.5))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale))
         p.drawPath(hair_path)
 
-    def _draw_face_features(self, p: QPainter, head: QPointF, w: float, h: float) -> None:
+    def _draw_face_features(
+        self,
+        p: QPainter,
+        head_pos: Any,
+        scale_or_w: Union[float, None] = 1.0,
+        nmm_params_or_h: Any = None,
+        scale: float = 1.0,
+        nmm_params: Optional[Dict[str, float]] = None,
+    ) -> None:
         """Draws cheeks, almond eyes, dynamic FACS brows, nose ridge, and terracotta lips."""
-        cx, cy = head.x(), head.y()
+        if isinstance(head_pos, QPointF):
+            cx, cy = head_pos.x(), head_pos.y()
+        elif isinstance(head_pos, (tuple, list)):
+            cx, cy = float(head_pos[0]), float(head_pos[1])
+        else:
+            cx, cy = float(self.width()) * 0.5, float(self.height()) * 0.25
+
+        if isinstance(scale_or_w, float) and scale_or_w <= 5.0:
+            scale = scale_or_w
+        if isinstance(nmm_params_or_h, dict):
+            nmm_params = nmm_params_or_h
+
+        # Update temporary FACS Action Units if provided
+        if nmm_params:
+            if "au01" in nmm_params or "au01_inner_brow" in nmm_params:
+                self.au01_inner_brow = nmm_params.get("au01", nmm_params.get("au01_inner_brow", self.au01_inner_brow))
+            if "au02" in nmm_params or "au02_outer_brow" in nmm_params:
+                self.au02_outer_brow = nmm_params.get("au02", nmm_params.get("au02_outer_brow", self.au02_outer_brow))
+            if "au04" in nmm_params or "au04_brow_furrow" in nmm_params:
+                self.au04_brow_furrow = nmm_params.get("au04", nmm_params.get("au04_brow_furrow", self.au04_brow_furrow))
+            if "mouth_open" in nmm_params or "mouth_open_ratio" in nmm_params:
+                self.mouth_open_ratio = nmm_params.get("mouth_open", nmm_params.get("mouth_open_ratio", self.mouth_open_ratio))
 
         # Cheeks
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(COLOR_CHEEK_BLUSH))
-        p.drawEllipse(QPointF(cx - 20, cy + 8), 8, 5)
-        p.drawEllipse(QPointF(cx + 20, cy + 8), 8, 5)
+        p.drawEllipse(QPointF(cx - 20 * scale, cy + 8 * scale), 8 * scale, 5 * scale)
+        p.drawEllipse(QPointF(cx + 20 * scale, cy + 8 * scale), 8 * scale, 5 * scale)
 
         # Almond Eyes
-        self._draw_eye(p, QPointF(cx - 14, cy - 2), is_right=False)
-        self._draw_eye(p, QPointF(cx + 14, cy - 2), is_right=True)
+        self._draw_eye(p, QPointF(cx - 14 * scale, cy - 2 * scale), is_right=False, scale=scale)
+        self._draw_eye(p, QPointF(cx + 14 * scale, cy - 2 * scale), is_right=True, scale=scale)
 
         # FACS Eyebrows
-        self._draw_eyebrows(p, cx, cy)
+        self._draw_eyebrows(p, cx, cy, scale=scale)
 
         # Nose Ridge
-        p.setPen(QPen(COLOR_SKIN_CREASE, 1.8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        p.drawLine(QPointF(cx, cy + 3), QPointF(cx + 2, cy + 10))
-        p.drawLine(QPointF(cx + 2, cy + 10), QPointF(cx - 2, cy + 11))
+        p.setPen(QPen(COLOR_SKIN_CREASE, 1.8 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.drawLine(QPointF(cx, cy + 3 * scale), QPointF(cx + 2 * scale, cy + 10 * scale))
+        p.drawLine(QPointF(cx + 2 * scale, cy + 10 * scale), QPointF(cx - 2 * scale, cy + 11 * scale))
 
         # Terracotta Lips
-        self._draw_lips(p, cx, cy + 22)
+        self._draw_lips(p, cx, cy + 22 * scale, scale=scale)
 
-    def _draw_eye(self, p: QPainter, center: QPointF, is_right: bool) -> None:
+    def _draw_eye(self, p: QPainter, center: QPointF, is_right: bool, scale: float = 1.0) -> None:
         """Draws crisp vector eye with sclera, cyan iris, pupil, and specular dot."""
         ex, ey = center.x(), center.y()
-        ew, eh = 8.5, 6.0
+        ew, eh = 8.5 * scale, 6.0 * scale
 
         eye_path = self.get_eye_path(center, ew, eh)
         p.fillPath(eye_path, QBrush(COLOR_EYE_WHITE))
-        p.setPen(QPen(COLOR_OUTLINE, 1.8))
+        p.setPen(QPen(COLOR_OUTLINE, 1.8 * scale))
         p.drawPath(eye_path)
 
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QBrush(COLOR_IRIS_BASE))
-        p.drawEllipse(center, 4.5, 5.0)
+        p.drawEllipse(center, 4.5 * scale, 5.0 * scale)
 
         p.setBrush(QBrush(COLOR_PUPIL))
-        p.drawEllipse(center, 2.5, 2.8)
+        p.drawEllipse(center, 2.5 * scale, 2.8 * scale)
 
         p.setBrush(QBrush(COLOR_EYE_SPEC))
-        p.drawEllipse(QPointF(ex + (1.2 if is_right else -1.2), ey - 1.8), 1.6, 1.6)
+        p.drawEllipse(QPointF(ex + (1.2 if is_right else -1.2) * scale, ey - 1.8 * scale), 1.6 * scale, 1.6 * scale)
 
-        p.setPen(QPen(COLOR_OUTLINE, 2.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        p.drawLine(QPointF(ex - ew - 1, ey - 2), QPointF(ex + ew + 1, ey - 2))
+        p.setPen(QPen(COLOR_OUTLINE, 2.2 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        p.drawLine(QPointF(ex - ew - 1 * scale, ey - 2 * scale), QPointF(ex + ew + 1 * scale, ey - 2 * scale))
 
-    def _draw_eyebrows(self, p: QPainter, cx: float, cy: float) -> None:
-        p.setPen(QPen(COLOR_HAIR_BASE, 3.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+    def _draw_eyebrows(self, p: QPainter, cx: float, cy: float, scale: float = 1.0) -> None:
+        p.setPen(QPen(COLOR_HAIR_BASE, 3.0 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
 
-        l_inner_y = cy - 14 - (self.au01_inner_brow * 6.0) + (self.au04_brow_furrow * 4.0)
-        l_outer_y = cy - 12 - (self.au02_outer_brow * 6.0)
-        l_mid_y   = (l_inner_y + l_outer_y) * 0.5 - 2.0
+        l_inner_y = cy - (14.0 * scale) - (self.au01_inner_brow * 6.0 * scale) + (self.au04_brow_furrow * 4.0 * scale)
+        l_outer_y = cy - (12.0 * scale) - (self.au02_outer_brow * 6.0 * scale)
+        l_mid_y   = (l_inner_y + l_outer_y) * 0.5 - (2.0 * scale)
 
         l_path = QPainterPath()
-        l_path.moveTo(cx - 24, l_outer_y)
-        l_path.quadTo(cx - 16, l_mid_y, cx - 6, l_inner_y)
+        l_path.moveTo(cx - 24 * scale, l_outer_y)
+        l_path.quadTo(cx - 16 * scale, l_mid_y, cx - 6 * scale, l_inner_y)
         p.drawPath(l_path)
 
-        r_inner_y = cy - 14 - (self.au01_inner_brow * 6.0) + (self.au04_brow_furrow * 4.0)
-        r_outer_y = cy - 12 - (self.au02_outer_brow * 6.0)
-        r_mid_y   = (r_inner_y + r_outer_y) * 0.5 - 2.0
+        r_inner_y = cy - (14.0 * scale) - (self.au01_inner_brow * 6.0 * scale) + (self.au04_brow_furrow * 4.0 * scale)
+        r_outer_y = cy - (12.0 * scale) - (self.au02_outer_brow * 6.0 * scale)
+        r_mid_y   = (r_inner_y + r_outer_y) * 0.5 - (2.0 * scale)
 
         r_path = QPainterPath()
-        r_path.moveTo(cx + 6, r_inner_y)
-        r_path.quadTo(cx + 16, r_mid_y, cx + 24, r_outer_y)
+        r_path.moveTo(cx + 6 * scale, r_inner_y)
+        r_path.quadTo(cx + 16 * scale, r_mid_y, cx + 24 * scale, r_outer_y)
         p.drawPath(r_path)
 
-    def _draw_lips(self, p: QPainter, cx: float, cy: float) -> None:
-        open_h = self.mouth_open_ratio * 12.0
-        half_w = 11.0
+    def _draw_lips(self, p: QPainter, cx: float, cy: float, scale: float = 1.0) -> None:
+        open_h = self.mouth_open_ratio * 12.0 * scale
+        half_w = 11.0 * scale
 
         mouth_path = QPainterPath()
-        if open_h > 2.5:
+        if open_h > 2.5 * scale:
             mouth_path.moveTo(cx - half_w, cy)
-            mouth_path.quadTo(cx, cy - 2, cx + half_w, cy)
+            mouth_path.quadTo(cx, cy - 2 * scale, cx + half_w, cy)
             mouth_path.quadTo(cx, cy + open_h, cx - half_w, cy)
             mouth_path.closeSubpath()
             p.fillPath(mouth_path, QBrush(COLOR_MOUTH_INNER))
-            p.setPen(QPen(COLOR_OUTLINE, 2.0))
+            p.setPen(QPen(COLOR_OUTLINE, 2.0 * scale))
             p.drawPath(mouth_path)
 
             teeth = QPainterPath()
-            teeth.moveTo(cx - half_w + 3, cy)
-            teeth.lineTo(cx + half_w - 3, cy)
-            teeth.lineTo(cx + half_w - 3, cy + 3)
-            teeth.lineTo(cx - half_w + 3, cy + 3)
+            teeth.moveTo(cx - half_w + 3 * scale, cy)
+            teeth.lineTo(cx + half_w - 3 * scale, cy)
+            teeth.lineTo(cx + half_w - 3 * scale, cy + 3 * scale)
+            teeth.lineTo(cx - half_w + 3 * scale, cy + 3 * scale)
             teeth.closeSubpath()
             p.fillPath(teeth, QBrush(QColor("#FFFFFF")))
         else:
             mouth_path.moveTo(cx - half_w, cy)
-            mouth_path.quadTo(cx, cy + 4, cx + half_w, cy)
-            p.setPen(QPen(COLOR_LIP_BASE, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            mouth_path.quadTo(cx, cy + 4 * scale, cx + half_w, cy)
+            p.setPen(QPen(COLOR_LIP_BASE, 2.5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             p.drawPath(mouth_path)
 
     # ── Segmented 5-Finger Articulated Vector Hand ────────────────────────────
 
     def _draw_vector_hand(
-        self, p: QPainter, hand_pts: List[Tuple[float, float]], is_right: bool, w: float, h: float
+        self, p: QPainter, hand_pts: List[Tuple[float, float]], is_right: bool, w: float, h: float, scale: float = 1.0
     ) -> None:
         """Renders 5-finger articulated vector hand with line-art stroke separation."""
         if len(hand_pts) < 21:
@@ -717,7 +819,7 @@ class ToonAvatarRenderer(QWidget):
         palm_path = QPainterPath()
         palm_path.addPolygon(palm_poly)
         p.fillPath(palm_path, QBrush(COLOR_SKIN_BASE))
-        p.setPen(QPen(COLOR_OUTLINE, 2.5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setPen(QPen(COLOR_OUTLINE, 2.5 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         p.drawPath(palm_path)
 
         # 2. 5 Articulated Fingers (Thumb, Index, Middle, Ring, Pinky)
@@ -728,7 +830,7 @@ class ToonAvatarRenderer(QWidget):
             [13, 14, 15, 16],      # Ring
             [17, 18, 19, 20],      # Pinky
         ]
-        widths = [7.5, 6.5, 6.8, 6.0, 5.2]
+        widths = [7.5 * scale, 6.5 * scale, 6.8 * scale, 6.0 * scale, 5.2 * scale]
 
         for f_i, chain in enumerate(finger_chains):
             f_w = widths[f_i]
@@ -736,18 +838,18 @@ class ToonAvatarRenderer(QWidget):
                 p1 = P(chain[s])
                 p2 = P(chain[s + 1])
                 seg_w = f_w * (1.0 - s * 0.15)
-                self._draw_finger_bone_capsule(p, p1, p2, seg_w)
+                self._draw_finger_bone_capsule(p, p1, p2, seg_w, scale=scale)
 
             # Fingernail Highlight
             tip_pt = P(chain[-1])
             prev_pt = P(chain[-2])
             self._draw_fingernail(p, tip_pt, prev_pt, f_w * 0.6)
 
-    def _draw_finger_bone_capsule(self, p: QPainter, p1: QPointF, p2: QPointF, radius: float) -> None:
+    def _draw_finger_bone_capsule(self, p: QPainter, p1: QPointF, p2: QPointF, radius: float, scale: float = 1.0) -> None:
         """Draws discrete finger bone capsule with bold outline to eliminate silhouette blending."""
         capsule = self.get_finger_capsule_path(p1, p2, radius)
         p.fillPath(capsule, QBrush(COLOR_SKIN_BASE))
-        p.setPen(QPen(COLOR_OUTLINE, 2.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        p.setPen(QPen(COLOR_OUTLINE, 2.2 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
         p.drawPath(capsule)
 
         # Knuckle Crease Line
@@ -756,7 +858,7 @@ class ToonAvatarRenderer(QWidget):
         L = math.hypot(dx, dy) or 1.0
         nx = -dy / L * radius
         ny = dx / L * radius
-        p.setPen(QPen(COLOR_SKIN_CREASE, 1.3))
+        p.setPen(QPen(COLOR_SKIN_CREASE, 1.3 * scale))
         p.drawLine(QPointF(p1.x() + nx * 0.6, p1.y() + ny * 0.6), QPointF(p1.x() - nx * 0.6, p1.y() - ny * 0.6))
 
     def _draw_fingernail(self, p: QPainter, tip: QPointF, prev: QPointF, size: float) -> None:

@@ -140,10 +140,43 @@ async def serve_mannequin_avatar():
     return HTMLResponse("<h1>3D Mannequin Avatar</h1>")
 
 
+@app.get("/dashboard", response_class=HTMLResponse)
+async def serve_dashboard():
+    """Sign-to-Speech (WebRTC ক্যামেরা) এবং Speech-to-Sign (3D Avatar)
+    সমন্বিত স্প্লিট-স্ক্রিন ইন্টারফেস।
+    """
+    p = TEMPLATES_DIR / "dashboard.html"
+    if p.exists():
+        return FileResponse(p)
+    return HTMLResponse("<h1>IsharaConnect Dashboard</h1>")
+
+
 @app.get("/health")
 async def health_check():
     """Ultra-fast root health endpoint for launcher and health probes."""
     return {"status": "healthy", "service": "IsharaConnect-Backend"}
+
+
+# ----------------- WebRTC Peer Signaling Endpoint -----------------
+from backend.websockets.webrtc_signaling import webrtc_hub
+
+@app.websocket("/ws/signaling/{room_id}")
+async def webrtc_signaling_websocket(websocket: WebSocket, room_id: str):
+    """Room-based WebRTC peer signaling for SDP offers/answers and ICE candidate trickling."""
+    await webrtc_hub.connect(room_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            try:
+                msg = json.loads(data)
+            except Exception:
+                msg = {"raw": data}
+            await webrtc_hub.broadcast_to_room(room_id, msg, sender=websocket)
+    except WebSocketDisconnect:
+        webrtc_hub.disconnect(room_id, websocket)
+    except Exception as e:
+        logger.debug("Signaling WebSocket error in room '%s': %s", room_id, e)
+        webrtc_hub.disconnect(room_id, websocket)
 
 
 # ----------------- WebRTC Endpoint -----------------

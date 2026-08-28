@@ -5,7 +5,7 @@ CoarticulatedSentencePlan that the CoarticulatedSentenceSynthesizer
 can render into a continuous kinematic frame stream.
 
 Pipeline stages:
-  1. BdSLSyntaxEngine.text_to_bdsl_gloss()   — SOV gloss extraction
+  1. BanglaSentenceToSignCompiler (if set) OR BdSLSyntaxEngine  — gloss extraction
   2. IsharaBakyaCorpus template lookup         — retrieve coarticulation map & NMM timeline
   3. CoarticulatedSentencePlan assembly        — merge gloss + kinetic + expression data
 """
@@ -13,10 +13,10 @@ Pipeline stages:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from core_engine.nlp.bdsl_syntax_engine import BdSLSyntaxEngine
+from core_engine.nlp.sentence_plan_dto import CoarticulatedSentencePlan, GlossTransitionSpec  # noqa: F401
 from core_engine.dsl.isharabakya_schema import (
     IsharaBakyaCorpus,
     KineticCoarticulationMap,
@@ -27,51 +27,14 @@ from core_engine.dsl.isharabakya_schema import (
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Data Transfer Object: CoarticulatedSentencePlan
-# ---------------------------------------------------------------------------
+# GlossTransitionSpec and CoarticulatedSentencePlan are re-exported from
+# sentence_plan_dto for backward compatibility with existing imports.
+__all__ = [
+    "GlossTransitionSpec",
+    "CoarticulatedSentencePlan",
+    "SentenceToGlossPipeline",
+]
 
-@dataclass
-class GlossTransitionSpec:
-    """Per-transition metadata consumed by the synthesizer."""
-    from_gloss: str
-    to_gloss: str
-    blend_ms: int = 150
-    slerp_enabled: bool = True
-    spatial_pause_ms: int = 0
-
-
-@dataclass
-class CoarticulatedSentencePlan:
-    """Complete execution plan for one BdSL sentence ready for kinematic synthesis."""
-
-    template_id: str
-    spoken_text: str
-    gloss_sequence: List[str]
-    transitions: List[GlossTransitionSpec]
-    nmm_timeline: List[NMMExpressionSegment]
-    total_duration_ms: int
-    domain: str = "General"
-    applied_rules: List[str] = field(default_factory=list)
-    is_interrogative: bool = False
-
-    # ------------------------------------------------------------------
-    # Convenience query helpers
-    # ------------------------------------------------------------------
-
-    def get_nmm_at(self, timestamp_ms: int) -> Dict[str, float]:
-        """Return merged FACS AU values active at *timestamp_ms*."""
-        merged: Dict[str, float] = {}
-        for seg in self.nmm_timeline:
-            if seg.applies_at(timestamp_ms):
-                merged.update(seg.facs)
-        return merged
-
-    def get_transition(self, from_gloss: str, to_gloss: str) -> Optional[GlossTransitionSpec]:
-        for t in self.transitions:
-            if t.from_gloss == from_gloss and t.to_gloss == to_gloss:
-                return t
-        return None
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +48,12 @@ class SentenceToGlossPipeline:
         corpus = IsharaBakyaCorpus.from_json_file("dataset/corpus/isharabakya_seed_v1.json")
         pipeline = SentenceToGlossPipeline(corpus=corpus)
         plan = pipeline.process("আমি এখন একটু বাইরে যাচ্ছি, আধ ঘণ্টার মধ্যে ফিরবো।")
+
+    Usage (with BanglaSentenceToSignCompiler for categorical SOV ordering):
+        from core_engine.nlp.bangla_sentence_generator import BanglaSentenceToSignCompiler
+        compiler = BanglaSentenceToSignCompiler(master_lexicon_db={})
+        pipeline = SentenceToGlossPipeline(compiler=compiler)
+        plan = pipeline.process("আমি বাড়ি যাচ্ছি।")
 
     Usage (syntax-only, no corpus needed):
         pipeline = SentenceToGlossPipeline()
@@ -103,11 +72,14 @@ class SentenceToGlossPipeline:
         corpus: Optional[IsharaBakyaCorpus] = None,
         default_blend_ms: int = 150,
         fps: int = 60,
+        compiler: Optional[Any] = None,
     ) -> None:
         self.syntax_engine = BdSLSyntaxEngine()
         self.corpus = corpus
         self.default_blend_ms = default_blend_ms
         self.fps = fps
+        # Optional BanglaSentenceToSignCompiler backend for categorical SOV ordering
+        self.compiler: Optional[Any] = compiler
 
     # ------------------------------------------------------------------
     # Public API
@@ -125,11 +97,18 @@ class SentenceToGlossPipeline:
         Otherwise the plan is built from the BdSLSyntaxEngine output with
         sensible defaults.
         """
-        # Step 1: Extract BdSL gloss sequence from surface Bengali text
-        gloss_result = self.syntax_engine.text_to_bdsl_gloss(spoken_text)
-        glosses: List[str] = gloss_result.get("glosses", [])
-        applied_rules: List[str] = gloss_result.get("applied_rules", [])
-        is_interrogative: bool = gloss_result.get("is_interrogative", False)
+        # Step 1: Extract BdSL gloss sequence
+        # Prefer BanglaSentenceToSignCompiler when attached (categorical SOV)
+        if self.compiler is not None:
+            compiler_result = self.compiler.compile_sentence(spoken_text)
+            glosses: List[str] = compiler_result.get("syntactic_glosses", [])
+            applied_rules: List[str] = compiler_result.get("applied_rules", [])
+            is_interrogative: bool = compiler_result.get("is_interrogative", False)
+        else:
+            gloss_result = self.syntax_engine.text_to_bdsl_gloss(spoken_text)
+            glosses = gloss_result.get("glosses", [])
+            applied_rules = gloss_result.get("applied_rules", [])
+            is_interrogative = gloss_result.get("is_interrogative", False)
 
         if not glosses:
             logger.warning("SentenceToGlossPipeline: empty gloss sequence for '%s'", spoken_text)

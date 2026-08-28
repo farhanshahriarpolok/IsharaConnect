@@ -34,9 +34,11 @@ from core_engine.dsl.isharabakya_schema import (
     NMMExpressionSegment,
     GrammaticalDecomposition,
 )
-from core_engine.dsl.coarticulated_sentence_synthesizer import (
-    CoarticulatedSentenceSynthesizer,
-)
+# CoarticulatedSentenceSynthesizer is NOT imported here to avoid a
+# circular import chain:  dsl/__init__ -> coarticulated_sentence_synthesizer
+# -> sentence_plan_dto -> dsl/isharabakya_schema -> dsl/__init__
+# Import it directly:  from core_engine.dsl.coarticulated_sentence_synthesizer import ...
+
 
 __all__ = [
     "load_bdsl_dictionary",
@@ -64,6 +66,6 @@ __all__ = [
     "CoarticulationTransition",
     "NMMExpressionSegment",
     "GrammaticalDecomposition",
-    # Sentence-level synthesis
-    "CoarticulatedSentenceSynthesizer",
+    # CoarticulatedSentenceSynthesizer: import directly from its module to avoid
+    # circular imports — from core_engine.dsl.coarticulated_sentence_synthesizer import ...
 ]

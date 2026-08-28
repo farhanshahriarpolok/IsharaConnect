@@ -22,7 +22,7 @@ from core_engine.dsl.procedural_synthesizer import (
     HyperKinematicSynthesizer,
     MultiSignSequenceBlender,
 )
-from core_engine.nlp.sentence_to_gloss_pipeline import (
+from core_engine.nlp.sentence_plan_dto import (
     CoarticulatedSentencePlan,
     GlossTransitionSpec,
 )

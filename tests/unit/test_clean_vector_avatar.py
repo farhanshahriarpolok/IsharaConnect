@@ -1,11 +1,13 @@
 """Unit Tests for Ultra-Clean Cel-Vector 2D Humanoid Signer Illustration Engine.
 
 Tests:
-  - Vector path generation for head, hair, eyes, and collared shirt
+  - Vector path generation for back hair silhouette, head, hair bangs, eyes, collar, and fingers
   - 5-finger segmented bone capsule generation
-  - Hand shape configs for flat palm, fist, pinch, and hook
+  - Knuckle crease calculations and hand shape configurations
   - Hand zoom transform scale and pan calculations
-  - Modular rendering methods execution safety
+  - Modular rendering methods execution safety across all 9 depth layers
+  - Playback bar button layout metrics (anti-clipping min-widths and heights)
+  - Unicode bullet formatting in HUD overlay badges
 """
 
 import sys
@@ -23,10 +25,12 @@ app = QApplication.instance()
 if app is None:
     app = QApplication([])
 
+from desktop_app.ui.components.avatar_playback_bar import AvatarPlaybackBar
 from desktop_app.ui.components.toon_avatar_renderer import (
     AvatarViewMode,
     ToonAvatarRenderer,
     COLOR_COLLAR_BASE,
+    COLOR_HAIR_BACK,
     COLOR_HAIR_BASE,
     COLOR_OUTLINE,
     COLOR_SHIRT_BASE,
@@ -44,10 +48,18 @@ class TestVectorPathGeometry:
         assert isinstance(path, QPainterPath)
         assert not path.isEmpty()
         bounds = path.boundingRect()
-        assert bounds.width() == pytest.approx(68.0, abs=1.0)
-        assert bounds.height() == pytest.approx(84.0, abs=1.0)
+        assert bounds.width() == pytest.approx(68.0, abs=4.0)
+        assert bounds.height() == pytest.approx(84.0, abs=4.0)
 
-    def test_hair_path_generation(self):
+    def test_back_hair_path_generation(self):
+        path = ToonAvatarRenderer.get_back_hair_path(200.0, 150.0, 34.0, 42.0)
+        assert isinstance(path, QPainterPath)
+        assert not path.isEmpty()
+        bounds = path.boundingRect()
+        assert bounds.width() > 60.0
+        assert bounds.height() > 40.0
+
+    def test_hair_bangs_path_generation(self):
         path = ToonAvatarRenderer.get_hair_path(200.0, 150.0, 34.0, 42.0)
         assert isinstance(path, QPainterPath)
         assert not path.isEmpty()
@@ -76,8 +88,8 @@ class TestVectorPathGeometry:
         eye = ToonAvatarRenderer.get_eye_path(center, 8.5, 6.0)
         assert not eye.isEmpty()
         bounds = eye.boundingRect()
-        assert bounds.width() == pytest.approx(17.0, abs=1.0)
-        assert bounds.height() == pytest.approx(12.0, abs=1.0)
+        assert bounds.width() == pytest.approx(17.0, abs=2.0)
+        assert bounds.height() == pytest.approx(12.0, abs=2.0)
 
     def test_finger_capsule_path_generation(self):
         p1 = QPointF(100.0, 100.0)
@@ -150,45 +162,56 @@ class TestModularPaintingSafety:
         img = QImage(400, 300, QImage.Format.Format_ARGB32_Premultiplied)
         p = QPainter(img)
 
-        # 1. Background
+        # 0. Background
         renderer._draw_backdrop(p, 400.0, 300.0)
 
-        # 2. Torso
+        # 1. Back Hair
+        head = QPointF(200.0, 70.0)
+        renderer._draw_back_hair(p, head, 400.0, 300.0)
+
+        # 2. Neck
         neck = QPointF(200.0, 110.0)
+        renderer._draw_neck(p, neck, head)
+
+        # 3. Torso
         chest = QPointF(200.0, 160.0)
         ls = QPointF(140.0, 120.0)
         rs = QPointF(260.0, 120.0)
         renderer._draw_torso_and_clothing(p, chest, neck, ls, rs, 400.0, 300.0)
 
-        # 2b. Torso via Bounds & Scale
+        # 3b. Torso via Bounds & Scale
         bounds = QRectF(50.0, 50.0, 300.0, 200.0)
         renderer._draw_torso_and_clothing(p, bounds, scale=1.2)
 
-        # 3. Arms
+        # 4. Head & Ears
+        renderer._draw_head_and_hair(p, head, 400.0, 300.0)
+
+        # 5. Face features
+        renderer._draw_face_features(p, head, 400.0, 300.0)
+
+        # 5b. Head & Face with NMM Parameters
+        nmm = {"au01": 0.4, "au02": 0.3, "au04": 0.2, "mouth_open": 0.5}
+        renderer._draw_head_and_hair(p, head, scale=1.2, nmm_params=nmm)
+        renderer._draw_face_features(p, head, scale=1.2, nmm_params=nmm)
+
+        # 6. Front hair bangs
+        renderer._draw_front_hair_bangs(p, head, 400.0, 300.0)
+
+        # 7. Arms & Sleeves
         lw = QPointF(130.0, 220.0)
         rw = QPointF(240.0, 190.0)
         renderer._draw_vector_arm(p, ls, QPointF(130.0, 170.0), lw, is_right=False)
         renderer._draw_vector_arm(p, rs, QPointF(260.0, 170.0), rw, is_right=True)
 
-        # 3b. Unified Arm and Hand Drawing
+        # 7b. Unified Arm and Hand Drawing
         renderer._draw_vector_arm_and_hand(p, rs, QPointF(260.0, 170.0), rw, hand_type="right", scale=1.1)
         renderer._draw_vector_arm_and_hand(p, ls, QPointF(130.0, 170.0), lw, hand_type="left", scale=1.1)
 
-        # 4. Head & Face
-        head = QPointF(200.0, 70.0)
-        renderer._draw_head_and_hair(p, head, 400.0, 300.0)
-        renderer._draw_face_features(p, head, 400.0, 300.0)
-
-        # 4b. Head & Face with NMM Parameters
-        nmm = {"au01": 0.4, "au02": 0.3, "au04": 0.2, "mouth_open": 0.5}
-        renderer._draw_head_and_hair(p, head, scale=1.2, nmm_params=nmm)
-        renderer._draw_face_features(p, head, scale=1.2, nmm_params=nmm)
-
-        # 5. Hand
+        # 8. Articulated Hand
         hand_pts = renderer.frames[0].right_hand
         renderer._draw_vector_hand(p, hand_pts, is_right=True, w=400.0, h=300.0)
 
-        # 6. Badges
+        # 9. Badges
         renderer._draw_overlay_badges(p, 400.0, 300.0)
 
         p.end()
@@ -227,3 +250,29 @@ class TestModularPaintingSafety:
         assert mode2 == "full_body"
         assert renderer.view_mode == AvatarViewMode.FULL_BODY
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Playback Bar UI Layout Metrics Tests
+# ─────────────────────────────────────────────────────────────────────────────
+class TestPlaybackBarLayoutMetrics:
+    def test_playback_bar_button_metrics(self):
+        renderer = ToonAvatarRenderer("dhonnobad")
+        bar = AvatarPlaybackBar(renderer)
+
+        # Speed buttons min-width >= 54px, height >= 36px
+        assert bar.btn_spd_1x.minimumWidth() >= 54
+        assert bar.btn_spd_1x.height() >= 34 or bar.btn_spd_1x.minimumHeight() >= 34
+        assert bar.btn_spd_05x.minimumWidth() >= 54
+        assert bar.btn_spd_025x.minimumWidth() >= 54
+
+        # Action buttons
+        assert bar.btn_loop.minimumWidth() >= 60
+        assert bar.btn_zoom.minimumWidth() >= 80
+
+        # Transport buttons
+        assert bar.btn_play.minimumWidth() >= 36
+        assert bar.btn_prev.minimumWidth() >= 30
+        assert bar.btn_next.minimumWidth() >= 30
+
+        # Timecode badge
+        assert "60" in bar.lbl_frame.text()

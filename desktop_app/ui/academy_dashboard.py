@@ -495,24 +495,24 @@ class AcademyDashboard(QWidget):
 
         # Middle: Stacked Widget containing SVG SignCardViewer (0) and Cel-Shaded ToonAvatarRenderer + PlaybackBar (1)
         self.ref_display_stack = QStackedWidget()
-        self.ref_display_stack.setFixedSize(280, 280)
+        self.ref_display_stack.setFixedSize(300, 340)
 
         self.sign_card_viewer = SignCardViewer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.sign_card_viewer.setFixedSize(280, 280)
+        self.sign_card_viewer.setFixedSize(300, 300)
         self.svg_widget = self.sign_card_viewer  # compatibility alias
 
         # Live Action Container with ToonAvatarRenderer and Cyber Playback Controller
         self.live_action_container = QWidget()
         live_action_layout = QVBoxLayout(self.live_action_container)
         live_action_layout.setContentsMargins(0, 0, 0, 0)
-        live_action_layout.setSpacing(4)
+        live_action_layout.setSpacing(6)
 
         self.toon_avatar_renderer = ToonAvatarRenderer("dhonnobad", "ধন্যবাদ", "Thank you")
-        self.toon_avatar_renderer.setFixedSize(280, 215)
+        self.toon_avatar_renderer.setFixedSize(300, 220)
         self.human_rig_viewer = self.toon_avatar_renderer  # compatibility alias
 
         self.avatar_playback_bar = AvatarPlaybackBar(self.toon_avatar_renderer)
-        self.avatar_playback_bar.setFixedWidth(280)
+        self.avatar_playback_bar.setFixedWidth(300)
 
         live_action_layout.addWidget(self.toon_avatar_renderer)
         live_action_layout.addWidget(self.avatar_playback_bar)

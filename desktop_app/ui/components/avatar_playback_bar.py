@@ -1,6 +1,6 @@
 """Interactive Academy Avatar Playback Controller Widget.
 
-Provides cybernetic-styled playback controls for ToonAvatarRenderer and HumanRigViewer:
+Provides cybernetic-styled playback controls for ToonAvatarRenderer:
   - ⏯️ Play / Pause toggle
   - ⏱️ Speed selector: 1.0x (Normal), 0.5x (Half speed), 0.25x (Ultra slow-motion)
   - 🔄 Continuous Loop toggle
@@ -68,19 +68,21 @@ class AvatarPlaybackBar(QFrame):
             QFrame#AvatarPlaybackBar {{
                 background: {BG_CARD};
                 border: 1px solid {BORDER_GLOW};
-                border-radius: 8px;
-                padding: 4px 6px;
+                border-radius: 10px;
+                padding: 6px 8px;
             }}
             QPushButton {{
                 background: {SURFACE_BTN};
                 color: {TEXT_MAIN};
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 5px;
-                padding: 4px 8px;
-                font-size: 11px;
-                font-weight: bold;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 6px;
+                padding: 4px 10px;
+                font-size: 12px;
+                font-weight: 600;
+                min-height: 34px;
             }}
             QPushButton:hover {{
+                background: #283548;
                 border-color: {CYAN_ACCENT};
                 color: {CYAN_ACCENT};
             }}
@@ -88,108 +90,136 @@ class AvatarPlaybackBar(QFrame):
                 background: {CYAN_ACCENT};
                 color: #0F172A;
                 border-color: {CYAN_ACCENT};
+                font-weight: bold;
             }}
             QSlider::groove:horizontal {{
-                height: 4px;
+                height: 6px;
                 background: rgba(255, 255, 255, 0.15);
-                border-radius: 2px;
+                border-radius: 3px;
             }}
             QSlider::sub-page:horizontal {{
                 background: {CYAN_ACCENT};
-                border-radius: 2px;
+                border-radius: 3px;
             }}
             QSlider::handle:horizontal {{
                 background: #FFFFFF;
-                border: 1.5px solid {CYAN_ACCENT};
-                width: 12px;
-                margin-top: -4px;
-                margin-bottom: -4px;
-                border-radius: 6px;
+                border: 2px solid {CYAN_ACCENT};
+                width: 14px;
+                margin-top: -5px;
+                margin-bottom: -5px;
+                border-radius: 7px;
             }}
         """)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(6, 4, 6, 4)
-        layout.setSpacing(4)
+        layout.setContentsMargins(8, 6, 8, 6)
+        layout.setSpacing(6)
 
-        # Row 1: Scrubber Slider + Frame Counter
+        # ── Row 1: Scrubber Timeline Slider + High-Contrast Time Code Badge ──
         scrub_row = QHBoxLayout()
-        scrub_row.setSpacing(6)
+        scrub_row.setSpacing(8)
 
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setRange(0, 59)
         self.slider.setValue(0)
         self.slider.sliderMoved.connect(self._on_slider_moved)
-        scrub_row.addWidget(self.slider)
+        scrub_row.addWidget(self.slider, stretch=1)
 
-        self.lbl_frame = QLabel("0/60")
-        self.lbl_frame.setFont(QFont("JetBrains Mono", 9, QFont.Weight.Bold))
-        self.lbl_frame.setStyleSheet(f"color: {TEXT_MUTED}; min-width: 42px;")
-        self.lbl_frame.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_frame = QLabel("1/60")
+        self.lbl_frame.setFont(QFont("JetBrains Mono", 11, QFont.Weight.Bold))
+        self.lbl_frame.setStyleSheet(f"""
+            color: #38BDF8;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 5px;
+            padding: 3px 8px;
+            min-width: 52px;
+        """)
+        self.lbl_frame.setAlignment(Qt.AlignmentFlag.AlignCenter)
         scrub_row.addWidget(self.lbl_frame)
 
         layout.addLayout(scrub_row)
 
-        # Row 2: Controls Toolbar
-        ctrl_row = QHBoxLayout()
-        ctrl_row.setSpacing(4)
+        # ── Row 2: Transport Controls & Speed Selectors ──────────────────────
+        ctrl_row1 = QHBoxLayout()
+        ctrl_row1.setSpacing(6)
 
         # 1. Play / Pause
         self.btn_play = QPushButton("⏸")
-        self.btn_play.setFixedWidth(28)
+        self.btn_play.setMinimumWidth(38)
+        self.btn_play.setFixedHeight(36)
+        self.btn_play.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         self.btn_play.setToolTip("চালু / বিরতি (Play/Pause)")
         self.btn_play.clicked.connect(self._toggle_play)
-        ctrl_row.addWidget(self.btn_play)
+        ctrl_row1.addWidget(self.btn_play)
 
         # 2. Step Backward / Step Forward
         self.btn_prev = QPushButton("⏮")
-        self.btn_prev.setFixedWidth(24)
+        self.btn_prev.setMinimumWidth(34)
+        self.btn_prev.setFixedHeight(36)
+        self.btn_prev.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self.btn_prev.setToolTip("পূর্ববর্তী ফ্রেম")
         self.btn_prev.clicked.connect(self._step_back)
-        ctrl_row.addWidget(self.btn_prev)
+        ctrl_row1.addWidget(self.btn_prev)
 
         self.btn_next = QPushButton("⏭")
-        self.btn_next.setFixedWidth(24)
+        self.btn_next.setMinimumWidth(34)
+        self.btn_next.setFixedHeight(36)
+        self.btn_next.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self.btn_next.setToolTip("পরবর্তী ফ্রেম")
         self.btn_next.clicked.connect(self._step_fwd)
-        ctrl_row.addWidget(self.btn_next)
+        ctrl_row1.addWidget(self.btn_next)
 
-        # 3. Speed Buttons (1.0x, 0.5x, 0.25x)
+        # 3. Speed Buttons (1.0x, 0.5x, 0.25x) - Min width 54px, Height 36px, 12px Font
         self.btn_spd_1x = QPushButton("1.0x")
+        self.btn_spd_1x.setMinimumWidth(54)
+        self.btn_spd_1x.setFixedHeight(36)
         self.btn_spd_1x.setCheckable(True)
         self.btn_spd_1x.setChecked(True)
         self.btn_spd_1x.clicked.connect(lambda: self._set_speed(1.0))
-        ctrl_row.addWidget(self.btn_spd_1x)
+        ctrl_row1.addWidget(self.btn_spd_1x)
 
         self.btn_spd_05x = QPushButton("0.5x")
+        self.btn_spd_05x.setMinimumWidth(54)
+        self.btn_spd_05x.setFixedHeight(36)
         self.btn_spd_05x.setCheckable(True)
         self.btn_spd_05x.clicked.connect(lambda: self._set_speed(0.5))
-        ctrl_row.addWidget(self.btn_spd_05x)
+        ctrl_row1.addWidget(self.btn_spd_05x)
 
         self.btn_spd_025x = QPushButton("0.25x")
+        self.btn_spd_025x.setMinimumWidth(54)
+        self.btn_spd_025x.setFixedHeight(36)
         self.btn_spd_025x.setCheckable(True)
         self.btn_spd_025x.clicked.connect(lambda: self._set_speed(0.25))
-        ctrl_row.addWidget(self.btn_spd_025x)
+        ctrl_row1.addWidget(self.btn_spd_025x)
 
-        ctrl_row.addStretch()
+        layout.addLayout(ctrl_row1)
+
+        # ── Row 3: Action Controls (Loop & Perspective Hand Zoom) ─────────────
+        ctrl_row2 = QHBoxLayout()
+        ctrl_row2.setSpacing(6)
 
         # 4. Continuous Loop Button
         self.btn_loop = QPushButton("🔄 লুপ")
+        self.btn_loop.setMinimumWidth(64)
+        self.btn_loop.setFixedHeight(36)
         self.btn_loop.setCheckable(True)
         self.btn_loop.setChecked(True)
-        self.btn_loop.setToolTip("ক্রমাগত লুপ (Looping)")
+        self.btn_loop.setToolTip("ক্রমাগত লুপ (Continuous Loop)")
         self.btn_loop.clicked.connect(self._toggle_loop)
-        ctrl_row.addWidget(self.btn_loop)
+        ctrl_row2.addWidget(self.btn_loop, stretch=1)
 
-        # 5. Perspective Toggle Button
+        # 5. Perspective Toggle Button (Hand Zoom vs Full Body)
         self.btn_zoom = QPushButton("🔍 হাত জুম")
+        self.btn_zoom.setMinimumWidth(90)
+        self.btn_zoom.setFixedHeight(36)
         self.btn_zoom.setCheckable(True)
         self.btn_zoom.setChecked(False)
-        self.btn_zoom.setToolTip("ফুল বডি / হাতের ক্লোজ-আপ জুম")
+        self.btn_zoom.setToolTip("ফুল বডি / হাতের ক্লোজ-আপ জুম (Hand Zoom)")
         self.btn_zoom.clicked.connect(self._toggle_zoom)
-        ctrl_row.addWidget(self.btn_zoom)
+        ctrl_row2.addWidget(self.btn_zoom, stretch=1)
 
-        layout.addLayout(ctrl_row)
+        layout.addLayout(ctrl_row2)
 
     # ── Avatar Binding ───────────────────────────────────────────────────────
 

@@ -132,6 +132,14 @@ async def serve_avatar_viewport():
     return HTMLResponse("<h1>Avatar Viewport</h1>")
 
 
+@app.get("/mannequin", response_class=HTMLResponse)
+async def serve_mannequin_avatar():
+    p = TEMPLATES_DIR / "mannequin_avatar.html"
+    if p.exists():
+        return FileResponse(p)
+    return HTMLResponse("<h1>3D Mannequin Avatar</h1>")
+
+
 @app.get("/health")
 async def health_check():
     """Ultra-fast root health endpoint for launcher and health probes."""

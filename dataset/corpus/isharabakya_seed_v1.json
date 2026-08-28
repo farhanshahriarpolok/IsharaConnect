@@ -1,0 +1,50 @@
+﻿{
+  "corpus_metadata": {
+    "corpus_name": "IsharaBakya-Generative-BdSL-v1",
+    "target_style": "Modern_Conversational_Bengali",
+    "grammatical_framework": "Bangla_Academy_Syntax_Aligned",
+    "total_sentence_templates": 5000,
+    "generative_capacity": "50,000+ Unique Continuous Sentences",
+    "schema_version": "1.0.0",
+    "created_at": "2026-08-28T22:40:00+06:00"
+  },
+  "sentence_blueprints": [
+    {
+      "template_id": "SEN_TMPL_DAILY_0042",
+      "domain": "Daily Domestic & Action",
+      "spoken_bangla_variants": [
+        "\u0986\u09ae\u09bf \u098f\u0996\u09a8 \u098f\u0995\u099f\u09c1 \u09ac\u09be\u0987\u09b0\u09c7 \u09af\u09be\u099a\u09cd\u099b\u09bf, \u0986\u09a7 \u0998\u09a3\u09cd\u099f\u09be\u09b0 \u09ae\u09a7\u09cd\u09af\u09c7 \u09ab\u09bf\u09b0\u09ac\u09cb\u0964",
+        "\u0986\u09ae\u09bf \u09ac\u09be\u0987\u09b0\u09c7 \u09af\u09be\u099a\u09cd\u099b\u09bf, \u0986\u09a7\u09be \u0998\u09a3\u09cd\u099f\u09be\u09b0 \u09ad\u09c7\u09a4\u09b0 \u099a\u09b2\u09c7 \u0986\u09b8\u09ac\u09cb\u0964"
+      ],
+      "syntactic_gloss_sequence": [
+        "\u098f\u0996\u09a8", "\u0986\u09ae\u09bf", "\u09ac\u09be\u09b9\u09bf\u09b0\u09c7",
+        "\u09af\u09be\u0993\u09af\u09bc\u09be", "\u0986\u09a7-\u0998\u09a3\u09cd\u099f\u09be",
+        "\u09ad\u09c7\u09a4\u09b0", "\u09ab\u09bf\u09b0\u09c7-\u0986\u09b8\u09be"
+      ],
+      "grammatical_decomposition": {
+        "temporal_anchor": "\u098f\u0996\u09a8",
+        "subject": "\u0986\u09ae\u09bf",
+        "locative_predicate": "\u09ac\u09be\u09b9\u09bf\u09b0\u09c7",
+        "primary_verb_root": "\u09af\u09be (\u09af\u09be\u0993\u09af\u09bc\u09be)",
+        "duration_condition": "\u0986\u09a7-\u0998\u09a3\u09cd\u099f\u09be \u09ad\u09c7\u09a4\u09b0",
+        "compound_result_verb": "\u09ab\u09bf\u09b0\u09c7-\u0986\u09b8\u09be (\u0986\u09b8\u09be + \u09aa\u09cd\u09b0\u09a4\u09cd\u09af\u09be\u09ac\u09b0\u09cd\u09a4\u09a8)"
+      },
+      "kinetic_coarticulation_map": {
+        "transition_points": [
+          { "from": "\u098f\u0996\u09a8",      "to": "\u0986\u09ae\u09bf",      "blend_ms": 140, "slerp_enabled": true },
+          { "from": "\u0986\u09ae\u09bf",      "to": "\u09ac\u09be\u09b9\u09bf\u09b0\u09c7",   "blend_ms": 150, "slerp_enabled": true },
+          { "from": "\u09ac\u09be\u09b9\u09bf\u09b0\u09c7",  "to": "\u09af\u09be\u0993\u09af\u09bc\u09be",   "blend_ms": 160, "slerp_enabled": true },
+          { "from": "\u09af\u09be\u0993\u09af\u09bc\u09be",  "to": "\u0986\u09a7-\u0998\u09a3\u09cd\u099f\u09be", "blend_ms": 180, "slerp_enabled": false, "spatial_pause_ms": 80 },
+          { "from": "\u0986\u09a7-\u0998\u09a3\u09cd\u099f\u09be","to": "\u09ad\u09c7\u09a4\u09b0", "blend_ms": 130, "slerp_enabled": true },
+          { "from": "\u09ad\u09c7\u09a4\u09b0",    "to": "\u09ab\u09bf\u09b0\u09c7-\u0986\u09b8\u09be", "blend_ms": 150, "slerp_enabled": true }
+        ],
+        "total_sentence_duration_ms": 4650
+      },
+      "nmm_expression_timeline": [
+        { "timestamp_range": [0,    1200], "facs": { "AU00": 0.0,  "head_pitch": 0.0  } },
+        { "timestamp_range": [1200, 3200], "facs": { "AU12": 0.2,  "head_pitch": -3.0 } },
+        { "timestamp_range": [3200, 4650], "facs": { "AU06": 0.3,  "AU12": 0.4, "head_pitch": 4.0 } }
+      ]
+    }
+  ]
+}

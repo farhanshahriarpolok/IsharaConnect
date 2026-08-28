@@ -25,6 +25,18 @@ from core_engine.dsl.procedural_synthesizer import (
 )
 from core_engine.dsl.sequence_blender import MultiSignSequenceBlender
 from core_engine.dsl.video_to_v3_extractor import BdSLVideoV3Extractor
+from core_engine.dsl.isharabakya_schema import (
+    IsharaBakyaCorpus,
+    IsharaBakyaCorpusMetadata,
+    SentenceBlueprint,
+    KineticCoarticulationMap,
+    CoarticulationTransition,
+    NMMExpressionSegment,
+    GrammaticalDecomposition,
+)
+from core_engine.dsl.coarticulated_sentence_synthesizer import (
+    CoarticulatedSentenceSynthesizer,
+)
 
 __all__ = [
     "load_bdsl_dictionary",
@@ -44,4 +56,14 @@ __all__ = [
     "HyperKinematicSynthesizer",
     "MultiSignSequenceBlender",
     "BdSLVideoV3Extractor",
+    # IsharaBakya Corpus Schema
+    "IsharaBakyaCorpus",
+    "IsharaBakyaCorpusMetadata",
+    "SentenceBlueprint",
+    "KineticCoarticulationMap",
+    "CoarticulationTransition",
+    "NMMExpressionSegment",
+    "GrammaticalDecomposition",
+    # Sentence-level synthesis
+    "CoarticulatedSentenceSynthesizer",
 ]
